@@ -1,13 +1,13 @@
 {
   "name": "oh-story-zcode",
-  "description": "oh-story 网络小说创作工具箱的 ZCode 插件市场",
+  "description": "oh-story 웹소설 창작 툴킷의 ZCode 플러그인 마켓플레이스",
   "version": 1,
   "plugins": [
     {
       "name": "oh-story",
       "source": "./",
       "version": "0.7.5",
-      "description": "13 个网文 Skills、Commands 与 ZCode 写作守卫。"
+      "description": "13개의 웹소설 Skills, Commands와 ZCode 작성 가드."
     }
   ]
 }

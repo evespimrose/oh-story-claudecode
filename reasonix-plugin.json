@@ -1,6 +1,6 @@
 {
   "name": "oh-story",
   "version": "0.7.5",
-  "description": "网络小说创作工具箱：扫榜、拆文、写作、审查、去 AI 味和封面生成。",
+  "description": "웹소설 창작 툴킷: 순위 스캔, 텍스트 분석, 작성, 심사, AI 냄새 제거, 표지 생성.",
   "skills": "skills"
 }

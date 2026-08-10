@@ -1,85 +1,85 @@
-# 小说封面视觉风格库
-各题材网文封面视觉风格定义，用于构建 GPT-Image-2 英文提示词。
+# 소설 표지 시각 스타일 라이브러리
+각 장르 웹소설 표지 시각 스타일 정의로, GPT-Image-2 영어 프롬프트 구성에 사용한다.
 
 ---
 
-## 平台风格
+## 플랫폼 스타일
 
-### 番茄小说
+### 판타지 소설 (番茄小说)
 
-视觉：高饱和高对比 / 人物占60%+面部清晰 / 书名大粗有光效(金/红/白) / 大头贴构图+华丽背景
-关键词：`vibrant saturated colors, eye-catching bold design, character portrait dominating frame, mass-market novel cover style, high contrast`
+시각: 고채도 고대비 / 인물 60% 이상 차지하며 얼굴 선명 / 제목 크고 굵으며 광 효과(금/빨/흰) / 증명사진 구도 + 화려한 배경
+키워드: `vibrant saturated colors, eye-catching bold design, character portrait dominating frame, mass-market novel cover style, high contrast`
 
-### 起点
+### 기점 (起点)
 
-视觉：细腻精致偏写实插画 / 构图讲究层次丰富 / 书名偏传统毛笔楷体 / 色彩沉稳 / 人物场景均衡有电影感
-关键词：`polished refined illustration, detailed cinematic composition, epic atmospheric, mature sophisticated style, premium quality`
+시각: 섬세하고 정교한 사실주의 일러스트 / 구도에 계층 풍부 / 제목은 전통 붓 해체체 / 색상 차분 / 인물과 장면 균형 잡히고 영화감 있음
+키워드: `polished refined illustration, detailed cinematic composition, epic atmospheric, mature sophisticated style, premium quality`
 
-### 晋江
+### 진장 (晋江)
 
-视觉：柔和色调(粉/紫/浅蓝/暖白) / 唯美画风大眼精致五官 / 花瓣光斑丝绸珠宝装饰 / 居中对称画面干净 / 书名优雅行书细圆
-关键词：`dreamy ethereal aesthetic, soft pastel tones, elegant romantic, delicate beauty, flower petals and bokeh`
+시각: 부드러운 톤(분/보라/하늘/따뜻한 흰) / 아름다운 화풍에 큰 눈과 정교한 이목구비 / 꽃잎 보케 실크 보석 장식 / 중앙 대칭에 화면 깔끔 / 제목은 우아한 행서나 세로 원형체
+키워드: `dreamy ethereal aesthetic, soft pastel tones, elegant romantic, delicate beauty, flower petals and bokeh`
 
-### 知乎盐言
+### 즈후옌언 (知乎盐言)
 
-视觉：大量留白极简 / 冷淡色(灰/蓝/白/暗色) / 氛围感>人物细节，常用场景/物品/抽象意象 / 书名现代简约无衬线 / 独立电影海报质感
-关键词：`minimalist literary style, clean composition with negative space, subtle moody atmosphere, independent film poster aesthetic`
+시각: 많은 여백의 미니멀 / 차가운 색(회/파/흰/어두운) / 분위기 > 인물 디테일, 장면/물건/추상적 이미지 많이 사용 / 제목은 모던 심플 산세리프 / 독립 영화 포스터 질감
+키워드: `minimalist literary style, clean composition with negative space, subtle moody atmosphere, independent film poster aesthetic`
 
-### 七猫
+### 치마오 (七猫)
 
-视觉：极度饱和强烈冲击 / 人物华丽服饰装备丰富 / 火焰雷电灵力特效 / 书名大号发光占比大 / 海报感信息密度高
-关键词：`striking high-impact design, vivid dramatic colors, spectacular visual effects, attention-grabbing poster style`
+시각: 극도로 채도 높고 강렬한 임팩트 / 인물 화려한 복식과 장비 풍부 / 화염 뇌전 영력 특수효과 / 제목 대형 발광 비중 큼 / 포스터 느낌 정보 밀도 높음
+키워드: `striking high-impact design, vivid dramatic colors, spectacular visual effects, attention-grabbing poster style`
 
-### 刺猬猫
+### 차웨이마오 (刺猬猫)
 
-视觉：日系插画二次元 / 色彩明亮线稿清晰 / Q版元素 / 书名卡通手绘风 / 轻松活泼
-关键词：`anime illustration style, vibrant colorful, detailed character art, Japanese light novel aesthetic`
+시각: 일러스트 애니메이션 2D / 색상 밝고 선 명확 / Q판 요소 / 제목 카툰 손그림풍 / 가볍고 발랄
+키워드: `anime illustration style, vibrant colorful, detailed character art, Japanese light novel aesthetic`
 
 ---
 
-## 题材推断规则
+## 장르 추론 규칙
 
-| 关键词 | 题材 | 风格标签 |
+| 키워드 | 장르 | 스타일 태그 |
 |:-------|:-----|:---------|
-| 仙/道/剑/灵/修/宗/天/帝/尊/神 | 玄幻/仙侠 | xianxia fantasy |
-| 都市/总裁/校园/重生/系统/学霸/医生/兵王 | 都市 | urban modern |
-| 妃/皇/侯/宫/嫡/庶/后/朝/凤/鸾 | 古言 | ancient romance |
-| 总裁/契约/替嫁/甜宠/娇妻/萌宝/闪婚 | 现言 | modern romance |
-| 诡/案/侦探/悬疑/推理/密室/连环 | 悬疑 | mystery thriller |
-| 星际/末世/机甲/赛博/废土/进化 | 科幻 | sci-fi |
-| 龙/骑/魔法/异世界/精灵/领主 | 西幻 | western fantasy |
-| 三国/大明/大唐/战场/将军/谋士 | 历史 | historical epic |
-| 鬼/僵尸/阴阳/风水/盗墓/咒 | 灵异 | supernatural horror |
-| 萌/喵/团宠/娇/转生 | 轻小说 | light novel |
+| 선/도/검/영/수/종/천/제/존/신 | 판타지/선협 (玄幻/仙侠) | xianxia fantasy |
+| 도시/총재/캠퍼스/환생/시스템/학바/의사/병왕 | 도시 (都市) | urban modern |
+| 비/황/후/궁/적/서/후/조/봉/란 | 고대 로맨스 (古言) | ancient romance |
+| 총재/계약/대체 시집/달콤한 반려/아내/귀염둥이 아기/번개 결혼 | 현대 로맨스 (现言) | modern romance |
+| 괴이/사건/탐정/서스펜스/추리/밀실/연쇄 | 미스터리 스릴러 (悬疑) | mystery thriller |
+| 스타/포스트 아포칼립스/메카/사이버/폐허/진화 | 공상과학 (科幻) | sci-fi |
+| 용/기사/마법/이세계/엘프/영주 | 서양 판타지 (西幻) | western fantasy |
+| 삼국/대명/대당/전장/장군/모사 | 역사 (历史) | historical epic |
+| 귀신/강시/음양/풍수/도굴/주 | 초자연 공포 (灵异) | supernatural horror |
+| 귀여움/냥이/단체 반려/어리다/전생 | 라이트 노벨 (轻小说) | light novel |
 
 ---
 
-## 提示词构建公式
+## 프롬프트 구성 공식
 
 ```
-[平台风格] + [文字层：书名+作者名+字体设计] + [题材风格标签] + [人物描述]
-+ [背景元素] + [色彩指令] + [光效指令] + [通用修饰]
+[플랫폼 스타일] + [텍스트 레이어: 제목+작가명+폰트 디자인] + [장르 스타일 태그] + [인물 묘사]
++ [배경 요소] + [색상 지시] + [광 효과 지시] + [범용 수식어]
 ```
 
-通用修饰：`professional book cover design, high detail digital painting, portrait orientation 2:3 ratio, no watermark`
+범용 수식어: `professional book cover design, high detail digital painting, portrait orientation 2:3 ratio, no watermark`
 
-文字层必须指定：书名内容+位置(top center)+字体风格+颜色；作者名内容+位置(bottom center)+字体风格+颜色
+텍스트 레이어 필수 지정: 제목 내용+위치(top center)+폰트 스타일+색상; 작가명 내용+위치(bottom center)+폰트 스타일+색상
 
 ---
 
-## 提示词技巧
+## 프롬프트 팁
 
-### 文字渲染
+### 텍스트 렌더링
 
-GPT-Image-2可直接渲染中文。格式：
+GPT-Image-2는 중국어를 직접 렌더링할 수 있다. 형식:
 ```
-Title text '书名' at top center in {字体风格}
-Author name '作者名' at bottom center in {字体风格}
+Title text '제목' at top center in {폰트 스타일}
+Author name '작가명' at bottom center in {폰트 스타일}
 ```
 
-### 人物描述要具体
+### 인물 묘사는 구체적으로
 
-不要"a man"，要：
+"a man" 이렇게 말고:
 ```
 a young man in flowing white silk robes with gold embroidery,
 long black hair tied in a topknot with a jade crown,
@@ -87,48 +87,48 @@ piercing dark eyes, confident expression,
 holding a glowing blue spirit sword
 ```
 
-### 背景三层
+### 배경 3층 구조
 
-前景(人物/道具) → 中景(场景：山峰/建筑/森林) → 远景(氛围：云海/星空/火焰)
+전경(인물/소품) → 중경(장면: 산봉/건물/숲) → 원경(분위기: 운해/성화/불꽃)
 
-### 光效
+### 광 효과
 
-| 光效 | 关键词 | 感觉 |
+| 광 효과 | 키워드 | 느낌 |
 |------|--------|------|
-| 神圣 | `dramatic golden light from above` | 神圣感 |
-| 神秘 | `cold moonlight from the left casting long shadows` | 神秘感 |
-| 温暖 | `warm sunset glow backlighting the figure` | 温暖感 |
-| 科幻 | `neon blue and purple lights from below` | 科幻感 |
+| 신성 | `dramatic golden light from above` | 신성감 |
+| 신비 | `cold moonlight from the left casting long shadows` | 신비감 |
+| 따뜻 | `warm sunset glow backlighting the figure` | 따뜻한 느낌 |
+| SF | `neon blue and purple lights from below` | SF 느낌 |
 
-### 避免真人照片感
+### 실사 사진 느낌 피하기
 
-加 `digital painting style`，网文封面需要插画感。
+`digital painting style` 추가. 웹소설 표지는 일러스트 느낌이 필요하다.
 
-### 构图变体
+### 구도 변형
 
-| 类型 | 关键词 | 适用 |
+| 유형 | 키워드 | 적 용 |
 |:-----|:-------|:-----|
-| 人物特写 | `close-up portrait, face filling upper half` | 强调角色 |
-| 全身像 | `full body shot, dynamic pose` | 展示服装动作 |
-| 纯场景 | `no human figure, landscape composition` | 悬疑/科幻 |
-| 双人 | `two figures facing each other` | 言情类 |
+| 인물 클로즈업 | `close-up portrait, face filling upper half` | 캐릭터 강조 |
+| 전신샷 | `full body shot, dynamic pose` | 복장과 동작 보여주기 |
+| 순수 장면 | `no human figure, landscape composition` | 미스터리/SF |
+| 듀오 | `two figures facing each other` | 로맨스류 |
 
 ---
 
-## 风格库
+## 스타일 라이브러리
 
-### 玄幻 / 仙侠
+### 판타지 / 선협 (玄幻 / 仙侠)
 
-**标签**：`xianxia Chinese fantasy art style, ethereal atmosphere`
-**色彩**：青蓝+金色+玄黑，冷色为主，金色/暖色光源点缀
-**人物**：男-长发束冠/散发，持剑/法器，衣袂飘飞 | 女-仙裙飘逸，灵兽伴随，莲花装饰
-**背景**：云海、仙山、古建筑楼阁、灵力光效
-**光效**：`divine golden light rays, mystical mist, spiritual energy glow`
-**示例**：
+**태그**: `xianxia Chinese fantasy art style, ethereal atmosphere`
+**색상**: 청람+금색+현흑, 한색 위주, 금색/따뜻한 색 광원 포인트
+**인물**: 남-긴 머리 상투/가발, 검이나 법기 들고, 옷깃 휘날림 | 여-선녀 치마 휘날리며, 영수 동반, 연꽃 장식
+**배경**: 운해, 선산, 고건물 누각, 영력 광 효과
+**광 효과**: `divine golden light rays, mystical mist, spiritual energy glow`
+**예시**:
 ```
 Chinese web novel cover, xianxia fantasy style.
-Title text '剑道独尊' at top center in bold golden brush calligraphy with metallic glow and sharp strokes.
-Author name '青椒炒肉' at bottom center in small refined white serif text with faint golden glow, flanked by delicate cloud-scroll ornaments, resting on a thin horizontal gold line.
+Title text '검도독존' at top center in bold golden brush calligraphy with metallic glow and sharp strokes.
+Author name '청초초육' at bottom center in small refined white serif text with faint golden glow, flanked by delicate cloud-scroll ornaments, resting on a thin horizontal gold line.
 A young swordsman in flowing white robes standing on a mountain peak,
 holding a glowing blue spirit sword, long black hair flowing in the wind.
 Ethereal clouds swirling below, dramatic golden divine light from above,
@@ -137,74 +137,74 @@ Color palette: deep blue, gold, white, black.
 Professional book cover, high detail digital painting, portrait 2:3 ratio, no watermark
 ```
 
-### 都市
+### 도시 (都市)
 
-**标签**：`modern urban contemporary style, clean cinematic composition`
-**色彩**：深蓝+灰色+金色，霓虹点缀(夜景)/暖橙(黄昏)
-**人物**：男-西装/休闲装干练轮廓分明 | 女-时尚穿搭自信表情
-**背景**：城市天际线、高端办公室、校园、霓虹街道
-**光效**：`sharp city lights, sunset glow reflecting on glass buildings, neon rim light`
+**태그**: `modern urban contemporary style, clean cinematic composition`
+**색상**: 남색+회색+금색, 네온 포인트(야경)/따뜻한 주황(황혼)
+**인물**: 남-정장/캐주얼 의상에 깔끔하고 뚜렷한 윤곽 | 여-패션한 코디에 자신 있는 표정
+**배경**: 도시 스카이라인, 고급 사무실, 캠퍼스, 네온 가로등
+**광 효과**: `sharp city lights, sunset glow reflecting on glass buildings, neon rim light`
 
-### 古言 / 宫斗
+### 고대 로맨스 / 궁중 암투 (古言 / 宫斗)
 
-**标签**：`ancient Chinese romance palace drama, elegant classical beauty`
-**色彩**：正红+金色+墨黑，华贵厚重
-**人物**：女-华服盛装凤冠步摇精致妆容 | 男-帝王/将军威严或温润
-**背景**：宫殿、庭院、红墙、珠帘、屏风、灯笼
-**光效**：`warm lantern light, golden candle glow, silk fabric shimmering`
+**태그**: `ancient Chinese romance palace drama, elegant classical beauty`
+**색상**: 정홍+금색+묵흑, 화려하고 무게감
+**인물**: 여-화려한 예복과 봉관 장신구 정교한 메이크업 | 남-황제/장군의 위엄 또는 온화함
+**배경**: 궁전, 정원, 붉은 담장, 주렴, 병풍, 등불
+**광 효과**: `warm lantern light, golden candle glow, silk fabric shimmering`
 
-### 现言 / 甜宠
+### 현대 로맨스 / 달콤한 반려 (现言 / 甜宠)
 
-**标签**：`modern romance cover art, soft dreamy warm atmosphere`
-**色彩**：粉色+暖白+浅金，温暖柔和
-**人物**：双人构图为主，甜蜜互动（拥抱/对视/牵手）
-**背景**：咖啡厅、花园、温馨室内、夕阳海滩
-**光效**：`soft warm backlighting, dreamy bokeh, gentle sunset glow`
+**태그**: `modern romance cover art, soft dreamy warm atmosphere`
+**색상**: 분홍+따뜻한 흰+연금, 따뜻하고 부드러움
+**인물**: 듀오 구도 위주, 달콤한 인터랙션 (포옹/시선 교차/손잡기)
+**배경**: 카페, 정원, 아늑한 실내, 석양 해변
+**광 효과**: `soft warm backlighting, dreamy bokeh, gentle sunset glow`
 
-### 悬疑 / 推理
+### 미스터리 / 추리 (悬疑 / 推理)
 
-**标签**：`dark mystery thriller, noir atmosphere, high contrast shadows`
-**色彩**：黑色+深灰+暗蓝，血红/冷白点缀
-**人物**：剪影/半遮面/背影，冷静或紧张
-**背景**：雨夜街道、老旧建筑、密室、暗巷
-**光效**：`dramatic chiaroscuro, single spotlight, rain-slicked reflections`
+**태그**: `dark mystery thriller, noir atmosphere, high contrast shadows`
+**색상**: 검정+짙은 회+어두운 파랑, 피빨강/차가운 흰 포인트
+**인물**: 실루엣/반가면/뒷모습, 침착하거나 긴장
+**배경**: 비 오는 밤 거리, 낡은 건물, 밀실, 어두운 골목
+**광 효과**: `dramatic chiaroscuro, single spotlight, rain-slicked reflections`
 
-### 科幻 / 末世
+### SF / 포스트 아포칼립스 (科幻 / 末世)
 
-**标签**：`sci-fi cyberpunk, futuristic technology, post-apocalyptic`
-**色彩**：深蓝+黑+银色，霓虹蓝/电子紫/能量绿点缀
-**人物**：机甲装/战术服/实验室服，科幻武器/全息界面
-**背景**：太空、废墟城市、实验室、空间站
-**光效**：`holographic blue glow, neon rim lighting, energy arcs`
+**태그**: `sci-fi cyberpunk, futuristic technology, post-apocalyptic`
+**색상**: 남색+검정+은색, 네온 블루/전자 보라/에너지 그린 포인트
+**인물**: 메카 슈트/전술복/실험실복, SF 무기/홀로그램 인터페이스
+**배경**: 우주, 폐허 도시, 실험실, 우주 정거장
+**광 효과**: `holographic blue glow, neon rim lighting, energy arcs`
 
-### 西幻
+### 서양 판타지 (西幻)
 
-**标签**：`western high fantasy, epic medieval atmosphere`
-**色彩**：深蓝+暗金+银白，火焰红/魔法紫点缀
-**人物**：骑士铠甲/法师长袍/游侠皮甲，伴随龙/狮鹫
-**背景**：城堡、龙巢、魔法阵、广阔原野
-**光效**：`magic spell glow, dramatic stormy sky, firelight from torches`
+**태그**: `western high fantasy, epic medieval atmosphere`
+**색상**: 남색+어두운 금+은백, 불꽃 빨강/마법 보라 포인트
+**인물**: 기사 갑옷/법사 로브/유령 가죽 갑옷, 용/그리핀 동반
+**배경**: 성, 용의 둥지, 마법진, 넓은 평야
+**광 효과**: `magic spell glow, dramatic stormy sky, firelight from torches`
 
-### 历史 / 军事
+### 역사 / 군사 (历史 / 军事)
 
-**标签**：`historical Chinese war epic, grand battlefield panorama`
-**色彩**：铁灰+暗红+土黄，金甲光泽/烽火橙点缀
-**人物**：将军铠甲/谋士长袍，持兵器
-**背景**：战场、城墙、军营、烽火
-**光效**：`dramatic battlefield firelight, smoke-filled sky, sunset over war`
+**태그**: `historical Chinese war epic, grand battlefield panorama`
+**색상**: 철회+어두운 붉은+누르스름, 금갑 광택/봉화 주황 포인트
+**인물**: 장군 갑옷/모사 로브, 무기 소지
+**배경**: 전장, 성벽, 군영, 봉화
+**광 효과**: `dramatic battlefield firelight, smoke-filled sky, sunset over war`
 
-### 灵异 / 恐怖
+### 초자연 / 공포 (灵异 / 恐怖)
 
-**标签**：`Chinese supernatural horror, eerie ghostly atmosphere`
-**色彩**：墨黑+幽绿+暗红，纸白/烛光黄点缀
-**人物**：道士装扮/普通人陷入诡异，鬼影/纸人/僵尸
-**背景**：墓地、古庙、暗巷、棺材
-**光效**：`eerie green glow, flickering candlelight, cold ghostly luminescence`
+**태그**: `Chinese supernatural horror, eerie ghostly atmosphere`
+**색상**: 묵흑+유령 녹색+어두운 붉은, 종이 흰/촛불 노랑 포인트
+**인물**: 도사 복장/평범한 사람이 괴이에 빠짐, 귀신 그림자/종이 인형/강시
+**배경**: 묘지, 고사찰, 어두운 골목, 관
+**광 효과**: `eerie green glow, flickering candlelight, cold ghostly luminescence`
 
-### 轻小说 / 二次元
+### 라이트 노벨 / 2D (轻小说 / 二次元)
 
-**标签**：`anime light novel cover, vibrant colorful moe style`
-**色彩**：明亮多色，星光/花瓣点缀
-**人物**：Q版/萌系角色，猫耳/翅膀等萌属性
-**背景**：奇幻世界、校园、异世界、星空
-**光效**：`sparkly star effects, magical particle effects, soft luminous glow`
+**태그**: `anime light novel cover, vibrant colorful moe style`
+**색상**: 밝고 다채로움, 별빛/꽃잎 포인트
+**인물**: Q판/귀여움 캐릭터, 고양이 귀/날개 등 귀여운 속성
+**배경**: 판타지 월드, 캠퍼스, 이세계, 성화
+**광 효과**: `sparkly star effects, magical particle effects, soft luminous glow`

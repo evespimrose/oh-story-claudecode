@@ -4,43 +4,43 @@
     "name": "worldwonderer"
   },
   "metadata": {
-    "description": "网络小说创作工具箱 — 扫榜、拆文、写作全流程 Claude Code skill，覆盖长篇与短篇网文",
+    "description": "웹소설 창작 툴킷 — 순위 스캔, 텍스트 분석, 작성 전과정 Claude Code skill. 장편과 단편 웹소설을 아우름",
     "version": "0.7.5"
   },
   "plugins": [
     {
       "name": "story",
-      "description": "网络小说工具箱主入口。自动路由扫榜、拆文与写作工具，并可通过 /story dashboard 启动本地写作工作台。",
+      "description": "웹소설 툴킷 메인 진입점. 순위 스캔, 텍스트 분석, 작성 툴을 자동 라우팅하며, /story dashboard로 로컬 작성 워크벤치를 실행할 수 있습니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-writing",
-      "keywords": ["novel", "web-novel", "router", "chinese", "writing", "网文"],
+      "keywords": ["novel", "web-novel", "router", "chinese", "writing", "웹소설"],
       "skills": ["./skills/story"]
     },
     {
       "name": "story-long-scan",
-      "description": "长篇网文扫榜。分析起点、番茄、晋江等平台排行榜数据，提炼市场趋势与热门题材。",
+      "description": "장편 웹소설 순위 스캔. 기점, 판치, 진장 등 플랫폼 랭킹 데이터를 분석하여 시장 트렌드와 인기 소재를 도출합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-market",
-      "keywords": ["long-novel", "ranking", "market", "trend", "起点", "番茄", "晋江", "chinese"],
+      "keywords": ["long-novel", "ranking", "market", "trend", "기점", "판치", "진장", "chinese"],
       "skills": ["./skills/story-long-scan"]
     },
     {
       "name": "story-long-analyze",
-      "description": "长篇网文拆文。深度拆解爆款长篇小说的黄金三章、人设架构、爽点设计、节奏控制。",
+      "description": "장편 웹소설 텍스트 분석. 히트작 장편 소설의 황금 3장, 캐릭터 설정, 쾌감 포인트 설계, 리듬 제어를 심층 분해합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-analysis",
-      "keywords": ["long-novel", "analysis", "breakdown", "golden-three-chapters", "爽文", "chinese"],
+      "keywords": ["long-novel", "analysis", "breakdown", "golden-three-chapters", "쾌감물", "chinese"],
       "skills": ["./skills/story-long-analyze"]
     },
     {
       "name": "story-long-write",
-      "description": "长篇网文写作。从大纲到正文，辅助长篇网络小说的创作，包括世界观、人物、情节线管理。",
+      "description": "장편 웹소설 작성. 개요부터 본문까지 장편 웹소설 창작을 지원하며, 세계관, 인물, 플롯 라인 관리를 포함합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
@@ -50,17 +50,17 @@
     },
     {
       "name": "story-short-scan",
-      "description": "短篇网文扫榜。分析知乎盐言故事、番茄短篇等平台热门短篇数据，捕捉风口题材。",
+      "description": "단편 웹소설 순위 스캔. 지후 염언 스토리, 판치 단편 등 플랫폼 인기 단편 데이터를 분석하여 트렌드 소재를 포착합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-market",
-      "keywords": ["short-novel", "ranking", "market", "知乎盐言", "番茄短篇", "chinese"],
+      "keywords": ["short-novel", "ranking", "market", "지후 염언", "판치 단편", "chinese"],
       "skills": ["./skills/story-short-scan"]
     },
     {
       "name": "story-short-analyze",
-      "description": "短篇网文拆文。拆解爆款短篇小说的叙事结构、情绪曲线、反转技巧、钩子设计。",
+      "description": "단편 웹소설 텍스트 분석. 히트작 단편 소설의 서사 구조, 감정 곡선, 반전 기교, 훅 설계를 분해합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
@@ -70,7 +70,7 @@
     },
     {
       "name": "story-short-write",
-      "description": "短篇网文写作。辅助短篇小说创作，从构思到成稿，聚焦情绪拉扯与节奏把控。",
+      "description": "단편 웹소설 작성. 단편 소설 창작을 지원하며, 구상부터 완성까지 감정 이끌기와 리듬 제어에 집중합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
@@ -80,62 +80,62 @@
     },
     {
       "name": "story-deslop",
-      "description": "网文去AI味。检测并清除文本中的AI写作痕迹，让文字回归自然。覆盖禁用词替换、句式去套路、心理外化、节奏打碎。",
+      "description": "웹소설 AI 냄새 제거. 텍스트 내 AI 작성 흔적을 감지하고 제거하여 문장을 자연스럽게 만듭니다. 금지어 치환, 문식 탈피, 심리 외화, 리듬 분쇄를 아우름.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-polish",
-      "keywords": ["de-ai", "humanize", "deslop", "去AI味", "润色", "去味", "chinese"],
+      "keywords": ["de-ai", "humanize", "deslop", "AI 냄새 제거", "윤색", "탈맛", "chinese"],
       "skills": ["./skills/story-deslop"]
     },
     {
       "name": "browser-cdp",
-      "description": "浏览器操控。通过 CDP 协议控制 Chrome，复用已有登录态，执行浏览器自动化操作。",
+      "description": "브라우저 조작. CDP 프로토콜로 Chrome을 제어하고 기존 로그인 세션을 재사용하여 브라우저 자동화 작업을 수행합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "browser-automation",
-      "keywords": ["browser", "cdp", "chrome", "agent-browser", "浏览器", "登录态", "automation"],
+      "keywords": ["browser", "cdp", "chrome", "agent-browser", "브라우저", "로그인 세션", "automation"],
       "skills": ["./skills/browser-cdp"]
     },
     {
       "name": "story-setup",
-      "description": "网文写作环境部署。一键部署 hooks、rules、agents、CLAUDE.md 到写作项目，提供会话恢复、一致性检查、提交验证等自动化基础设施。",
+      "description": "웹소설 작성 환경 배포. hooks, rules, agents, CLAUDE.md를 작성 프로젝트에 일괄 배포하여 세션 복구, 일관성 검사, 커밋 검증 등 자동화 인프라를 제공합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-infra",
-      "keywords": ["setup", "deploy", "hooks", "agents", "初始化", "部署", "基础设施", "chinese"],
+      "keywords": ["setup", "deploy", "hooks", "agents", "초기화", "배포", "인프라", "chinese"],
       "skills": ["./skills/story-setup"]
     },
     {
       "name": "story-review",
-      "description": "多视角对抗式审查。full/lean 模式在已部署 reviewer agents 时并行 spawn；agents 缺失、异常、过旧或启动失败时自动降级 solo，参考文件不可读时使用内置 rubric fallback。内置番茄/起点/知乎三平台评分标准。",
+      "description": "다중 시점 대조식 심사. full/lean 모드는 심사 reviewer agents가 배포된 경우 병렬 spawn; agents 누락, 이상, 구버전 또는 시작 실패 시 자동으로 solo로 다운그레이드하며, 참고 파일을 읽을 수 없을 때는 내장 rubric fallback을 사용합니다. 내장된 판치/기점/지후 세 플랫폼 평가 기준.",
       "source": "./",
       "strict": false,
       "version": "1.1.0",
       "category": "novel-quality",
-      "keywords": ["review", "audit", "multi-agent", "rubric", "审查", "评分", "番茄", "起点", "知乎", "chinese"],
+      "keywords": ["review", "audit", "multi-agent", "rubric", "심사", "평가", "판치", "기점", "지후", "chinese"],
       "skills": ["./skills/story-review"]
     },
     {
       "name": "story-import",
-      "description": "逆向导入已有小说。将已写好的小说（半成品或完本）反向解析为标准项目目录结构，兼容后续写作流程。",
+      "description": "기존 소설 역방향 임포트. 이미 작성된 소설(미완성 혹은 완결본)을 표준 프로젝트 디렉터리 구조로 역파싱하여 후속 작성 흐름과 호환합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-import",
-      "keywords": ["import", "reverse-engineer", "导入", "反推", "迁移", "chinese"],
+      "keywords": ["import", "reverse-engineer", "임포트", "역추론", "이전", "chinese"],
       "skills": ["./skills/story-import"]
     },
     {
       "name": "story-cover",
-      "description": "网文封面生成。分析书名题材，生成专业封面图，支持 10 大题材视觉风格。",
+      "description": "웹소설 표지 생성. 제목과 소재를 분석하여 전문적인 표지 이미지를 생성하며, 10대 소재 비주얼 스타일을 지원합니다.",
       "source": "./",
       "strict": false,
       "version": "1.0.0",
       "category": "novel-cover",
-      "keywords": ["cover", "封面", "image", "GPT-Image", "chinese"],
+      "keywords": ["cover", "표지", "image", "GPT-Image", "chinese"],
       "skills": ["./skills/story-cover"]
     }
   ]
