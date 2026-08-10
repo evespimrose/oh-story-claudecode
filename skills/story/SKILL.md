@@ -1,116 +1,113 @@
 ---
 name: story
-description: "网络小说工具箱主入口。根据用户需求自动路由到对应 skill，并可启动本地 Dashboard 查看拆文库、写作项目和编辑文本。触发方式：/story、$story、/story dashboard、$story dashboard、/网文、「我想写小说」「打开工作台」「检查更新」。"
+description: "웹소설 도구 모음 메인 입구. 사용자 요청에 따라 자동으로 해당 skill로 라우팅하며, 로컬 Dashboard를 실행하여 분석 라이브러리, 집필 프로젝트 조회 및 텍스트 편집이 가능합니다. 트리거 방식: /story, $story, /story dashboard, $story dashboard, /웹소설, 「소설을 쓰고 싶어」「작업대 열기」「업데이트 확인」."
 metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claudecode"}}
 ---
-# story：网文工具箱路由
+# story: 웹소설 도구 모음 라우터
 
-你是网文工具箱的路由入口。用户的请求模糊时由你分发到具体 skill。
+당신은 웹소설 도구 모음의 라우팅 입구입니다. 사용자의 요청이 모호할 때 구체적인 skill로 분배합니다.
 
-## 路由表
+## 라우팅 테이블
 
-> Codex CLI 中优先使用 `$story-*` 或 `/skills` 触发；Claude Code / OpenCode 继续使用 `/story-*`；OpenClaw 可用 `/skill story-*` 或自然语言点名 skill。下表以 slash command 展示，Codex 可将 `/story-long-write` 等价替换为 `$story-long-write`，OpenClaw 可将其等价替换为 `/skill story-long-write`。
+> Codex CLI에서는 `$story-*` 또는 `/skills`로 트리거하는 것을 우선합니다. Claude Code / OpenCode는 `/story-*`를 계속 사용합니다. OpenClaw에서는 `/skill story-*` 또는 자연어로 skill을 지정할 수 있습니다. 아래 표는 slash command로 표시하며, Codex에서는 `/story-long-write`를 `$story-long-write`로 대체할 수 있고, OpenClaw에서는 `/skill story-long-write`로 대체할 수 있습니다.
 
-| 用户意图 | 关键词示例 | 路由到 |
+| 사용자 의도 | 키워드 예시 | 라우팅 대상 |
 |---|---|---|
-| 写长篇 | 开书、写大纲、长篇、连载 | `/story-long-write` |
-| 写短篇 | 短篇、盐言、一万字 | `/story-short-write` |
-| 长篇拆文 | 拆文、分析这本书、黄金三章 | `/story-long-analyze` |
-| 短篇拆文 | 拆短篇、分析这个故事 | `/story-short-analyze` |
-| 长篇扫榜 | 长篇排行、什么火、起点/番茄/晋江 | `/story-long-scan` |
-| 选题决策 | 写什么能爆、帮我选题、选题方向 | `/story-long-scan` |
-| 短篇扫榜 | 短篇排行、知乎盐言排行 | `/story-short-scan` |
-| 去 AI 味 | 去 AI 味、太 AI、去味 | `/story-deslop` |
-| 审查稿件 | 审查、审稿、帮我审一下、一致性检查、看看有没有问题 | `/story-review` |
-| 封面 | 封面、封面图 | `/story-cover` |
-| 环境部署 | 准备写书、搭环境、初始化 | `/story-setup` |
-| 浏览器操控 | 浏览器、抓取、登录态 | `/browser-cdp` |
-| 导入小说 | 导入、反向解析、导入小说、把我的书导进来 | `/story-import` |
-| 工作台 | dashboard、工作台、看拆文库、浏览项目文件、打开项目面板 | 见下方「Dashboard 工作台」 |
-| 检查/更新版本 | 检查更新、有新版本吗、升级、更新工具箱 | 见下方「版本更新检查」 |
-| 切换/列出书目 | 切书、换书、列出我的书、我在写哪几本、切换项目 | 见下方「多书切换」 |
-| 查故事资料 | 查角色、查伏笔、查进度、查设定、什么状态、写到哪了 | spawn `story-explorer` agent（结构化 prompt：`项目目录：{dir}\n查询类型：{根据意图选择}\n查询参数：{用户查询}`）；agent 不可用时见下方「查询降级」 |
-| 查资料 | 查资料、帮我查资料、调研、搜索一下、搜一下 | spawn `story-researcher` agent；agent 不可用时见下方「查询降级」 |
+| 장편 집필 | 개서, 개요 작성, 장편, 연재 | `/story-long-write` |
+| 단편 집필 | 단편, 옌옌, 만 자 | `/story-short-write` |
+| 장편 분석 | 분석, 이 책 분석, 골든 3장 | `/story-long-analyze` |
+| 단편 분석 | 단편 분석, 이 이야기 분석 | `/story-short-analyze` |
+| 장편 차트 스캔 | 장편 랭킹, 무엇이 인기, 치디엔/판치에/진장 | `/story-long-scan` |
+| 주제 선정 | 뭘 써야 터지나, 주제 골라줘, 주제 방향 | `/story-long-scan` |
+| 단편 차트 스캔 | 단편 랭킹, 즈후 옌옌 랭킹 | `/story-short-scan` |
+| AI 냄새 제거 | AI 냄새 제거, 너무 AI스러움, 디슬롭 | `/story-deslop` |
+| 원고 심사 | 심사, 검토, 한번 봐줘, 일관성 검사, 문제 없는지 확인 | `/story-review` |
+| 표지 | 표지, 표지 이미지 | `/story-cover` |
+| 환경 배포 | 집필 준비, 환경 구축, 초기화 | `/story-setup` |
+| 브라우저 제어 | 브라우저, 크롤링, 로그인 상태 | `/browser-cdp` |
+| 소설 가져오기 | 가져오기, 역파싱, 소설 가져오기, 내 책 가져오기 | `/story-import` |
+| 작업대 | dashboard, 작업대, 분석 라이브러리 보기, 프로젝트 파일 탐색, 프로젝트 패널 열기 | 아래 「Dashboard 작업대」 참조 |
+| 버전 확인/업데이트 | 업데이트 확인, 새 버전 있나, 업그레이드, 도구 모음 업데이트 | 아래 「버전 업데이트 확인」 참조 |
+| 책 전환/목록 | 책 전환, 책 변경, 내 책 목록, 몇 권 쓰고 있는지, 프로젝트 전환 | 아래 「다중 도서 전환」 참조 |
+| 스토리 자료 조회 | 캐릭터 조회, 복선 조회, 진행 조회, 설정 조회, 현재 상태, 어디까지 썼는지 | spawn `story-explorer` agent (구조화 prompt: `프로젝트 디렉토리: {dir}\n조회 유형: {의도에 따라 선택}\n조회 매개변수: {사용자 쿼리}`); agent 사용 불가 시 아래 「조회 대체」 참조 |
+| 자료 조사 | 자료 조사, 조사 도와줘, 리서치, 검색해줘 | spawn `story-researcher` agent; agent 사용 불가 시 아래 「조회 대체」 참조 |
 
-### 导入续写顺序
+### 가져오기 및 이어쓰기 순서
 
-用户问"导入续写先 setup 还是 import"时，直接回答：**推荐先 `/story-setup`，新开/刷新会话后 `/story-import`，最后 `/story-long-write 日更` 或 `/story-long-write 写第N章`**。如果用户已经直接触发 `/story-import`，按 story-import 自带环境检测继续：未 setup 时让用户选择先去 setup 或继续串行导入。
+사용자가 "가져오기 후 이어쓰기할 때 setup 먼저인가 import 먼저인가"를 물으면 직접 답합니다: **추천 순서는 `/story-setup` 먼저, 세션 새로 열기/새로고침 후 `/story-import`, 마지막으로 `/story-long-write 일일 연재` 또는 `/story-long-write N장 집필`**. 사용자가 이미 `/story-import`를 직접 트리거한 경우, story-import 자체 환경 감지에 따라 계속 진행합니다: setup이 안 된 경우 먼저 setup으로 갈지 직렬 가져오기를 계속할지 선택하게 합니다.
 
-## Dashboard 工作台
+## Dashboard 작업대
 
-用户执行 `/story dashboard`（Codex 为 `$story dashboard`），或明确说“打开工作台 / 看项目
-文件”时，直接启动随本 skill 分发的本地 Dashboard，不再转发到其他 skill：
+사용자가 `/story dashboard` (Codex에서는 `$story dashboard`)를 실행하거나, "작업대 열기 / 프로젝트
+파일 보기"라고 명확히 말하면, 본 skill에 포함된 로컬 Dashboard를 직접 실행하며, 다른 skill로 전달하지 않습니다:
 
-1. 把**当前工作目录**作为默认工作区；用户明确给出目录时改用该目录。目录必须存在。
-2. 从当前已加载的 `story` skill 目录定位 `scripts/dashboard-server.mjs`，不要硬编码仓库路径、
-   全局 skill 路径或用户主目录。
-3. 检查 `node` 可用后，以长运行进程执行：
+1. **현재 작업 디렉토리**를 기본 워크스페이스로 사용합니다. 사용자가 명시적으로 디렉토리를 지정하면 해당 디렉토리를 사용합니다. 디렉토리는 반드시 존재해야 합니다.
+2. 현재 로드된 `story` skill 디렉토리에서 `scripts/dashboard-server.mjs`를 찾습니다. 저장소 경로, 전역 skill 경로 또는 사용자 홈 디렉토리를 하드코딩하지 마세요.
+3. `node` 사용 가능 여부를 확인한 후, 장기 실행 프로세스로 실행합니다:
 
    ```bash
    node "<story-skill-dir>/scripts/dashboard-server.mjs" --root "<workspace>" --open
    ```
 
-4. 等待输出出现“本机地址”，把完整 URL 回给用户。工具支持后台进程/PTY 时让服务保持运行；
-   无法自动拉起浏览器不算失败，仍返回可点击 URL。
-5. Dashboard 默认只监听 `127.0.0.1`。不要主动增加 `--allow-network`，不要把工作区暴露到
-   局域网或公网。
+4. 출력에 "로컬 주소"가 나타날 때까지 기다린 뒤, 전체 URL을 사용자에게 반환합니다. 도구가 백그라운드 프로세스/PTY를 지원하면 서비스를 계속 실행합니다. 브라우저를 자동으로 열지 못하는 것은 실패가 아니며, 클릭 가능한 URL을 반환합니다.
+5. Dashboard는 기본적으로 `127.0.0.1`만 리슨합니다. `--allow-network`를 자발적으로 추가하지 마세요. 워크스페이스를 LAN이나 공용 네트워크에 노출하지 마세요.
 
-工作台会识别标准 `拆文库/{书名}/`，兼容存量 `拆文库-{书名}/`。写作项目识别同时支持：
+작업대는 표준 `분석라이브러리/{책이름}/` 경로를 인식하며, 기존 `분석라이브러리-{책이름}/`과도 호환됩니다. 집필 프로젝트 인식은 다음을 동시에 지원합니다:
 
-- 长篇目录结构：目录内含 `正文/`、`大纲/`、`设定/` 或 `追踪/` 任一普通子目录。
-- 短篇单文件结构：目录内含普通文件 `正文.md`，并同时含 `小节大纲.md` 或 `设定.md`。
+- 장편 디렉토리 구조: 디렉토리 내에 `본문/`, `개요/`, `설정/` 또는 `추적/` 중 하나의 일반 하위 디렉토리가 있는 경우.
+- 단편 단일 파일 구조: 디렉토리 내에 일반 파일 `본문.md`가 있고, `소절개요.md` 또는 `설정.md`가 함께 있는 경우.
 
-符号链接不作为项目标记，只有单个 `正文.md` 的普通资料目录也不会被误认。浏览器可编辑
-`.md`、`.txt`、`.json`、`.yaml`、`.yml`、`.toml`，保存或确认删除前用修改时间防止
-误操作外部更新。
+심볼릭 링크는 프로젝트 표시로 사용하지 않으며, `본문.md`만 있는 일반 자료 디렉토리는 오인하지 않습니다. 브라우저에서
+`.md`, `.txt`, `.json`, `.yaml`, `.yml`, `.toml` 파일을 편집할 수 있으며, 저장 또는 삭제 확인 전에 수정 시간을 통해
+외부 업데이트의 오동작을 방지합니다.
 
-停止服务时终止对应的 Node 长运行进程即可。若用户只问用法，不要替他启动；给出
-`/story dashboard` / `$story dashboard` 两种平台对应入口。
+서비스를 중지할 때는 해당 Node 장기 실행 프로세스를 종료하면 됩니다. 사용자가 사용법만 물으면 대신 실행하지 마세요.
+`/story dashboard` / `$story dashboard` 두 가지 플랫폼 대응 입구를 안내해 주세요.
 
-## 路由流程
+## 라우팅 흐름
 
-1. 分析用户请求，提取意图关键词
-2. 匹配上表，找到对应的 skill
-3. 如果能明确匹配，直接调用对应 skill（Claude/OpenCode 可用 `Skill("skill-name")` 或 slash command；Codex 用 `$skill-name` / `/skills`；OpenClaw 用 `/skill skill-name` 或自然语言点名）
-4. 如果无法匹配，询问用户想做什么（从上表中选择）
-5. 如果用户说"我想写小说"但未指定长篇/短篇，询问篇幅类型后再路由
+1. 사용자 요청을 분석하여 의도 키워드를 추출합니다
+2. 위 표에서 매칭하여 해당 skill을 찾습니다
+3. 명확히 매칭되면 해당 skill을 직접 호출합니다 (Claude/OpenCode에서는 `Skill("skill-name")` 또는 slash command 사용; Codex에서는 `$skill-name` / `/skills` 사용; OpenClaw에서는 `/skill skill-name` 또는 자연어 지정)
+4. 매칭할 수 없으면 사용자에게 무엇을 하고 싶은지 물어봅니다 (위 표에서 선택)
+5. 사용자가 "소설을 쓰고 싶어"라고 하지만 장편/단편을 지정하지 않으면, 분량 유형을 물어본 후 라우팅합니다
 
-## 查询降级
+## 조회 대체
 
-> Spawn 版本提示（不阻断 spawn）：先读取项目根 `.story-deployed` 的 `agents_version`。与本版 `agents_version: 24` 不一致时（标记缺失、字段缺失/非整数、小于或大于 24）**照常按文件存在性检查并 spawn**，同时报告 `Notice: agents bundle 版本不匹配（项目 {N}，本版 24）` 并提示重新运行 `/story-setup` 后新开会话；大于 24 时额外提示先更新 oh-story-claudecode，不要用本地旧版 setup 降级覆盖。只有 agent 文件缺失、或运行时不暴露 custom agent 时才降级 solo/direct，报告 `Fallback: ... -> solo`。
+> Spawn 버전 알림 (spawn 차단 없음): 먼저 프로젝트 루트 `.story-deployed`의 `agents_version`을 읽습니다. 본 버전 `agents_version: 24`와 불일치할 때 (표시 누락, 필드 누락/비정수, 24보다 작거나 큰 경우) **파일 존재 여부 확인 후 정상적으로 spawn**하면서 `Notice: agents bundle 버전 불일치 (프로젝트 {N}, 본 버전 24)`를 보고하고 `/story-setup` 재실행 후 새 세션 열기를 안내합니다. 24보다 큰 경우 oh-story-claudecode를 먼저 업데이트하라고 추가 안내하며, 로컬 구버전 setup으로 다운그레이드 덮어쓰기를 하지 않습니다. agent 파일이 없거나 런타임에서 custom agent를 노출하지 않을 때만 solo/direct로 대체하며, `Fallback: ... -> solo`를 보고합니다.
 
-「查故事资料」「查资料」走 agent 前先做轻量可用性检查（路由只做这一层，不承担全局部署策略）：当前不在子代理上下文、Agent/Task 工具可用、且 `.claude/agents/{story-explorer|story-researcher}.md`、`.opencode/agents/{story-explorer|story-researcher}.md` 或 `.codex/agents/{story-explorer|story-researcher}.toml` 存在 → 可尝试 spawn。任一不满足，或 Codex 运行时返回 `unknown agent_type` / 未暴露 custom-agent registry，则降级，不硬失败：
+「스토리 자료 조회」「자료 조사」는 agent로 가기 전에 경량 가용성 검사를 합니다 (라우터는 이 한 단계만 담당하며, 전체 배포 전략을 책임지지 않습니다): 현재 하위 에이전트 컨텍스트에 있지 않고, Agent/Task 도구가 사용 가능하며, `.claude/agents/{story-explorer|story-researcher}.md`, `.opencode/agents/{story-explorer|story-researcher}.md` 또는 `.codex/agents/{story-explorer|story-researcher}.toml`이 존재하면 → spawn 시도 가능. 하나라도 충족되지 않거나, Codex 런타임이 `unknown agent_type` / custom-agent registry를 노출하지 않으면 대체 처리하며, 하드 실패하지 않습니다:
 
-- `story-explorer` 不可用 → 主线程直接用 Read/Grep 从项目文件检索（角色状态/伏笔/进度/设定），回答前标注 `Fallback: agent unavailable -> direct lookup`；项目尚未部署时提示先 `/story-setup`（Codex 中用 `$story-setup`）。
-- `story-researcher` 不可用 → 主线程用现有检索/回答能力完成，或提示用户改用 `/browser-cdp` 采集，同样标注 `Fallback: agent unavailable -> direct lookup`。
+- `story-explorer` 사용 불가 → 메인 스레드에서 Read/Grep으로 프로젝트 파일을 직접 검색 (캐릭터 상태/복선/진행/설정)하고, 응답 전에 `Fallback: agent unavailable -> direct lookup`을 표시합니다. 프로젝트가 아직 배포되지 않은 경우 먼저 `/story-setup` (Codex에서는 `$story-setup`)을 안내합니다.
+- `story-researcher` 사용 불가 → 메인 스레드에서 기존 검색/응답 기능으로 처리하거나, `/browser-cdp`를 사용하여 수집하라고 안내하며, 마찬가지로 `Fallback: agent unavailable -> direct lookup`을 표시합니다.
 
-## 项目状态感知
+## 프로젝트 상태 감지
 
-路由前先检查当前项目状态：
+라우팅 전에 현재 프로젝트 상태를 확인합니다:
 
-- **无项目目录**（没有包含 `追踪/` 或 `设定/` 的书名目录）：
-  - 如果用户要写作，下一步是先运行 `/story-setup` 初始化环境（Codex 中用 `$story-setup`）
-  - 如果用户要扫榜/拆文，直接路由
-- **已有项目**：检查 `.story-deployed` 标记，如未部署则先运行 `/story-setup`（Codex 中用 `$story-setup`）
+- **프로젝트 디렉토리 없음** (`추적/` 또는 `설정/`을 포함하는 책 이름 디렉토리가 없음):
+  - 사용자가 집필하려는 경우, 다음 단계는 먼저 `/story-setup`으로 환경을 초기화하는 것입니다 (Codex에서는 `$story-setup`)
+  - 사용자가 차트 스캔/분석을 하려는 경우, 직접 라우팅합니다
+- **프로젝트가 있는 경우**: `.story-deployed` 표시를 확인하고, 미배포 시 먼저 `/story-setup`을 실행합니다 (Codex에서는 `$story-setup`)
 
-## 多书切换
+## 다중 도서 전환
 
-用户想切换或查看在写的书时（一个项目可同时有多本）：
+사용자가 집필 중인 책을 전환하거나 조회하려 할 때 (하나의 프로젝트에 여러 권이 동시에 있을 수 있음):
 
-1. 在项目根查找所有书目录：包含 `追踪/` 或 `设定/` 子目录的目录（含 `长篇/`、`短篇/` 下的子目录）。
-2. 列出书名，并标出当前 `.active-book` 指向的那本。
-3. 让用户选择，把所选书的相对路径写入项目根 `.active-book`（覆盖原内容）。
-4. 只发现一本时直接确认为活跃书，无需询问。
+1. 프로젝트 루트에서 모든 도서 디렉토리를 찾습니다: `추적/` 또는 `설정/` 하위 디렉토리를 포함하는 디렉토리 (`장편/`, `단편/` 하위 디렉토리 포함).
+2. 책 이름을 나열하고, 현재 `.active-book`이 가리키는 책을 표시합니다.
+3. 사용자가 선택하면, 선택한 책의 상대 경로를 프로젝트 루트 `.active-book`에 씁니다 (기존 내용 덮어쓰기).
+4. 한 권만 발견되면 바로 활성 도서로 확인하며, 질문하지 않습니다.
 
-## 版本更新检查
+## 버전 업데이트 확인
 
-用户问"有没有新版本""检查更新""升级"时执行。**只通知，更不更新由用户定，不自动安装。**
+사용자가 "새 버전 있나" "업데이트 확인" "업그레이드"를 물으면 실행합니다. **알림만 하며, 업데이트 여부는 사용자가 결정합니다. 자동 설치하지 않습니다.**
 
-1. **当前版本**：读本 skill 同目录的 `VERSION` 文件；缺失则视为未知。
-2. **最新版本**：优先 `gh release view --json tagName,name,url -R worldwonderer/oh-story-claudecode` 取 `tagName`；无 gh 用 `curl -fsS --max-time 5 https://api.github.com/repos/worldwonderer/oh-story-claudecode/releases/latest` 取 `.tag_name`（jq 或 grep）。查不到 → 告知"暂时拉不到最新版本，可手动看 [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)"，不报错。
-3. **比较**：去掉 `v` 前缀按语义版本比（major.minor.patch）。`gh release` 默认取 latest 稳定版，不含 pre-release。
-4. **告知**：
-   - 已最新 → 「已是最新版 vX.Y.Z」。
-   - 有新版 → 列出 当前 vA → 最新 vB + [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)/[CHANGELOG](https://github.com/worldwonderer/oh-story-claudecode/blob/main/CHANGELOG.md)（能拿到 release notes 就附本次要点），再用 AskUserQuestion 问「现在更新吗？」：
-     - 选更新 → 跑 `npx skills add worldwonderer/oh-story-claudecode -y -g`（`-g` 全局，去掉则只更当前目录）；完成后提示：已部署过的项目在项目根重跑 `/story-setup`（Codex 中用 `$story-setup`）同步 hooks/agents/references，并**新开一个会话**让 agents 重新注册。
-     - 选先不 → 不动，告知随时可再来。
+1. **현재 버전**: 본 skill 동일 디렉토리의 `VERSION` 파일을 읽습니다. 없으면 알 수 없음으로 간주합니다.
+2. **최신 버전**: `gh release view --json tagName,name,url -R worldwonderer/oh-story-claudecode`로 `tagName`을 우선 가져옵니다. gh가 없으면 `curl -fsS --max-time 5 https://api.github.com/repos/worldwonderer/oh-story-claudecode/releases/latest`로 `.tag_name`을 가져옵니다 (jq 또는 grep). 가져올 수 없으면 → "잠시 최신 버전을 가져올 수 없습니다. [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)에서 직접 확인하세요"라고 안내하며, 오류를 표시하지 않습니다.
+3. **비교**: `v` 접두사를 제거하고 시맨틱 버전으로 비교합니다 (major.minor.patch). `gh release`는 기본적으로 최신 안정 버전을 가져오며, pre-release는 포함하지 않습니다.
+4. **안내**:
+   - 최신인 경우 → 「이미 최신 버전 vX.Y.Z입니다」.
+   - 새 버전이 있는 경우 → 현재 vA → 최신 vB + [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)/[CHANGELOG](https://github.com/worldwonderer/oh-story-claudecode/blob/main/CHANGELOG.md) (릴리스 노트를 가져올 수 있으면 주요 사항 첨부)를 나열한 뒤, AskUserQuestion으로 「지금 업데이트하시겠습니까?」를 묻습니다:
+     - 업데이트 선택 → `npx skills add worldwonderer/oh-story-claudecode -y -g` 실행 (`-g`는 전역, 제거하면 현재 디렉토리만 업데이트); 완료 후 안내: 이미 배포된 프로젝트에서는 프로젝트 루트에서 `/story-setup` (Codex에서는 `$story-setup`)을 다시 실행하여 hooks/agents/references를 동기화하고, **새 세션을 열어** agents를 다시 등록하세요.
+     - 나중에 선택 → 변경 없이, 언제든 다시 올 수 있다고 안내합니다.

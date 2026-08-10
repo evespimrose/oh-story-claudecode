@@ -1,169 +1,169 @@
 ---
 name: story-cover
 version: 1.0.0
-description: "小说封面生成。根据书名、作者名自动分析题材风格，调用 GPT-Image-2 直接生成含标题和署名的专业级网文封面。触发方式：/story-cover、/封面、「帮我做个封面」「生成封面图」「做个小说封面」「封面设计」。"
+description: "소설 표지 생성. 도서명과 작가명을 기반으로 장르 및 스타일을 자동 분석하여, GPT-Image-2를 호출해 제목과 서명이 포함된 전문적인 웹소설 표지를 직접 생성합니다. 트리거 방식: /story-cover, /표지, 「표지 하나 만들어줘」「표지 이미지 생성해줘」「소설 표지 제작」「표지 디자인」."
 metadata: {"openclaw":{"requires":{"env":["GPT_IMAGE_API_KEY"],"bins":["curl","jq","base64"]},"primaryEnv":"GPT_IMAGE_API_KEY","source":"https://github.com/worldwonderer/oh-story-claudecode"}}
 ---
-# story-cover：小说封面生成
+# story-cover: 소설 표지 생성
 
-你是小说封面设计师。根据书名和题材，调用 GPT-Image-2 一次性生成包含书名和作者名的完整封面。
+당신은 소설 표지 디자이너입니다. 도서명과 장르에 따라 GPT-Image-2를 호출하여 도서명과 작가명이 포함된 완성형 표지를 한 번에 생성합니다.
 
-**核心原则：封面是读者的第一印象，一眼传达题材和氛围。**
+**핵심 원칙: 표지는 독자의 첫인상이며, 한눈에 장르와 분위기를 전달해야 합니다.**
 
 ---
 
-## 环境变量
+## 환경 변수
 
-| 变量 | 必填 | 默认 | 说明 |
+| 변수 | 필수 | 기본값 | 설명 |
 |:-----|:----:|:-----|:-----|
-| `GPT_IMAGE_API_KEY` | ✅ | — | OpenAI 或兼容代理的 API Key |
-| `GPT_IMAGE_BASE_URL` | | `https://api.openai.com/v1` | 兼容代理时改这个 |
-| `GPT_IMAGE_MODEL` | | `gpt-image-2` | 仅在测试新模型时覆盖 |
-| `GPT_IMAGE_SIZE` | | `1024x1536` | 目标比例提示（番茄 3:4→`768x1024`，默认 2:3→`1024x1536`）。官方 gpt-image-2 认任意 16 倍数尺寸（比例≤3:1），但**很多中转代理会忽略 size、按预设返回约 2:3**（已实测）——平台尺寸不靠它，由「导出平台上传尺寸」步骤兜底 |
-| `UPLOAD_SIZE` | | — | 平台固定上传像素（番茄 `600x800`）；设置后由「导出平台上传尺寸」步骤居中裁剪+缩放出上传版（不变形、不依赖出图尺寸） |
-| `BOOK_DIR` | ✅ | — | 输出目录，建议 `./covers/<书名>` |
-| `REF_IMAGE` | | — | 参考图本地路径或 URL；设置后走 `images/edits` 图生图 |
+| `GPT_IMAGE_API_KEY` | ✅ | — | OpenAI 또는 호환 프록시의 API Key |
+| `GPT_IMAGE_BASE_URL` | | `https://api.openai.com/v1` | 호환 프록시 사용 시 이 값을 변경 |
+| `GPT_IMAGE_MODEL` | | `gpt-image-2` | 새 모델 테스트시에만 덮어씀 |
+| `GPT_IMAGE_SIZE` | | `1024x1536` | 목표 비율 힌트(판치에 3:4→`768x1024`, 기본 2:3→`1024x1536`). 공식 gpt-image-2는 16의 배수 크기(비율 ≤3:1)를 지원하지만, **많은 중계 프록시가 size를 무시하고 예설정된 약 2:3 비율을 반환함**(실측 완료). 플랫폼 크기는 이에 의존하지 않고 「플랫폼 업로드 크기 내보내기」 단계에서 최종 보장 |
+| `UPLOAD_SIZE` | | — | 플랫폼 고정 업로드 픽셀(판치에 `600x800`). 설정 시 「플랫폼 업로드 크기 내보내기」 단계에서 중앙 자르기+축소하여 업로드용 버전 생성 (왜곡 없음, 생성 이미지 크기에 비의존) |
+| `BOOK_DIR` | ✅ | — | 출력 디렉토리, `./covers/<도서명>` 권장 |
+| `REF_IMAGE` | | — | 참고 이미지 로컬 경로 또는 URL. 설정 시 `images/edits` 이미지 투 이미지 방식 진행 |
 
 ---
 
-## 生成流程
+## 생성 절차
 
-### Step 1：收集信息
+### Step 1: 정보 수집
 
-必填：书名、作者名（笔名）、目标平台、输出目录 `BOOK_DIR`（建议 `./covers/<书名>`，调用前 export）
-选填：参考图 `REF_IMAGE`（本地路径或 URL，设置后切换到图生图）、风格偏好、尺寸
+필수: 도서명, 작가명(필명), 대상 플랫폼, 출력 디렉토리 `BOOK_DIR`(호출 전 export, `./covers/<도서명>` 권장)
+선택: 참고 이미지 `REF_IMAGE`(로컬 경로 또는 URL, 설정 시 이미지 투 이미지 모드로 전환), 스타일 선호도, 크기
 
-> **书名和笔名是封面必需信息**：缺任一必须先用 AskUserQuestion 问用户补全，不得编造或留空。
+> **도서명과 필명은 표지의 필수 정보입니다**: 하나라도 누락되면 먼저 AskUserQuestion을 사용하여 사용자에게 보충을 요청해야 하며, 임의로 지어내거나 빈칸으로 둘 수 없습니다.
 
-**按目标平台定封面尺寸**：番茄上传 600×800 是 **3:4**（不是 2:3），出图比例不对、平台二次裁剪就会切掉书名/笔名。
+**대상 플랫폼에 맞춘 표지 크기 결정**: 판치에 업로드 600×800은 **3:4** 비율이며(2:3이 아님), 이미지 비율이 맞지 않으면 플랫폼 2차 자르기 시 도서명이나 필명이 잘릴 수 있습니다.
 
-| 平台 | 上传尺寸 | 比例 | 生成 `GPT_IMAGE_SIZE`（尽量） |
+| 플랫폼 | 업로드 크기 | 비율 | 생성 `GPT_IMAGE_SIZE` (권장) |
 |:-----|:--------|:-----|:-------------------|
-| 番茄小说 | 600×800 | 3:4 | `768x1024` |
-| 其他平台（默认竖版） | 按平台规格 | 2:3 | `1024x1536` |
+| 판치에 소설 | 600×800 | 3:4 | `768x1024` |
+| 기타 플랫폼 (기본 세로형) | 플랫폼 규격에 따름 | 2:3 | `1024x1536` |
 
-`export GPT_IMAGE_SIZE` 给目标比例（官方按它出图，很多代理会忽略、返回约 2:3）；平台有固定上传像素再 `export UPLOAD_SIZE`（番茄 `600x800`）。**平台尺寸最终由「导出平台上传尺寸」步骤居中裁剪+缩放保证，不依赖代理认不认 size。** 平台与题材风格见 [references/cover-styles.md](references/cover-styles.md)。
+`export GPT_IMAGE_SIZE`로 목표 비율 지정(공식 API는 이를 따르나 프록시는 무시하고 약 2:3 반환할 수 있음). 플랫폼에 고정 업로드 픽셀이 있는 경우 `export UPLOAD_SIZE` 지정(판치에 `600x800`). **플랫폼 크기는 프록시 인식 여부와 관계없이 「플랫폼 업로드 크기 내보내기」 단계의 중앙 자르기+축소로 최종 보장됩니다.** 플랫폼 및 장르별 스타일은 [references/cover-styles.md](references/cover-styles.md)를 참조하세요.
 
-### Step 2：题材判定
+### Step 2: 장르 판정
 
-扫描书名（必要时简介）中的关键词，对照 [references/cover-styles.md](references/cover-styles.md) 的「题材推断规则」表选定题材。
+도서명(필요시 소개글)의 키워드를 스캔하여 [references/cover-styles.md](references/cover-styles.md)의 「장르 추론 규칙」 표에 따라 장르를 결정합니다.
 
-- 单题材命中 → 直接采用
-- 多题材命中 → 按优先级取一：仙侠 > 西幻 > 古言 > 现言 > 都市 > 悬疑 > 科幻 > 历史 > 灵异 > 轻小说
-- 零命中 → 默认 `都市`
+- 단일 장르 일치 → 즉시 적용
+- 다중 장르 일치 → 우선순위에 따라 1개 선택: 선협 > 서양 판타지 > 고전 로맨스 > 현대 로맨스 > 도시 > 추리/스릴러 > SF > 역사 > 괴담/포복 > 서브컬처/라이트노벨
+- 일치 항목 없음 → 기본값 `도시` 적용
 
-### Step 3：构建提示词
+### Step 3: 프롬프트 구성
 
-提示词 = **文字层** + **风格层** + **画面层**，全部用英文编写。
+프롬프트 = **텍스트 레이어** + **스타일 레이어** + **비주얼 레이어**로 구성하며, 전체를 영어로 작성합니다.
 
-#### 文字层：书名 + 作者名字体设计
+#### 텍스트 레이어: 도서명 + 작가명 폰트 디자인
 
-在提示词中直接包含中文书名和作者名，GPT-Image-2 可直接渲染。**重点描述字体风格**：
+프롬프트에 한글/중문 도서명과 작가명을 직접 포함하면 GPT-Image-2가 렌더링을 수행합니다. **폰트 스타일을 구체적으로 묘사하세요**:
 
 ```
-Title text '书名' at top center in [书名字体风格].
-Author name '作者名' at bottom center in [作者名字体风格].
+Title text '도서명' at top center in [도서명 폰트 스타일].
+Author name '작가명' at bottom center in [작가명 폰트 스타일].
 ```
 
-#### 书名字体风格
+#### 도서명 폰트 스타일
 
-| 题材 | 描述关键词 |
+| 장르 | 묘사 키워드 |
 |:-----|:-----------|
-| 玄幻/仙侠 | `bold golden brush calligraphy with metallic glow and sharp strokes` |
-| 都市 | `modern bold sans-serif with metallic silver finish` |
-| 古言/宫斗 | `elegant golden traditional Kai script with ornate decoration` |
-| 现言/甜宠 | `soft rounded handwritten style in white with pink glow` |
-| 悬疑/推理 | `distorted bold cracked letters in blood red` |
-| 科幻/末世 | `neon glowing futuristic font in electric blue` |
-| 西幻 | `metallic embossed fantasy lettering with glow effect` |
-| 历史/军事 | `heavy stone-carved seal script in deep red` |
-| 灵异/恐怖 | `eerie dripping handwritten font in sickly green` |
-| 轻小说 | `colorful cartoon outlined bubbly font` |
+| 동양 판타지/선협 | `bold golden brush calligraphy with metallic glow and sharp strokes` |
+| 도시/현대물 | `modern bold sans-serif with metallic silver finish` |
+| 고전 로맨스/궁중물 | `elegant golden traditional Kai script with ornate decoration` |
+| 현대 로맨스/달달물 | `soft rounded handwritten style in white with pink glow` |
+| 추리/스릴러 | `distorted bold cracked letters in blood red` |
+| SF/아포칼립스 | `neon glowing futuristic font in electric blue` |
+| 서양 판타지 | `metallic embossed fantasy lettering with glow effect` |
+| 역사/밀리터리 | `heavy stone-carved seal script in deep red` |
+| 괴담/공포 | `eerie dripping handwritten font in sickly green` |
+| 서브컬처/라이트노벨 | `colorful cartoon outlined bubbly font` |
 
-#### 作者名字体风格（重点：作者名必须精心设计，不能只是"小字"）
+#### 작가명 폰트 스타일 (핵심: 작가명도 정교하게 디자인되어야 하며, 단지 "작은 글씨"로 둔치면 안 됨)
 
-作者名虽小，但是封面专业感的关键。必须指定：**字体 + 颜色 + 装饰元素**，让作者名与书名风格呼应但不抢焦点。
+작가명은 작지만 표지의 전문성을 결정짓는 요소입니다. **폰트 + 색상 + 장식 요소**를 지정하여 도서명 스타일과 조화를 이루되 시선을 빼앗지 않도록 합니다.
 
-| 题材 | 作者名风格提示词 |
+| 장르 | 작가명 스타일 프롬프트 |
 |:-----|:----------------|
-| 玄幻/仙侠 | `small refined white serif text with faint golden glow, flanked by delicate cloud-scroll ornaments on both sides, resting on a thin horizontal gold line` |
-| 都市 | `small clean white modern text with subtle drop shadow, positioned above a thin silver horizontal divider line` |
-| 古言/宫斗 | `small elegant dark red traditional text inside a thin golden rectangular border frame with corner decorations` |
-| 现言/甜宠 | `small soft pink-white handwritten text with a tiny heart motif on the left side, light sparkle effect` |
-| 悬疑/推理 | `small pale grey text with slight blur effect, almost hidden in the shadows, a thin cracked line underneath` |
-| 科幻/末世 | `small crisp white monospace text with subtle cyan scanline overlay, flanked by small geometric brackets` |
-| 西幻 | `small bronze medieval script text with aged parchment texture, enclosed in a small decorative shield or banner shape` |
-| 历史/军事 | `small dignified white Song typeface text above a double horizontal line in dark red` |
-| 灵异/恐怖 | `small faded grey-green text slightly tilted, with a thin dripping ink line above` |
-| 轻小说 | `small playful rounded white text with pastel color outline, tiny star decorations on both sides` |
+| 동양 판타지/선협 | `small refined white serif text with faint golden glow, flanked by delicate cloud-scroll ornaments on both sides, resting on a thin horizontal gold line` |
+| 도시/현대물 | `small clean white modern text with subtle drop shadow, positioned above a thin silver horizontal divider line` |
+| 고전 로맨스/궁중물 | `small elegant dark red traditional text inside a thin golden rectangular border frame with corner decorations` |
+| 현대 로맨스/달달물 | `small soft pink-white handwritten text with a tiny heart motif on the left side, light sparkle effect` |
+| 추리/스릴러 | `small pale grey text with slight blur effect, almost hidden in the shadows, a thin cracked line underneath` |
+| SF/아포칼립스 | `small crisp white monospace text with subtle cyan scanline overlay, flanked by small geometric brackets` |
+| 서양 판타지 | `small bronze medieval script text with aged parchment texture, enclosed in a small decorative shield or banner shape` |
+| 역사/밀리터리 | `small dignified white Song typeface text above a double horizontal line in dark red` |
+| 괴담/공포 | `small faded grey-green text slightly tilted, with a thin dripping ink line above` |
+| 서브컬처/라이트노벨 | `small playful rounded white text with pastel color outline, tiny star decorations on both sides` |
 
-**作者名通用规则**：
-- 大小：`small`（不能太大抢书名焦点，也不能太小看不清）
-- 位置：`at bottom center`，与画面底部保持适当间距
-- 必须有装饰元素：线条/边框/小图标/光效中至少一种
-- 颜色与背景形成对比但不刺眼
+**작가명 공통 규칙**:
+- 크기: `small` (도서명 시선을 가릴 만큼 크지 않고, 읽기 어려울 만큼 작지 않음)
+- 위치: `at bottom center`, 이미지 하단과 적절한 여백 유지
+- 필수 장식: 선/테두리/아이콘/광원 효과 중 최소 1개 이상 포함
+- 배경과 대비를 이루되 눈이 부시지 않은 색상 사용
 
-#### 风格层：平台风格
+#### 스타일 레이어: 플랫폼 스타일
 
-平台风格的描述关键词统一来自 [references/cover-styles.md](references/cover-styles.md) 的「平台风格」节，按目标平台直接取对应关键词串使用，不在本文件维护副本以免与参考文件漂移。
+플랫폼 스타일 키워드는 [references/cover-styles.md](references/cover-styles.md)의 「플랫폼 스타일」 섹션에서 직접 가져와 사용하며, 동기화 어긋남을 방지하기 위해 본 파일에 복사본을 두지 않습니다.
 
-#### 画面层：题材 + 构图
+#### 비주얼 레이어: 장르 + 구도
 
-从 [references/cover-styles.md](references/cover-styles.md) 读取题材对应的风格标签、色彩、人物、背景描述。
+[references/cover-styles.md](references/cover-styles.md)에서 장르별 스타일 태그, 색상, 인물, 배경 묘사를 읽어옵니다.
 
-构图变体（首次输出 2-3 个方案）：
+구도 변형 (최초 출력 시 2~3개 시안 생성):
 
-| 方案 | 构图 | 适合题材 |
+| 시안 | 구도 | 적합 장르 |
 |:-----|:-----|:---------|
-| A | 人物特写 + 场景 | 全题材通用 |
-| B | 全身像 + 动态姿势 | 玄幻、都市、西幻 |
-| C | 纯场景/氛围图 | 悬疑、科幻、历史 |
+| A | 인물 클로즈업 + 배경 | 전 장르 공통 |
+| B | 전신상 + 동적 포즈 | 동양/서양 판타지, 도시 |
+| C | 배경 위주 / 분위기 중심 | 스릴러, SF, 역사 |
 
-#### 完整提示词模板
+#### 전체 프롬프트 템플릿
 
 ```
-Chinese web novel cover design, [平台风格].
-Title text '{书名}' at top center in [书名字体风格].
-Author name '{作者名}' at bottom center in [作者名字体风格 — 从上表选择].
-[题材风格标签]. [人物描述]. [背景描述].
-[色彩指令]. [光效指令].
-Professional book cover, high detail digital painting, portrait [平台比例：番茄=3:4，默认=2:3] ratio, keep title and author name inside the central safe area away from edges (inner ~85%), no watermark
+Chinese web novel cover design, [플랫폼 스타일].
+Title text '{도서명}' at top center in [도서명 폰트 스타일].
+Author name '{작가명}' at bottom center in [작가명 폰트 스타일 — 위 표에서 선택].
+[장르 스타일 태그]. [인물 묘사]. [배경 묘사].
+[색상 지시]. [광원 지시].
+Professional book cover, high detail digital painting, portrait [플랫폼 비율: 판치에=3:4, 기본=2:3] ratio, keep title and author name inside the central safe area away from edges (inner ~85%), no watermark
 ```
 
-#### 提示词技巧（实测验证）
+#### 프롬프트 작성 팁 (실전 검증됨)
 
-- 人物描述越具体越好：服饰、姿态、发型、表情、道具每个维度都指定
-- 背景分层：前景（人物）→ 中景（场景）→ 远景（氛围）
-- 光效是指定光源方向 + 颜色（如 `dramatic golden light from above`）
-- 用 `digital painting style` 而非 `photo`，避免真人照片感
+- 인물 묘사는 구체적일수록 좋음: 의상, 포즈, 헤어스타일, 표정, 소품을 각 차원별로 지정
+- 배경 레이어 분리: 전경(인물) → 중경(장면) → 원경(분위기)
+- 광원 효과는 광원 방향 + 색상 지정 (예: `dramatic golden light from above`)
+- 실사 느낌을 피하기 위해 `photo` 대신 `digital painting style` 사용
 
-### Step 4：调用 API 并保存
+### Step 4: API 호출 및 저장
 
-`gpt-image-2` 始终返回 base64，请求体不要带 `response_format`（旧 DALL-E 参数，gpt-image 系列不支持）。`$PROMPT` 为「构建提示词」步骤拼出的完整提示词。
+`gpt-image-2`는 항상 base64를 반환합니다. 요청 본문에 `response_format`(구형 DALL-E 매개변수, gpt-image 시리즈 미지원)을 포함하지 마세요. `$PROMPT`는 「프롬프트 구성」 단계에서 조합한 전체 프롬프트입니다.
 
-两种调用方式二选一：未设置 `REF_IMAGE` → 走「文生图」；设置了 → 走「图生图」。
+호출 방식 선택: `REF_IMAGE` 미설정 → 「텍스트 투 이미지」 진행, 설정됨 → 「이미지 투 이미지」 진행.
 
-#### 文生图（默认）
+#### 텍스트 투 이미지 (기본)
 
 ```bash
 set -euo pipefail
-: "${GPT_IMAGE_API_KEY:?请设置 export GPT_IMAGE_API_KEY=你的key}"
-: "${PROMPT:?请先 export PROMPT=构建提示词步骤拼好的完整提示词}"
+: "${GPT_IMAGE_API_KEY:?export GPT_IMAGE_API_KEY=YOUR_KEY 를 설정하세요}"
+: "${PROMPT:?프롬프트 단계에서 조합된 전체 프롬프트를 export PROMPT=... 로 설정하세요}"
 BASE_URL="${GPT_IMAGE_BASE_URL:-https://api.openai.com/v1}"
 MODEL="${GPT_IMAGE_MODEL:-gpt-image-2}"
 SIZE="${GPT_IMAGE_SIZE:-1024x1536}"
-BOOK_DIR="${BOOK_DIR:?请先 export BOOK_DIR=./covers/<书名>}"
+BOOK_DIR="${BOOK_DIR:?export BOOK_DIR=./covers/<도서명> 을 설정하세요}"
 
 mkdir -p "$BOOK_DIR/封面"
 
-# 自增版本号，避免覆盖之前生成的封面
+# 기존 생성된 표지를 덮어쓰지 않도록 버전 번호 자동 증가
 i=1
 while [ -f "$BOOK_DIR/封面/封面_v${i}.png" ]; do i=$((i+1)); done
 OUT="$BOOK_DIR/封面/封面_v${i}.png"
 RESP=$(mktemp)
 trap 'rm -f "$RESP"' EXIT
 
-# 用 jq 拼 JSON 体，避免 PROMPT 里的引号/换行/中文把 shell 字符串撑破
+# PROMPT 내 따옴표/줄바꿈/한글로 인한 shell 문자열 파손을 방지하기 위해 jq로 JSON 구성
 BODY=$(jq -n \
   --arg m "$MODEL" \
   --arg p "$PROMPT" \
@@ -176,41 +176,41 @@ curl -fsS --max-time 180 --retry 2 --retry-delay 5 \
   -H "Content-Type: application/json" \
   -d "$BODY" > "$RESP"
 
-# API 出错时早退，避免把 error JSON 当成 base64 写成损坏 PNG
+# API 오류 발생 시 즉시 중단
 if jq -e '.error' "$RESP" >/dev/null 2>&1; then
   echo "API error:" >&2
   jq '.error' "$RESP" >&2
   exit 1
 fi
 
-# `// empty` 让缺失字段输出空串而非 "null"，配合下面的 -s 检查避免写出 3 字节假 PNG
+# `// empty` 처리로 누락된 필드가 "null"로 출력되는 것을 방지
 jq -er '.data[0].b64_json // empty' "$RESP" | base64 --decode > "$OUT"
 [ -s "$OUT" ] || { echo "empty or malformed output: $OUT" >&2; head -c 300 "$RESP" >&2; exit 1; }
 
-# 落地提示词副本，方便迭代时基于上一次微调
+# 프롬프트 사본 저장
 printf '%s\n' "$PROMPT" > "${OUT%.png}.prompt.txt"
 
 file "$OUT"
 ls -lt "$BOOK_DIR/封面/"
 ```
 
-#### 图生图（提供参考图时）
+#### 이미지 투 이미지 (참고 이미지 제공 시)
 
-`/v1/images/edits` 走 `multipart/form-data`，**不能** 用 `Content-Type: application/json`。文本字段用 `--form-string`（避免 `@` 被误判为文件引用），图片字段用 `-F image=@path`。
+`/v1/images/edits`는 `multipart/form-data`를 사용하며, `Content-Type: application/json`을 사용할 수 **없습니다**. 텍스트 필드는 `--form-string`을 사용하고, 이미지 필드는 `-F image=@path`를 사용합니다.
 
 ```bash
 set -euo pipefail
-: "${GPT_IMAGE_API_KEY:?请设置 export GPT_IMAGE_API_KEY=你的key}"
-: "${PROMPT:?请先 export PROMPT=构建提示词步骤拼好的完整提示词}"
+: "${GPT_IMAGE_API_KEY:?export GPT_IMAGE_API_KEY=YOUR_KEY 를 설정하세요}"
+: "${PROMPT:?프롬프트 단계에서 조합된 전체 프롬프트를 export PROMPT=... 로 설정하세요}"
 BASE_URL="${GPT_IMAGE_BASE_URL:-https://api.openai.com/v1}"
 MODEL="${GPT_IMAGE_MODEL:-gpt-image-2}"
 SIZE="${GPT_IMAGE_SIZE:-1024x1536}"
-BOOK_DIR="${BOOK_DIR:?请先 export BOOK_DIR=./covers/<书名>}"
-REF_IMAGE="${REF_IMAGE:?请先 export REF_IMAGE=本地路径或 URL}"
+BOOK_DIR="${BOOK_DIR:?export BOOK_DIR=./covers/<도서명> 을 설정하세요}"
+REF_IMAGE="${REF_IMAGE:?export REF_IMAGE=로컬경로_또는_URL 을 설정하세요}"
 
 mkdir -p "$BOOK_DIR/封面"
 
-# 自增版本号
+# 버전 번호 자동 증가
 i=1
 while [ -f "$BOOK_DIR/封面/封面_v${i}.png" ]; do i=$((i+1)); done
 OUT="$BOOK_DIR/封面/封面_v${i}.png"
@@ -218,7 +218,6 @@ RESP=$(mktemp)
 REF_TMP=""
 trap '[ -n "$REF_TMP" ] && rm -f "$REF_TMP"; rm -f "$RESP"' EXIT
 
-# URL 先下载到临时文件，本地路径直接用。用裸 mktemp 以保证 macOS/Linux 行为一致。
 case "$REF_IMAGE" in
   http://*|https://*)
     REF_TMP=$(mktemp)
@@ -226,7 +225,7 @@ case "$REF_IMAGE" in
     REF_LOCAL="$REF_TMP"
     ;;
   *)
-    [ -f "$REF_IMAGE" ] || { echo "参考图不存在: $REF_IMAGE" >&2; exit 1; }
+    [ -f "$REF_IMAGE" ] || { echo "참고 이미지가 존재하지 않음: $REF_IMAGE" >&2; exit 1; }
     REF_LOCAL="$REF_IMAGE"
     ;;
 esac
@@ -245,7 +244,6 @@ if jq -e '.error' "$RESP" >/dev/null 2>&1; then
   exit 1
 fi
 
-# `// empty` 让缺失字段输出空串而非 "null"，配合 -s 检查避免写出 3 字节假 PNG
 jq -er '.data[0].b64_json // empty' "$RESP" | base64 --decode > "$OUT"
 [ -s "$OUT" ] || { echo "empty or malformed output: $OUT" >&2; head -c 300 "$RESP" >&2; exit 1; }
 
@@ -256,58 +254,55 @@ file "$OUT"
 ls -lt "$BOOK_DIR/封面/"
 ```
 
-### Step 5：导出平台上传尺寸（平台有固定像素时）
+### Step 5: 플랫폼 업로드 크기 내보내기 (고정 픽셀 규격 필요시)
 
-设了 `UPLOAD_SIZE`（番茄 600×800）就把原图**居中裁剪+缩放**成上传尺寸——不论出图是 2:3 还是 3:4 都裁成平台精确像素，不变形，避免平台再裁切掉书名/笔名。原图保留、另存 `_上传` 版：
+`UPLOAD_SIZE`가 지정된 경우(판치에 600×800) 원본 이미지를 **중앙 자르기+축소**하여 업로드 사본을 만듭니다.
 
 ```bash
-SRC="${OUT:-$(ls -t "${BOOK_DIR:-.}"/封面/封面_v*.png 2>/dev/null | grep -v _上传 | head -1)}"  # 复用「调用 API 并保存」步骤的 $OUT；新 shell 里从 BOOK_DIR 找最新原图
-TARGET="${UPLOAD_SIZE:-}"   # 番茄=600x800；未设则跳过
+SRC="${OUT:-$(ls -t "${BOOK_DIR:-.}"/封面/封面_v*.png 2>/dev/null | grep -v _上传 | head -1)}"
+TARGET="${UPLOAD_SIZE:-}"
 if [ -n "$TARGET" ] && [ -f "$SRC" ]; then
   UP="${SRC%.png}_上传.png"; W="${TARGET%x*}"; H="${TARGET#*x}"
   if command -v magick >/dev/null 2>&1; then M=magick
   elif command -v convert >/dev/null 2>&1; then M=convert; else M=""; fi
   if [ -n "$M" ]; then
-    "$M" "$SRC" -resize "${W}x${H}^" -gravity center -extent "${W}x${H}" "$UP"  # 缩放填满后居中裁
+    "$M" "$SRC" -resize "${W}x${H}^" -gravity center -extent "${W}x${H}" "$UP"
   elif command -v sips >/dev/null 2>&1; then
     cp "$SRC" "$UP"
     sw=$(sips -g pixelWidth "$UP" | awk '/pixelWidth/{print $NF}')
     sh=$(sips -g pixelHeight "$UP" | awk '/pixelHeight/{print $NF}')
     if [ $((sw*H)) -ge $((sh*W)) ]; then sips --resampleHeight "$H" "$UP" >/dev/null
     else sips --resampleWidth "$W" "$UP" >/dev/null; fi
-    sips -c "$H" "$W" "$UP" >/dev/null   # sips -c 是 高 宽，居中裁
+    sips -c "$H" "$W" "$UP" >/dev/null
   else
-    echo "无 magick/convert/sips，跳过；手动把 $SRC 居中裁剪+缩放到 $TARGET 再上传" >&2
+    echo "magick/convert/sips 도구가 없어 건너뜁니다. $SRC 를 $TARGET 크기로 중앙 자르기 후 업로드하세요" >&2
   fi
   [ -f "$UP" ] && file "$UP"
 fi
 ```
 
-> 书名/笔名已在提示词里留中心安全区，居中裁剪不会切到。
+### Step 6: 품질 검사 + 피드백 반영
 
-### Step 6：质量检查 + 迭代
-
-| 检查项 | 标准 |
+| 검사 항목 | 기준 |
 |:-------|:-----|
-| 文字渲染 | 书名清晰可辨，字体风格匹配题材 |
-| 题材匹配 | 视觉风格与书名题材一致 |
-| 构图合理 | 主体突出，文字不遮挡核心画面 |
-| 平台适配 | 符合目标平台的封面风格调性 |
-| 平台尺寸 | 比例与平台一致；缩放到上传尺寸后书名、笔名完整可见、未被裁切 |
+| 텍스트 렌더링 | 도서명이 명확히 식별되고, 폰트 스타일이 장르와 잘 부합함 |
+| 장르 부합성 | 시각적 스타일이 도서 장르와 일치함 |
+| 구도의 적절성 | 주 인물/배경이 두드러지며 텍스트가 핵심 비주얼을 가리지 않음 |
+| 플랫폼 적응 | 목표 플랫폼의 표지 톤앤매너에 부합함 |
+| 플랫폼 규격 | 비율이 플랫폼 요구사항과 일치함 |
 
-不满意时调整方向：更换构图、调整色调、换字体风格、换平台风格。
+불만족 시 수정 방향: 구도 변경, 색조 조정, 폰트 스타일 변경, 플랫폼 스타일 변경.
 
 ---
 
-## 参考资料
+## 참고 자료
 
-| 文件 | 何时加载 |
+| 파일 | 로드 시점 |
 |:-----|:---------|
-| [references/cover-styles.md](references/cover-styles.md) | 题材→视觉风格映射、平台风格详情、提示词模板 |
+| [references/cover-styles.md](references/cover-styles.md) | 장르→시각 스타일 매핑, 플랫폼 스타일 상세, 프롬프트 템플릿 |
 
 ---
 
-## 语言
+## 언어
 
-- 跟随用户的语言回复，用户用什么语言就用什么语言回复
-- 中文回复遵循《中文文案排版指北》
+- 사용자의 언어에 맞춰 응답합니다.
