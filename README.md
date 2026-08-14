@@ -1,30 +1,30 @@
-[English](README_EN.md) | **中文**
+[English](README_EN.md) | **한국어**
 
 # oh-story-claudecode
 
-网文写作 skill 包，覆盖长篇与短篇网络小说的扫榜、拆文、写作、去AI味、封面图全流程。内置适配 Claude Code、OpenCode、ZCode、OpenClaw、Codex CLI、Reasonix；能读取项目文件的 Web AI / Agent 环境也可按通用 skills 路径使用。
+웹소설 작성 skill 패키지로, 장편과 단편 웹소설의 순위 스캔, 작품 분석(拆文), 집필, AI 냄새 제거, 커버 이미지 생성까지 전 과정을 아우릅니다. Claude Code, OpenCode, ZCode, OpenClaw, Codex CLI, Reasonix를 기본 지원하며, 프로젝트 파일을 읽을 수 있는 Web AI / Agent 환경에서는 범용 skills 경로로도 사용 가능합니다.
 
-## 核心思路
+## 핵심 컨셉
 
-> **套路 = 确定性的情绪满足**
+> **노하우 = 확정적인 정서적 만족**
 
-专业作者的方法论三步走：
+전문 작가의 방법론은 3단계로 이뤄집니다:
 
-1. **扫榜**：分析热门榜单，洞察题材、人设、切入点。
-2. **拆文**：拆解大纲节奏与剧情素材，建立个人模块库。
-3. **商业化写作**：学习并运用钩子、爽感、期待感等核心技巧。
+1. **순위 스캔 (扫榜)**：인기 순위를 분석해 소재, 인물 설정, 접근 포인트를 파악합니다.
+2. **작품 분석 (拆文)**：개요의 리듬과 플롯 소재를 분해해 개인 모듈 라이브러리를 구축합니다.
+3. **상업적 집필**：갈고리(Hook), 쾌감, 기대감 등 핵심 기법을 학습하고 활용합니다.
 
-围绕四条线展开：爆款逆向 · 剧情模块化重组 · 上下文状态分层管理 · 人机协同。
+네 가지 축을 중심으로 전개됩니다: 인기작 역분석 · 플롯 모듈화 재구성 · 컨텍스트 상태 계층 관리 · 인간-AI 협업.
 
-> v0.7.5 起：稳定版。补上 Claude Code 写正文守卫缺的追踪检查点门——另三端从 v0.7.3 起就有，主力端此前会静默写出若干章没有追踪的正文；长篇 `story-long-write` 每次触发都整份进上下文的 SKILL.md 从 82 KB 降到 54 KB（开书三阶段抽成按需读的 `workflow-setup.md`，日更不再为用不上的建纲步骤付费）；清掉一批过度累加的限制指令，其中一条把正文里普通的「他说」判成了违规。**本版 `agents_version` 为 24**，已部署项目需重新运行 `/story-setup` 并新开会话。
+> v0.7.5 부터: 안정판. Claude Code에서 본문 작성 가드에 빠져 있던 추적 체크포인트 게이트를 보강——다른 세 플랫폼은 v0.7.3부터 지원했지만, 메인 플랫폼은 그동안 추적 없는 본문을 몇 챕터씩 조용히 써내려갔습니다; 장편 `story-long-write`에서 매 트리거마다 컨텍스트에 통째로 올라가던 SKILL.md를 82 KB에서 54 KB로 축소(개설 3단계를 필요 시 읽는 `workflow-setup.md`로 분리해, 일일 연재 시 쓸모없는 개纲 단계 비용을 지불하지 않게 함); 과도하게 누적된 제한 지시사항을 정리했고, 그중 하나는 본문의 평범한 「그가 말했다」를 위반으로 판정하는 문제였습니다. **이번 판 `agents_version`은 24**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
 >
-> v0.7.4 起：全是修复。`story-import` 不再把用户自己的书登记成对标（此前会出现「对标目录内容跟自己设定完全相同」）；story-setup 重部署不再把 Reasonix / generic 项目误判成 OpenClaw，多端部署也不再每次开会话误报参考包缺失；Stage 6 文风统计在 Windows 上不再必挂。spawn 的 `agents_version` 硬门禁改成提示——版本不匹配照常并行，只有 agent 文件缺失才降级 solo。**本版 `agents_version` 为 23**，已部署项目需重新运行 `/story-setup` 并新开会话。
+> v0.7.4 부터: 전부 수정사항입니다. `story-import`가 사용자 자신의 책을 대상(对标)으로 등록하지 않게 수정(이전에는 「대상 디렉터리 내용이 자기 설정과 완전히 동일」한 현상 발생); story-setup 재배포 시 Reasonix / generic 프로젝트를 OpenClaw로 오판하지 않게 수정, 다중 플랫폼 배포에서도 매 세션마다 참고 패키지 누수를 잘못 보고하지 않게 함; Stage 6 문풍 통계가 Windows에서 필수로 죽지 않게 함. spawn의 `agents_version` 하드 게이트를 알림으로 완화——버전 불일치해도 병렬 처리 정상 진행, agent 파일 누락 시에만 solo로 다운그레이드. **이번 판 `agents_version`은 23**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
 >
-> v0.7.3 起：长篇追踪改单一权威事务模型——`追踪/_tracking-state.json` 是唯一结构化状态，续写状态卡（固定 7 栏、≤12KB）与伏笔/时间线/角色快照都由 `tracking_commit.py` 整份生成，日更每章必读从五个文件收缩到三项；Dashboard 目录树改按需加载。**v0.7.2 及更早的长篇项目必须先迁移 `追踪/` 才能继续写**（走 `/story-import` 的「旧追踪项目迁移」，不必重跑全书拆解，见 [UPGRADING](skills/story-setup/UPGRADING.md)）。**本版 `agents_version` 为 22**，已部署项目需重新运行 `/story-setup` 并新开会话。
+> v0.7.3 부터: 장편 추적을 단일 권한 트랜잭션 모델로 개편——`추적/_tracking-state.json`이 유일한 구조화 상태이며, 연속 상태 카드(고정 7칼럼, ≤12KB)와 복선/타임라인/캐릭터 스냅샷은 모두 `tracking_commit.py`가 통째로 생성; 일일 연재 시 챕터마다 필수로 읽던 파일이 5개에서 3개로 축소; Dashboard 디렉터리 트리를 필요 시 로드로 변경. **v0.7.2 이하 장편 프로젝트는 반드시 `추적/`를 마이그레이션해야 계속 쓸 수 있습니다**(`/story-import`의 「이전 추적 프로젝트 마이그레이션」 사용, 전체 작품 재분석 필요 없음, [UPGRADING](skills/story-setup/UPGRADING.md) 참조). **이번 판 `agents_version`은 22**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
 >
-> 更早版本变更见 [CHANGELOG.md](CHANGELOG.md)。
+> 이전 버전 변경사항은 [CHANGELOG.md](CHANGELOG.md)를 참조하세요.
 
-## 流程总览
+## 프로세스 총괄
 
 ```mermaid
 flowchart LR
@@ -32,36 +32,36 @@ flowchart LR
     classDef phase fill:#e8f4fd,color:#1a1a2e,stroke:#4a9be8,stroke-width:1px
     classDef final fill:#fce4ec,color:#333,stroke:#e57373,stroke-width:1px
 
-    entry_l{{"长篇作者"}}:::entry
-    entry_s{{"短篇作者"}}:::entry
-    entry_r{{"已有方向"}}:::entry
-    entry_i{{"已有小说"}}:::entry
+    entry_l{{"장편 작가"}}:::entry
+    entry_s{{"단편 작가"}}:::entry
+    entry_r{{"방향 설정 완료"}}:::entry
+    entry_i{{"기존 작품 있음"}}:::entry
 
-    subgraph S0 ["  环境部署"]
+    subgraph S0 ["  환경 배포"]
         setup["/story-setup"]:::phase
     end
 
-    subgraph S1 ["  扫榜选材"]
+    subgraph S1 ["  순위 스캔·소재 선정"]
         direction TB
-        scan_l["长篇扫榜"]:::phase
-        scan_s["短篇扫榜"]:::phase
+        scan_l["장편 순위 스캔"]:::phase
+        scan_s["단편 순위 스캔"]:::phase
     end
 
-    subgraph S2 ["  拆文学习"]
+    subgraph S2 ["  작품 분석·학습"]
         direction TB
-        analyze_l["长篇拆文"]:::phase
-        analyze_s["短篇拆文"]:::phase
-        import_l["已有小说导入"]:::phase
+        analyze_l["장편 분석"]:::phase
+        analyze_s["단편 분석"]:::phase
+        import_l["기존 작품 가져오기"]:::phase
     end
 
-    subgraph S3 ["  落笔创作"]
+    subgraph S3 ["  집필 실행"]
         direction TB
-        write_l["长篇写作"]:::phase
-        write_s["短篇写作"]:::phase
+        write_l["장편 집필"]:::phase
+        write_s["단편 집필"]:::phase
     end
 
-    subgraph S4 ["  精修定稿"]
-        deslop["去 AI 味"]:::final
+    subgraph S4 ["  정밀 수정·확정"]
+        deslop["AI 냄새 제거"]:::final
     end
 
     entry_l --> setup
@@ -72,324 +72,323 @@ flowchart LR
     scan_s --> analyze_s
     analyze_l --> write_l
     analyze_s --> write_s
-    entry_r -.->|跳过准备| write_l
-    entry_r -.->|跳过准备| write_s
-    entry_i -.->|推荐先部署| setup
-    setup -.->|逆向导入| import_l
-    import_l -.->|续写| write_l
+    entry_r -.->|준비 생략| write_l
+    entry_r -.->|준비 생략| write_s
+    entry_i -.->|우선 배포 권장| setup
+    setup -.->|역방향 가져오기| import_l
+    import_l -.->|연속 집필| write_l
     write_l --> deslop
     write_s --> deslop
 ```
 
-## 安装
+## 설치
 
-**方式一** 直接告诉 Claude Code / OpenCode / ZCode / OpenClaw / Codex / Reasonix，或其他支持导入 GitHub 仓库/skill 的 Web AI / Agent 平台：
+**방식 1** 그대로 Claude Code / OpenCode / ZCode / OpenClaw / Codex / Reasonix, 또는 GitHub 저장소/skill 가져오기를 지원하는 기타 Web AI / Agent 플랫폼에 말하세요:
 
 ```
-安装这个 skill https://github.com/worldwonderer/oh-story-claudecode
+이 skill을 설치해줘 https://github.com/worldwonderer/oh-story-claudecode
 ```
 
-升级时再说一次同一句话即可。
+업그레이드할 때도 같은 문장을 한번 더 말하면 됩니다.
 
-**方式二** 命令行：
+**방식 2** 커맨드라인:
 
 ```bash
 npx skills add worldwonderer/oh-story-claudecode -y -g
 ```
 
-`-g` 全局安装，所有目录可用；去掉 `-g` 则只装到当前目录。更新时重新执行同一条命令即可。
+`-g`는 전역 설치로 모든 디렉터리에서 사용 가능; `-g`를 빼면 현재 디렉터리에만 설치합니다. 업데이트할 때도 같은 명령을 다시 실행하면 됩니다.
 
-Windows 上偶尔会看到 `ENOENT ... mkdir` 报错但末尾仍显示 `Done!`，这是有技能没装全。story-setup 的参考资料目录整个缺了一块时，跑 `/story-setup` 会提示参考资料包不完整；其它形式的残缺不一定有提示。无论有没有报错，重跑同一条安装命令即可修复。
+Windows에서 가끔 `ENOENT ... mkdir` 오류가 나는데도 마지막에 `Done!`이라고 표시되는 경우가 있습니다. 이는 일부 skill이 설치되지 않은 상태입니다. story-setup의 참고자료 디렉터리가 통째로 누락된 경우 `/story-setup`을 실행하면 참고 패키지가 불완전하다고 알려줍니다; 다른 형태의 불완전 설치는 항상 알림이 뜨지 않을 수 있습니다. 오류 유무와 관계없이 같은 설치 명령을 다시 실행하면 복구됩니다.
 
 <details>
-<summary>Codex / ZCode / OpenCode / OpenClaw / Reasonix / Web AI 使用说明</summary>
+<summary>Codex / ZCode / OpenCode / OpenClaw / Reasonix / Web AI 사용 안내</summary>
 
-**Codex 用户：** repo 内直接使用：Codex 会扫描 `$REPO_ROOT/.agents/skills`（指向 `skills/` 的 symlink）发现 13 个 skill；用 `$story`、`$story-setup` 或 `/skills` 调用。Windows 上 git 需开 `core.symlinks=true`，否则 symlink 失效，改走下方 `$story-setup` 部署。
+**Codex 사용자:** 저장소 내에서 바로 사용: Codex는 `$REPO_ROOT/.agents/skills`(`skills/`를 가리키는 symlink)를 스캔해 13개 skill을 발견; `$story`、`$story-setup` 또는 `/skills`로 호출. Windows에서 git은 `core.symlinks=true`를 켜야 합니다. 켜지 않으면 symlink가 무효화되므로 아래 `$story-setup` 배포로 대체합니다.
 
-跑 `$story-setup` 部署到写作项目后，会写入 `.codex/agents/*.toml`、`.codex/hooks.json`、`.codex/hooks/{story_codex_hook.py,run-story-hook.sh,run-story-hook.cmd}` 和 `.codex/skills/story-setup/references/agent-references/`；请信任项目 `.codex/` 配置层并在 `/hooks` review/trust hooks、新开 Codex 会话，让 custom agents 生效。
+`$story-setup`으로 집필 프로젝트에 배포하면 `.codex/agents/*.toml`、`.codex/hooks.json`、`.codex/hooks/{story_codex_hook.py,run-story-hook.sh,run-story-hook.cmd}`와 `.codex/skills/story-setup/references/agent-references/`가 기록됩니다; 프로젝트의 `.codex/` 설정 레이어를 trust하고 `/hooks`에서 review/trust hooks한 뒤 새 Codex 세션을 열어 custom agents를 활성화하세요.
 
-**ZCode 用户：** 在 Plugin Management 中把本仓库加入 marketplace，安装 `oh-story` 后可用 `$story`、`$story-setup` 或 `/` 面板调用 13 个 Skills/Commands。`$story-setup` 选择 `target_cli=zcode` 会部署 `.zcode/skills/`、`.zcode/commands/`、`.zcode/hooks/story_zcode_hook.js`，安全合并 `.zcode/config.json` 与根 `AGENTS.md`；Hook 依赖 PATH 中的 `node`。ZCode 3.3.4 不执行项目/plugin custom agents，也没有 `PreCompact` / `SessionEnd`，相关流程会明确降级 solo/direct，compact 后由 `SessionStart` 恢复上下文。
+**ZCode 사용자:** Plugin Management에서 본 저장소를 marketplace에 추가하고 `oh-story`를 설치하면 `$story`、`$story-setup` 또는 `/` 패널로 13개 Skills/Commands를 호출할 수 있습니다. `$story-setup`에서 `target_cli=zcode`를 선택하면 `.zcode/skills/`、`.zcode/commands/`、`.zcode/hooks/story_zcode_hook.js`가 배포되며 `.zcode/config.json`과 루트 `AGENTS.md`를 안전하게 병합; Hook은 PATH 내 `node`에 의존합니다. ZCode 3.3.4는 프로젝트/플러그인 custom agents를 실행하지 않고 `PreCompact` / `SessionEnd`도 없으므로, 관련 프로세스는 명시적으로 solo/direct로 다운그레이드되며 compact 후 `SessionStart`에서 컨텍스트를 복구합니다.
 
-**OpenCode 用户：** 全局安装后 opencode 自动从 `~/.claude/skills/` 发现 skills；首次用自然语言触发 story-setup（如「用 story-setup 部署网文写作环境」），**部署后退出重进 `opencode -c`** 才能用 slash command。部分 hook 行为与 Claude Code 有差异（session-start / session-end / compact 等），详见 [CONTRIBUTING.md](CONTRIBUTING.md) 的 OpenCode 章节。
+**OpenCode 사용자:** 전역 설치 후 opencode가 자동으로 `~/.claude/skills/`에서 skills를 발견; 처음에는 자연어로 story-setup을 트리거(예: 「story-setup skill로 웹소설 작성 환경을 배포해줘」)하고, **배포 후 종료했다가 `opencode -c`로 재진입**해야 slash command를 쓸 수 있습니다. 일부 hook 동작은 Claude Code와 차이가 있습니다(session-start / session-end / compact 등). 자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md)의 OpenCode 절을 참조하세요.
 
-**OpenClaw 用户：** 当前支持 skills-only：OpenClaw 可从 workspace `skills/`、`.agents/skills`、`~/.agents/skills`、`~/.openclaw/skills` 等 skill root 发现本项目 13 个 skill；`SKILL.md` 已按 OpenClaw 要求使用单行 `name` / `description` 与单行 JSON `metadata.openclaw`。`story-setup` 选择 `target_cli=openclaw` 时会把 skills 复制到项目 `skills/` 并写入 OpenClaw 版 `AGENTS.md`；agents/hooks 暂不部署，写正文前大纲守卫在 OpenClaw 下是 skill 内软约束。部署后如未显示新 skills，请新开 OpenClaw session 或等待 watcher 刷新。
+**OpenClaw 사용자:** 현재 skills-only 지원: OpenClaw는 workspace `skills/`、`.agents/skills`、`~/.agents/skills`、`~/.openclaw/skills` 등 skill root에서 본 프로젝트 13개 skill을 발견; `SKILL.md`는 OpenClaw 요구에 맞춰 단일 행 `name` / `description`과 단일 행 JSON `metadata.openclaw`를 사용합니다. `story-setup`에서 `target_cli=openclaw`를 선택하면 skills를 프로젝트 `skills/`에 복사하고 OpenClaw 버전 `AGENTS.md`를 기록; agents/hooks는 아직 배포하지 않으며, 본문 쓰기 전 개요 가드는 OpenClaw 하에서 skill 내부 소프트 제약입니다. 배포 후 새 skills가 표시되지 않으면 새 OpenClaw 세션을 열거나 watcher 갱신을 기다리세요.
 
-**Reasonix 用户：** 当前支持 skills + 原生 plugin manifest：Reasonix 原生扫描项目 skill root（`.agents/skills` 等，指向 `skills/` 的 symlink）发现 13 个 skill，用 `reasonix doctor capabilities` 校验；也可用根 `reasonix-plugin.json` 走 `reasonix plugin install`。`story-setup` 选择 `target_cli=reasonix` 时会把 skills 复制到项目 `skills/` 并写入 Reasonix 版 `AGENTS.md`；hooks/custom agents 暂不部署，涉及专业 Agent 的 skill 走 solo/direct fallback。Windows 未启用 symlink 时改走原生 plugin。
+**Reasonix 사용자:** 현재 skills + 기본 plugin manifest 지원: Reasonix는 프로젝트 skill root(`.agents/skills` 등, `skills/`를 가리키는 symlink로 Codex와 공용)를 기본 스캔해 13개 skill을 발견하며 `reasonix doctor capabilities`로 검증; 루트 `reasonix-plugin.json`으로 `reasonix plugin install`을 거칠 수도 있습니다. `story-setup`에서 `target_cli=reasonix`를 선택하면 skills를 프로젝트 `skills/`에 복사하고 Reasonix 버전 `AGENTS.md`를 기록; hooks/custom agents는 아직 배포하지 않으며 전문 Agent 관련 skill은 solo/direct fallback으로 처리합니다. Windows에서 symlink를 활성화하지 않은 경우 기본 plugin 경로로 대체합니다.
 
-**Web AI / 通用 Agent 用户：** 平台能读取 GitHub 仓库或项目文件时，可让 Agent 读取 `skills/*/SKILL.md` 与对应 `references/`；需要本地副本时，`story-setup` 可选 `target_cli=generic`，只写通用 `AGENTS.md` 和 `skills/`。无本项目 hooks/custom agents 的环境按 skill 内软约束或 solo/direct fallback 执行。
+**Web AI / 범용 Agent 사용자:** 플랫폼에서 GitHub 저장소나 프로젝트 파일을 읽을 수 있다면 Agent가 `skills/*/SKILL.md`와 대응되는 `references/`를 읽게 하면 됩니다; 로컬 사본이 필요할 때는 `story-setup`에서 `target_cli=generic`를 선택해 범용 `AGENTS.md`와 `skills/`만 기록하면 됩니다. 본 프로젝트의 hooks/custom agents가 없는 환경에서는 skill 내부 소프트 제약 또는 solo/direct fallback으로 실행합니다.
 
 </details>
 
-升级后如果项目里已经跑过 `/story-setup`，建议在项目根重跑一次 `/story-setup`，同步 hooks / agents / references。每版变更见 [CHANGELOG.md](CHANGELOG.md) 与 [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)。
+업그레이드 후 프로젝트에서 이미 `/story-setup`을 실행한 적이 있다면 프로젝트 루트에서 `/story-setup`을 한번 더 실행해 hooks / agents / references를 동기화하는 것을 권장합니다. 각 판 변경사항은 [CHANGELOG.md](CHANGELOG.md)와 [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)를 참조하세요.
 
-**多 agent 协作要先部署再新开会话：** 7 个专业 agent（story-architect、narrative-writer、consistency-checker 等）由 `/story-setup` 写入项目 `.claude/agents/`，或由 `$story-setup` 写入 `.codex/agents/*.toml`。Claude Code / Codex 都在会话启动时更稳定地注册 custom agent；ZCode 3.3.4、OpenClaw Phase 1、Reasonix Phase 1 与 generic 路径默认走 skills + solo fallback。判断是否生效：新会话里跑 `/story-review`，报告头是 `Effective Mode: full/lean` 即注册成功，是 `Fallback: ... -> solo` 说明当前运行时未暴露该 agent。
+**다중 agent 협업은 먼저 배포한 뒤 새 세션 열기:** 7개 전문 agent(story-architect, narrative-writer, consistency-checker 등)는 `/story-setup`으로 프로젝트 `.claude/agents/`에 기록되거나, `$story-setup`으로 `.codex/agents/*.toml`에 기록됩니다. Claude Code / Codex는 모두 세션 시작 시 custom agent를 더 안정적으로 등록; ZCode 3.3.4、OpenClaw Phase 1、Reasonix Phase 1과 generic 경로는 기본적으로 skills + solo fallback으로 동작합니다. 활성화 여부 판정: 새 세션에서 `/story-review`를 실행했을 때 보고서 헤더가 `Effective Mode: full/lean`이면 등록 성공, `Fallback: ... -> solo`면 현재 런타임이 해당 agent를 노출하지 않은 것입니다.
 
-**导入续写顺序：** 推荐先在写作项目根运行 `/story-setup`（部署 hooks/agents/AGENTS），新开/刷新会话后运行 `/story-import` 导入已有小说，再用 `/story-long-write 日更` 或 `/story-long-write 写第N章` 续写。也可以直接运行 `/story-import`；它会先检测是否已 setup，未部署时让你选择先去 setup 或继续串行导入。
+**가져오기·연속 집필 순서:** 우선 집필 프로젝트 루트에서 `/story-setup`을 실행(hooks/agents/AGENTS 배포)하고, 새 세션을 열거나 새로고침한 뒤 `/story-import`로 기존 소설을 가져온 다음 `/story-long-write 일일 연재` 또는 `/story-long-write N장 집필`로 이어 쓰는 것을 권장합니다. 바로 `/story-import`를 실행해도 됩니다; 이 명령은 먼저 setup 완료 여부를 감지해, 미배포 시 먼저 setup으로 갈지 계속 직렬 가져오기를 진행할지 선택하게 합니다.
 
 ## Skills
 
-| Skill | 触发 | 说明 |
+| Skill | 트리거 | 설명 |
 |:------|:-----|:-----|
-| `story-setup` | `/story-setup` `$story-setup` `/准备写书` | 环境部署 · Claude/OpenCode/Codex/ZCode/OpenClaw/Reasonix + generic（已有配置安全合并） |
-| `story` | `/story` `$story` `/story dashboard` | 工具箱路由 · 模糊意图分发 + 本地拆文/项目 Dashboard |
-| `story-long-write` | `/story-long-write` `/写长篇` | 长篇写作 · 大纲搭建、人物设定、正文输出 |
-| `story-long-analyze` | `/story-long-analyze` | 长篇拆文 · 黄金三章、爽点设计、节奏分析 |
-| `story-long-scan` | `/story-long-scan` | 长篇扫榜 · 起点/番茄/晋江市场趋势 |
-| `story-short-write` | `/story-short-write` | 短篇写作 · 情绪设计、反转构思、精修出稿 |
-| `story-short-analyze` | `/story-short-analyze` | 短篇拆文 · 故事核、结构分析、情感线、反转设计、写作手法、共鸣分析 |
-| `story-short-scan` | `/story-short-scan` | 短篇扫榜 · 知乎盐言/番茄短篇风口数据 |
-| `story-deslop` | `/story-deslop` `/去AI味` | 去AI味 · 检测并清除 AI 写作痕迹 |
-| `story-import` | `/story-import` `/导入小说` | 逆向导入 · 将已有小说反向解析为标准项目结构 |
-| `story-review` | `/story-review` `/审查` | 多视角审查 · 4 Agent 多视角审稿 + 番茄/起点/知乎评分标准 |
-| `story-cover` | `/story-cover` `/封面` | 封面生成 · 书名题材分析 + GPT-Image-2 出图 |
-| `browser-cdp` | `/browser-cdp` | 浏览器操控 · CDP 协议复用登录态抓取数据 |
+| `story-setup` | `/story-setup` `$story-setup` `/집필 준비` | 환경 배포 · Claude/OpenCode/Codex/ZCode/OpenClaw/Reasonix + generic(기존 설정 안전 병합) |
+| `story` | `/story` `$story` `/story dashboard` | 툴박스 라우터 · 모호한 의도 분배 + 로컬 분석 라이브러리/프로젝트 Dashboard |
+| `story-long-write` | `/story-long-write` `/장편 쓰기` | 장편 집필 · 개요 구축, 인물 설정, 본문 출력 |
+| `story-long-analyze` | `/story-long-analyze` | 장편 분석 · 황금 3장, 쾌감 포인트 설계, 리듬 분석 |
+| `story-long-scan` | `/story-long-scan` | 장편 순위 스캔 · 치디엔/판치에/진장 시장 동향 |
+| `story-short-write` | `/story-short-write` | 단편 집필 · 감정 설계, 반전 구상, 정밀 수정 출고 |
+| `story-short-analyze` | `/story-short-analyze` | 단편 분석 · 스토리 핵, 구조 분석, 감정선, 반전 설계, 작법, 공감 분석 |
+| `story-short-scan` | `/story-short-scan` | 단편 순위 스캔 · 즈후 옌옌/판치에 단편 트렌드 데이터 |
+| `story-deslop` | `/story-deslop` `/AI냄새제거` | AI 냄새 제거 · AI 작성 흔적 탐지 및 제거 |
+| `story-import` | `/story-import` `/소설 가져오기` | 역방향 가져오기 · 기존 소설을 표준 프로젝트 구조로 역분석 |
+| `story-review` | `/story-review` `/심사` | 다중 시점 심사 · 4 Agent 다중 시점 심사 + 판치에/치디엔/즈후 평가 기준 |
+| `story-cover` | `/story-cover` `/표지` | 커버 생성 · 도서명 소재 분석 + GPT-Image-2 이미지 생성 |
+| `browser-cdp` | `/browser-cdp` | 브라우저 조작 · CDP 프로토콜 로그인 상태 재사용 데이터 수집 |
 
-> `story-deslop` 的本地检查是写作 lint：blocking 只限确定性句式/标点问题，其他提示按读感判断；朱雀等外部检测只作自测参考，不替代人工读感。
+> `story-deslop`의 로컬 검사는 작성 lint: blocking은 확정적인 문장/구두점 문제에만 적용, 기타 알림은 독서 감각으로 판단; 주작 등 외부 검사는 자가 테스트 참고용일 뿐, 인간의 독서 감각을 대체하지 않습니다.
 
-自然语言同样触发：
-- 「帮我开书」→ `story-long-write`
-- 「这篇太 AI 了」→ `story-deslop`
-- 「把我的书导进来」→ `story-import`
-- 「打开工作台」→ `story dashboard`（本机浏览拆文库与写作项目，可轻量编辑）
-- 「沈栀现在什么状态」→ 自动 spawn `story-explorer` agent
+자연어로도 트리거됩니다:
+- 「책 내줘」→ `story-long-write`
+- 「이거 너무 AI 같아」→ `story-deslop`
+- 「내 책 가져와줘」→ `story-import`
+- 「작업대 열어」→ `story dashboard`(로컬에서 분석 라이브러리와 집필 프로젝트 열람, 가벼운 편집 가능)
+- 「심지는 지금 뭐 해?」→ 자동으로 `story-explorer` agent를 spawn
 
 ### Story Dashboard
 
-运行 `/story dashboard`（Codex 用 `$story dashboard`）打开本地写作工作台，浏览拆文库与
-长/短篇项目文件树，并完成搜索、Markdown 预览、文本编辑、冲突保护保存和确认删除。
-服务仅监听 `127.0.0.1`，小说内容不会上传。
+`/story dashboard`(Codex는 `$story dashboard`)를 실행해 로컬 집필 작업대를 열고, 분석 라이브러리와
+장/단편 프로젝트 파일 트리를 탐색하며 검색, Markdown 미리보기, 텍스트 편집, 충돌 방지 저장, 확인 후 삭제 기능을 수행합니다.
+서비스는 `127.0.0.1`에만 바인딩되며, 소설 내용이 외부로 업로드되지 않습니다.
 
-![OH STORY 本地写作工作台](demo/story-dashboard.png)
+![OH STORY 로컬 집필 작업대](demo/story-dashboard.png)
 
 <details>
-<summary>封面生成示例</summary>
+<summary>커버 생성 예시</summary>
 
-![封面示例 — 剑道独尊](demo/封面-剑道独尊.png)
+![커버 예시 — 검도독존](demo/封面-剑道独尊.png)
 
 </details>
 
 <details>
-<summary>拆文 demo — 盘龙</summary>
+<summary>작품 분석 데모 — 반룡(盘龙)</summary>
 
-使用 `/story-long-analyze` 深度模式分析《盘龙》前23章的完整输出：
+`/story-long-analyze` 심층 모드로 《반룡》 전 23장을 분석한 완전한 출력:
 
 ```
-demo/拆文库/盘龙/
-├── 概要.md              # 全书概要 + 章节索引
-├── 拆文报告.md           # 五维评分 + 爽点密度 + 可借鉴套路
-├── 文风.md              # 句长/标点/对话潜台词/情绪节奏 + 原文锚点
-├── 章节/
-│   ├── 第1章_深度拆解.md … 第3章_深度拆解.md  # 黄金三章逐章深度分析
-│   └── 第1章_摘要.md … 第23章_摘要.md          # 每章一个摘要文件
-├── 角色/
-│   ├── 林雷.md           # 主角完整档案
-│   ├── 霍格.md           # 核心配角
-│   ├── 希尔曼.md         # 核心配角
-│   ├── 希里.md           # 功能角色
-│   ├── 德林柯沃特.md      # 核心配角
-│   ├── 沃顿.md           # 功能角色
-│   └── 角色关系.md        # 关系网络
-├── 剧情/
-│   ├── 故事线.md          # 框架识别 + 4剧情 + 2故事线
-│   ├── 强者过境与魔法启蒙.md 等  # 五个分场景剧情单元
-│   ├── 节奏.md            # 节奏/关键信息递进/情绪触发爆发节律
-│   └── 情绪模块.md        # 读者需求/情绪引擎/可复用写作模块
-└── 设定/
-    ├── 世界观/
-    │   ├── 背景设定.md    # 核心规则 + 特殊设定
-    │   ├── 力量体系.md    # 战气 + 魔法 + 等级
-    │   ├── 地理.md        # 安达卢西亚 + 玉兰大陆
-    │   └── 金手指.md      # 盘龙戒指 + 德林柯沃特
-    └── 势力/
-        └── 巴鲁克家族.md  # 龙血血脉家族档案
+demo/拆文库/반룡/
+├── 개요.md              # 전서 개요 + 챕터 인덱스
+├── 분석 보고서.md       # 5차원 평가 + 쾌감 밀도 + 참고 가능한 노하우
+├── 문풍.md              # 문장 길이/구두점/대화 잠재의사/감정 리듬 + 원문 앵커
+├── 챕터/
+│   ├── 제1장_심층 분해.md … 제3장_심층 분해.md  # 황금 3장 챕터별 심층 분석
+│   └── 제1장_요약.md … 제23장_요약.md          # 챕터당 하나의 요약 파일
+├── 캐릭터/
+│   ├── 린레이.md         # 주인공 완전한 프로필
+│   ├── 호그.md           # 핵심 조연
+│   ├── 힐먼.md           # 핵심 조연
+│   ├── 시리.md           # 기능 역할
+│   ├── 드링코워트.md     # 핵심 조연
+│   ├── 워튼.md           # 기능 역할
+│   └── 캐릭터 관계.md    # 관계 네트워크
+├── 플롯/
+│   ├── 스토리라인.md     # 프레임워크 식별 + 4플롯 + 2스토리라인
+│   ├── 강자 경계와 마법 계몽.md 등  # 다섯 개 장면별 플롯 유닛
+│   ├── 리듬.md           # 리듬/핵심 정보 전개/감정 트리거 폭발 리듬
+│   └── 감정 모듈.md     # 독자 니즈/감정 엔진/재사용 가능한 작성 모듈
+└── 설정/
+    ├── 세계관/
+    │   ├── 배경 설정.md  # 핵심 규칙 + 특수 설정
+    │   ├── 역량 체계.md  # 전기 + 마법 + 레벨
+    │   ├── 지리.md       # 안달루시아 + 육란 대륙
+    │   └── 금핑거.md     # 반룡 반지 + 드링코워트
+    └── 세력/
+        └── 바루크 가문.md  # 용혈 혈통 가문 기록
 ```
 
-长篇拆文会额外生成 `文风.md`，并在 `剧情/` 下产出 `节奏.md`（节奏/关键信息递进/情绪触发爆发节律）和 `情绪模块.md`（读者需求/情绪引擎/可复用写作模块）；日更写作会通过 `对标/{书名}/剧情/` 读取这些素材，避免文风、节奏和情绪模块偏离对标书。
+장편 분석은 추가로 `문풍.md`를 생성하고, `플롯/` 하위에 `리듬.md`(리듬/핵심 정보 전개/감정 트리거 폭발 리듬)와 `감정 모듈.md`(독자 니즈/감정 엔진/재사용 가능한 작성 모듈)을 산출; 일일 연재 집필 시 `대상/{도서명}/플롯/` 등 하위 디렉터리로 이 자료를 읽어 문풍, 리듬, 감정 모듈이 대상 도서에서 벗어나는 것을 방지합니다.
 
 </details>
 
 <details>
-<summary>拆文 demo — 曾将爱意私藏（短篇）</summary>
+<summary>작품 분석 데모 — 증장애의사장(曾将爱意私藏, 단편)</summary>
 
-使用 `/story-short-analyze` 拆解短篇《曾将爱意私藏》（约 8500 字，追妻火葬场 · 死遁）的完整输出：
+`/story-short-analyze`로 단편 《증장애의사장》(약 8500자, 추장 화장장 · 사돈)을 분해한 완전한 출력:
 
 ```
-demo/拆文库/曾将爱意私藏/
-├── 原文/原文.txt        # 原文备份
-├── 拆文报告.md          # 故事核 + 五维评分 + 爆点6维 + 认知反转 + 共鸣9层
-├── 情节节点.md          # 54 个情节节点（原文引用 + 情绪标记 −9~+9）
-├── 写作手法.md          # POV / 对话 / 信息差 / 物件钩子 等 11 项
-└── _meta.json           # 结构计数 structure_counts（Phase 7 门控依据）
+demo/拆文库/증장애의사장/
+├── 원문/원문.txt        # 원문 백업
+├── 분석 보고서.md      # 스토리 핵 + 5차원 평가 + 폭발 포인트 6차원 + 인지 반전 + 공감 9층
+├── 플롯 노드.md        # 54개 플롯 노드(원문 인용 + 감정 마커 −9~+9)
+├── 작법.md            # POV / 대화 / 정보 차 / 오브제 갈고리 등 11개 항목
+└── _meta.json           # 구조 카운트 structure_counts(Phase 7 게이트 근거)
 ```
 
-短篇拆文产出 `拆文报告 / 情节节点 / 写作手法`，下游 `/story-short-write` 据此写同题材新短篇。
+단편 분석은 `분석 보고서 / 플롯 노드 / 작법`을 산출하며, 다운스트림 `/story-short-write`는 이를 바탕으로 동일 소재의 새 단편을 작성합니다.
 
 </details>
 
 <details>
-<summary>导入 demo — 让你管账号，你高燃混剪炸全网（长篇续写工程）</summary>
+<summary>가져오기 데모 — 너 관계 맡겨라, 네 고혼 합편이 전 폭발했다(장편 연속 집필 공정)</summary>
 
-推荐先 `/story-setup` 部署写作项目，再使用 `/story-import` 把作者已发布的前 20 章（约 3.7 万字）逆向重建为可续写的写作工程，最后接 `/story-long-write 日更` 或 `/story-long-write 写第21章` 续写：
+먼저 `/story-setup`으로 집필 프로젝트를 배포한 다음, `/story-import`를 사용해 작가가 이미 공개한 전 20장(약 3.7만 자)을 이어 쓸 수 있는 집필 공정으로 역방향으로 재구성한 뒤, 마지막으로 `/story-long-write 일일 연재` 또는 `/story-long-write 제21장 쓰기`로 이어 쓰는 것을 권장합니다:
 
 ```
-demo/长篇/让你管账号，你高燃混剪炸全网/
-├── 正文/        第001–020章（已发布原文）
-├── 大纲/        大纲.md · 卷纲_第1卷.md · 细纲_第001–020章.md（1 章 1 文件）
-├── 设定/        角色/{江晨·钟嘉嘉·周薄森·张耀祖·吴伟·李林}
-│                世界观/{背景设定·金手指} · 关系.md · 题材定位.md · 文风.md
-└── 追踪/        _tracking-state.json · 上下文.md · 伏笔.md · 逐章记录/
-                 角色状态/{角色名}.md · 时间线/{作者真相.md·读者已知.md}
+demo/장편/너 관계 맡겨라, 네 고혼 합편이 전 폭발했다/
+├── 본문/        제001–020장(기공개 원문)
+├── 개요/        개요.md · 권강_제1권.md · 세강_제001–020장.md(1장 1파일)
+├── 설정/        캐릭터/{강진·종가가·주박삼·장요조·오위·이림}
+│                세계관/{배경 설정·금핑거} · 관계.md · 소재 위치 설정.md · 문풍.md
+└── 추적/        _tracking-state.json · 컨텍스트.md · 복선.md · 챕터별 기록/
+                 캐릭터 상태/{캐릭터명}.md · 타임라인/{작가 진실.md·독자 기지.md}
 ```
 
-逐章提取（事件 / 角色 / 设定 / 伏笔 / 时间线）反推为续写 bible，作者从第 21 章无缝接着写。
+챕터별로 추출한(이벤트 / 캐릭터 / 설정 / 복선 / 타임라인) 내용을 연속 집필 성경(bible)으로 역추론해 작가가 제21장부터 끊김없이 이어 쓸 수 있게 합니다.
 
 </details>
 
-## Agent 体系
+## Agent 체계
 
-写作 skill 内部通过 7 个专业 Agent 协作，各司其职：
+작성 skill 내부는 7개 전문 Agent가 협업해 각자 역할을 수행합니다:
 
-| Agent | 模型 | 职责 |
+| Agent | 모델 | 역할 |
 |:------|:-----|:-----|
-| **story-architect** | Opus | 故事架构 · 题材定位、大纲结构、钩子/反转设计、情绪弧线 |
-| **character-designer** | Sonnet | 角色设计 · 角色档案、语言风格、动机链、对话创作 |
-| **narrative-writer** | Sonnet | 叙事写手 · 正文写作、去AI味、格式合规 |
-| **consistency-checker** | Haiku | 一致性检查 · 事实冲突扫描、伏笔追踪、S1-S4 分级报告 |
-| **story-researcher** | Sonnet | 资料研究 · CDP 搜索+正文提取、多源交叉验证、结构化参考文件输出 |
-| **story-explorer** | Haiku | 故事查询 · 角色/伏笔/设定/进度只读查询，日更上下文快速加载 |
-| **chapter-extractor** | Haiku | 章节提取 · 摘要+情节点+角色提及，并行拆文核心单元 |
+| **story-architect** | Opus | 스토리 아키텍처 · 소재 위치 설정, 개요 구조, 갈고리/반전 설계, 감정 곡선 |
+| **character-designer** | Sonnet | 캐릭터 디자인 · 캐릭터 프로필, 언어 스타일, 동기 연쇄, 대화 창작 |
+| **narrative-writer** | Sonnet | 서술 작가 · 본문 작성, AI 냄새 제거, 형식 준수 |
+| **consistency-checker** | Haiku | 일관성 검사 · 사실 충돌 스캔, 복선 추적, S1-S4 등급 보고서 |
+| **story-researcher** | Sonnet | 자료 연구 · CDP 검색+본문 추출, 다중 소스 교차 검증, 구조화 참고 파일 출력 |
+| **story-explorer** | Haiku | 스토리 조회 · 캐릭터/복선/설정/진행 읽기 전용 조회, 일일 연재 컨텍스트 고속 로드 |
+| **chapter-extractor** | Haiku | 챕터 추출 · 요약+플롯 포인트+캐릭터 언급, 병렬 분석 핵심 유닛 |
 
-Agent 按需加载 `references/` 中的写作理论（角色设计、对话技法、反转工具箱等 100+ 份方法论文件），不预占上下文。
+Agent는 필요할 때마다 `references/` 내 작성 이론(캐릭터 디자인, 대화 기법, 반전 툴킷 등 100+ 건의 방법론 파일)을 로드하며, 미리 컨텍스트를 점유하지 않습니다.
 
-## 自动化 Hooks
+## 자동화 Hooks
 
-`/story-setup` 为 Claude Code 部署 8 个自动化 hook：
+`/story-setup`은 Claude Code에 8개 자동화 hook을 배포합니다:
 
-| Hook | 触发时机 | 功能 |
+| Hook | 트리거 시점 | 기능 |
 |:-----|:---------|:-----|
-| session-start.sh | 会话开始 | 显示分支、进度快照、拆文状态 |
-| session-end.sh | 会话结束 | 记录会话日志到 `追踪/session-log.txt` |
-| detect-story-gaps.sh | 会话开始 | 检测设定缺口、大纲缺失、伏笔断线 |
-| pre-compact.sh | 上下文压缩前 | 保存进度快照路径和行数摘要 |
-| post-compact.sh | 上下文压缩后 | 提示读取进度快照恢复上下文 |
-| validate-story-commit.sh | git commit 时 | 检查硬编码属性、设定必填字段（仅警告，不阻断） |
-| guard-outline-before-prose.sh | 写正文前（Write/Edit） | 缺对应细纲/小节大纲时阻止首次创建正文（阻断），强制先搭大纲 |
-| check-prose-after-write.sh | 正文写入后（Write/Edit） | 轻量扫描截断、工程词、毒句式和字数欠账（提醒，不阻断） |
+| session-start.sh | 세션 시작 | 브랜치, 진행 스냅샷, 분석 상태 표시 |
+| session-end.sh | 세션 종료 | 세션 로그를 `추적/session-log.txt`에 기록 |
+| detect-story-gaps.sh | 세션 시작 | 설정 결함, 개요 누락, 복선 단절 감지 |
+| pre-compact.sh | 컨텍스트 압축 전 | 진행 스냅샷 경로와 행 수 요약 저장 |
+| post-compact.sh | 컨텍스트 압축 후 | 진행 스냅샷을 읽어 컨텍스트 복구 안내 |
+| validate-story-commit.sh | git commit 시 | 하드코딩 속성, 설정 필수 필드 검사(경고만, 차단 안 함) |
+| guard-outline-before-prose.sh | 본문 쓰기 전(Write/Edit) | 대응 세강/소절 개요가 없을 때 본문 최초 생성 차단(차단함), 강제로 개요를 먼저 짜게 함 |
+| check-prose-after-write.sh | 본문 쓰기 후(Write/Edit) | 가벼운 스캔으로 절단, 공정 용어, 독句式, 글자수 미달 점검(알림만, 차단 안 함) |
 
-## 项目文件结构
+## 프로젝트 파일 구조
 
-一部长篇动辄几十万字、几百章。设定冲突、伏笔断线、时间线对不上——写到最后全靠记忆硬撑，迟早翻车。
+장편 한 편은 수십만 자, 수백 챕터에 달합니다. 설정 충돌, 복선 단절, 타임라인 불일치——끝까지 쓰다 보면 기억에만 의존하게 되어 언젠가 탈이 납니다.
 
-用文件系统把设定、大纲、正文、追踪拆开，每个维度独立维护。对话只负责创作，不负责记忆。
+파일 시스템으로 설정, 개요, 본문, 추적을 나눠 각 차원을 독립적으로 유지 관리합니다. 대화는 오직 창작만 담당하며 기억을 담당하지 않습니다.
 
-**长篇：**
+**장편:**
 
 ```
-{书名}/
-├── 设定/
-│   ├── 世界观/          # 背景、力量体系等，按主题拆文件
-│   ├── 角色/            # 每个人物一个文件（江晨.md、钟嘉嘉.md）
-│   ├── 势力/            # 每个势力/组织一个文件（火箭军文工团.md）
-│   ├── 关系.md          # 角色关系映射
-│   └── 题材定位.md      # 题材核心梗+对标分析
-├── 大纲/
-│   ├── 大纲.md          # 全书卷级结构
-│   ├── 卷纲_第一卷.md   # 每卷一个：爽点节奏+情绪弧线+人物弧线+伏笔+反转
-│   ├── 细纲_第001章.md  # 每章一个：内容概括+多线情节+人物关系/出场顺序+钩子
+{도서명}/
+├── 설정/
+│   ├── 세계관/          # 배경, 역량 체계 등, 주제별 파일 분리
+│   ├── 캐릭터/          # 인물당 하나의 파일(강진.md, 종가가.md)
+│   ├── 세력/            # 세력/조직당 하나의 파일(로켓군 문공단.md)
+│   ├── 관계.md          # 캐릭터 관계 매핑
+│   └── 소재 위치 설정.md # 소재 핵심 반전요소 + 대상 분석
+├── 개요/
+│   ├── 개요.md          # 전서 권 단위 구조
+│   ├── 권강_제1권.md    # 권마다 하나: 쾌감 리듬+감정 곡선+인물 곡선+복선+반전
+│   ├── 세강_제001장.md # 챕터마다 하나: 내용 개요+다중 플롯+인물 관계/출장 순서+갈고리
 │   └── ...
-├── 正文/
-│   ├── 第001章_章名.md
+├── 본문/
+│   ├── 제001장_장명.md
 │   └── ...
-├── 对标/                # 对标参考（结构化子目录从拆文库同步）
-│   └── {对标书名}/
-│       ├── 原文/            # 对标书原文章节
-│       ├── 角色/            # 结构化角色卡（从 analyze 输出同步）
-│       ├── 剧情/            # 结构化剧情线/节奏/情绪模块（从 analyze 输出同步）
-│       ├── 设定/            # 结构化设定（从 analyze 输出同步）
-│       ├── 文风.md          # 日更前读取，用来贴近对标书文风
-│       └── 拆文报告.md      # analyze skill 输出的拆文报告
-├── 追踪/                # 文件优先的连续性状态
-│   ├── _tracking-state.json # 唯一结构化权威状态（不进正文 prompt）
-│   ├── 上下文.md        # 派生续写状态卡（固定 7 栏，≤12KB）
-│   ├── 逐章记录/        # 每章未来相关连续性记录/修订覆盖层（≤3072 bytes）
-│   ├── 角色状态/        # 派生核心角色快照（江晨.md、钟嘉嘉.md）
-│   ├── 伏笔.md          # 派生伏笔当前视图
-│   └── 时间线/          # 派生作者真相.md + 读者已知.md
-├── 参考资料/            # story-researcher 输出的研究资料
-│   └── {topic}.md       # 按研究主题拆分
+├── 대상/                # 대상 참고(구조화 하위 디렉터리가 분석 라이브러리에서 동기화됨)
+│   └── {대상 도서명}/
+│       ├── 원문/            # 대상 도서 원문 챕터
+│       ├── 캐릭터/          # 구조화 캐릭터 카드(analyze 출력에서 동기화)
+│       ├── 플롯/            # 구조화 플롯 라인/리듬/감정 모듈(analyze 출력에서 동기화)
+│       ├── 설정/            # 구조화 설정(analyze 출력에서 동기화)
+│       ├── 문풍.md          # 일일 연재 전 읽어 대상 도서 문풍에 가깝게 하는 데 사용
+│       └── 분석 보고서.md   # analyze skill이 출력한 분석 보고서
+├── 추적/                # 파일 우선의 연속성 상태
+│   ├── _tracking-state.json # 유일한 구조화 권한 상태(본문 prompt에 포함 안 됨)
+│   ├── 컨텍스트.md      # 파생 연속 집필 상태 카드(고정 7칼럼, ≤12KB)
+│   ├── 챕터별 기록/    # 챕터별 미래 관련 연속성 기록/개정 오버레이(≤3072 바이트)
+│   ├── 캐릭터 상태/    # 파생 핵심 캐릭터 스냅샷(강진.md, 종가가.md)
+│   ├── 복선.md         # 파생 복선 현재 뷰
+│   └── 타임라인/       # 파생 작가 진실.md + 독자 기지.md
+├── 참고 자료/          # story-researcher가 출력한 연구 자료
+│   └── {topic}.md     # 연구 주제별 분리
 ```
 
-**短篇：**
+**단편:**
 
 ```
-短篇/{标题}/
-├── 正文.md              # 完成稿
-├── 小节大纲.md          # 8 节结构 + 情绪曲线
-└── 拆文库/              # 如有参考小说（analyze 输出）
-    └── {书名}/
-        ├── 拆文报告.md
-        ├── 情节节点.md
-        └── 写作手法.md
+단편/{제목}/
+├── 본문.md              # 완성본
+├── 소절 개요.md        # 8절 구조 + 감정 곡선
+└── 拆文库/             # 참고 소설이 있을 경우(analyze 출력)
+    └── {도서명}/
+        ├── 분석 보고서.md
+        ├── 플롯 노드.md
+        └── 작법.md
 ```
 
-**拆文库：** 拆文 skill 默认输出到项目根目录 `拆文库/{书名}/`，产出结构化目录（角色/剧情/设定/章节），其中长篇剧情目录包含 `节奏.md` 和 `情绪模块.md`，是 analyze 的源数据（source of truth）。写作 skill 通过 `对标/{书名}/剧情/` 等子目录消费这些资产（项目级引用视图），或自动回退读取 `拆文库/`。
+**拆文库:** 분석 skill은 기본적으로 프로젝트 루트 디렉터리 `拆文库/{도서명}/`에 출력하며, 구조화 디렉터리(캐릭터/플롯/설정/챕터)를 생성합니다. 그중 장편 플롯 디렉터리는 `리듬.md`와 `감정 모듈.md`을 포함하며, 이것이 analyze의 원천 데이터(source of truth)입니다. 작성 skill은 `대상/{도서명}/플롯/` 등 하위 디렉터리로 이 자산을 소비하거나(프로젝트 레벨 참조 뷰), 자동으로 폴백해 `拆文库/`를 읽습니다.
 
-**`.active-book`：** 项目根目录的文本文件，内容是当前活跃书目的**相对路径**（如 `长篇/我的小说`），hook 和写作 skill 据此定位当前项目。
+**`.active-book`:** 프로젝트 루트 디렉터리의 텍스트 파일로, 내용은 현재 활성 도서의**상대 경로**(예: `장편/내 소설`)이며 hook과 작성 skill은 이 값으로 현재 프로젝트를 식별합니다.
 
-## 知识体系
+## 지식 체계
 
-各 skill 自带 `references/` 知识库，按需加载，不占上下文。
+각 skill은 자체 `references/` 지식 베이스를 갖고 있으며, 필요 시 로드해 컨텍스트를 차지하지 않습니다.
 
 <details>
-<summary>展开各 skill 知识库主题清单</summary>
+<summary>각 skill 지식 베이스 주제 목록 펼치기</summary>
 
-| 主题 | 内容 | 所在 skill |
+| 주제 | 내용 | 속한 skill |
 |:-----|:-----|:-----------|
-| 大纲排布 | 五步大纲法 · 故事结构分级 · 节点设计法 · 升级感设计 | long-write |
-| 开头设计 | 开篇模式 · 前 500 字设计 · 黄金三章开头策略 | long-write / short-write |
-| 人物设计 | 角色设定 · 人物提取 · 关系映射 · 动机链 · 群像 | long-write / short-write / short-analyze |
-| 钩子技法 | 章尾钩子 13 式 · 章首钩子 7 式 · 段落级钩子 · 悬念编排 | long-write / short-write / short-analyze |
-| 情绪设计 | 6 种弧形模板 · 期待感管理 · 题材赛道策略 | long-write / short-write |
-| 题材框架 | 长篇八节点 · 短篇压缩三幕 · 8 大题材开头模板 | long-write / short-write / short-analyze |
-| 对话技法 | 节奏 · 潜台词 · 信息控制 · 对话模式数据库 | long-write / short-write |
-| 反转工具箱 | 类型 · 时机 · 误导底层路径 | long-write / short-write |
-| 风格模块 | 对话 · 打斗 · 智斗 · 镜头式写作 · 装逼打脸 · 白描 | long-write |
-| 高级技法 | 小纲四步法 · 高潮逆推 · 双线结构 · AB 交织法 | long-write |
-| 去AI味 | 预防 · 三遍去AI法 · 改写范例库 · 禁用词表 | deslop / long-write / short-write |
-| 质量检查 | 通用 · 长篇专项 · 短篇专项 · 毒点排查 | long-write / short-write / short-analyze |
-| 写作公式 | 21 大题材写作公式 · 三翻四震 · 感情线四阶段 | short-write / short-analyze |
-| 女频写作 | 女读者偏好 · 情感描写 · 感情线模式 · 对标拆书 | short-write |
-| 拆文方法 | 黄金三章 · 情绪曲线 · 结构拆解 · 知乎风格分析 | long-analyze / short-analyze |
-| 短篇方法论 | 故事核 · 情节节点 · 爆点分析 · 写作手法 · 节奏分析 · 共鸣分析 · 人物分类 · 平台适配 | short-analyze |
-| 拆文实例 | 完整案例拆解 · 模板化输出 | short-analyze |
-| 读者画像 | 9 维画像 · 目标读者分析 | long-scan |
-| 市场数据 | 题材趋势 · 平台特性 · 采集格式 · 投稿指南 | long-scan / short-scan |
-| 封面风格 | 10 大题材视觉风格 · 色彩构图 · 提示词模板 | story-cover |
-| 多视角审稿 | 多视角审稿 · 评分标准 · 毒点排查 | story-review |
+| 개요 배치 | 5단계 개요법 · 스토리 구조 단계화 · 노드 설계법 · 성장감 설계 | long-write |
+| 시작 설계 | 오프닝 모드 · 전 500자 설계 · 황금 3장 시작 전략 | long-write / short-write |
+| 인물 설계 | 캐릭터 설정 · 인물 추출 · 관계 매핑 · 동기 연쇄 · 군상 | long-write / short-write / short-analyze |
+| 갈고리 기법 | 챕터 끝 갈고리 13식 · 챕터 머리 갈고리 7식 · 문단 레벨 갈고리 · 서스펜스 편성 | long-write / short-write / short-analyze |
+| 감정 설계 | 6가지 곡선 템플릿 · 기대감 관리 · 소재 레이스 전략 | long-write / short-write |
+| 소재 프레임워크 | 장편 8노드 · 단편 압축 3막 · 8대 소재 시작 템플릿 | long-write / short-write / short-analyze |
+| 대화 기법 | 리듬 · 잠재의사 · 정보 통제 · 대화 패턴 데이터베이스 | long-write / short-write |
+| 반전 툴킷 | 타입 · 타이밍 · 오도의 기층 경로 | long-write / short-write |
+| 스타일 모듈 | 대화 · 격투 · 지혜 격투 · 카메라式 작성 · 위엄 세우기 · 묘사 | long-write |
+| 고급 기법 | 소강 4단계법 · 클라이맥스 역추적 · 2선 구조 · AB 교직법 | long-write |
+| AI 냄새 제거 | 예방 · 3회 AI 냄새 제거법 · 개정 예시库 · 금지 어휘表 | deslop / long-write / short-write |
+| 품질 검사 | 범용 · 장편 전용 · 단편 전용 · 독점排查 | long-write / short-write / short-analyze |
+| 작성 공식 | 21대 소재 작성 공식 · 3번 반전 4번 충격 · 감정선 4단계 | short-write / short-analyze |
+| 여성 독자층 작성 | 여성 독자 선호 · 감정 묘사 · 감정선 패턴 · 대상 작품 분석 | short-write |
+| 작품 분석 방법 | 황금 3장 · 감정 곡선 · 구조 분해 · 즈후 스타일 분석 | long-analyze / short-analyze |
+| 단편 방법론 | 스토리 핵 · 플롯 노드 · 폭발 포인트 분석 · 작법 · 공감 분석 | short-analyze |
+| 독자 프로파일링 | 9차원 프로파일 · 타겟 독자 분석 | long-scan |
+| 시장 데이터 | 소재 트렌드 · 플랫폼 특성 · 수집 형식 · 투고 가이드 | long-scan / short-scan |
+| 커버 스타일 | 10대 소재 비주얼 스타일 · 색채 구도 · 프롬프트 템플릿 | story-cover |
+| 다중 시점 심사 | 다중 시점 심사 · 평가 기준 · 독점排查 | story-review |
 
 </details>
 
-## 适用平台
+## 지원 플랫폼
 
-**长篇** 起点中文网 · 番茄小说 · 晋江文学城 · 七猫小说 · 刺猬猫
+**장편** 치디엔(起点中文网) · 판치에(番茄小说) · 진장(晋江文学城) · 칠묘(七猫小说) · 차외묘(刺猬猫)
 
-**短篇** 知乎盐言故事 · 番茄短篇 · 七猫短篇
+**단편** 즈후 옌옌 스토리(知乎盐言故事) · 판치에 단편 · 칠묘 단편
 
-真实产出样例见 [demo/](demo/)：短篇拆文《曾将爱意私藏》· 长篇拆文《盘龙》· 长篇续写工程《让你管账号，你高燃混剪炸全网》· 封面《剑道独尊》示例图。
+실제 산출 샘플은 [demo/](demo/)를 참조: 단편 분석 《증장애의사장》· 장편 분석 《반룡》· 장편 연속 집필 공정 《너 관계 맡겨라, 네 고혼 합편이 전 폭발했다》· 커버 《검도독존》 예시 이미지.
 
-这套 skill 现在能让我度过找工作的过渡期 :joy:，希望也能帮到有需要的朋友。
+이 skill 덕분에 취업 준비 기간을 버틸 수 있네요 :joy:，필요한 분들께도 도움이 되길 바랍니다.
 
-## 贡献
+## 기여
 
-欢迎贡献新 skill、补充知识库、更新市场数据。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+새로운 skill 기여, 지식 베이스 보충, 시장 데이터 업데이트를 환영합니다. 자세한 내용은 [CONTRIBUTING.md](CONTRIBUTING.md)를 참조하세요.
 
-## 交流
+## 교류
 
-- **Telegram 群**：<https://t.me/ohstoryclaudecode> —— 日常交流、踩坑、新功能讨论。
-- **GitHub Discussions**：[提问 / 求助 / 分享用法](https://github.com/worldwonderer/oh-story-claudecode/discussions)，方便检索。
+- **Telegram 그룹**：<https://t.me/ohstoryclaudecode> —— 일상 교류, 삽질담, 신기능 논의.
+- **GitHub Discussions**：[질문 / 도움 요청 / 사용법 공유](https://github.com/worldwonderer/oh-story-claudecode/discussions), 검색 용이.
 
-## 致谢
+## 감사
 
-- [LINUX DO - The New Ideal Community](https://linux.do) — 社区支持
-- [FanqieRankTracker](https://github.com/wen1701/FanqieRankTracker) — 番茄小说字体反爬解码方案参考
-- [Zhuque AIGC Detector CLI](https://github.com/Sophomoresty/zhuque) — 去 AI 味实验中的外部复测工具参考
+- [LINUX DO - The New Ideal Community](https://linux.do) — 커뮤니티 지원
+- [FanqieRankTracker](https://github.com/wen1701/FanqieRankTracker) — 판치에 소설 폰트 크롤링 디코딩 방안 참고
+- [Zhuque AIGC Detector CLI](https://github.com/Sophomoresty/zhuque) — AI 냄새 제거 실험 중 외부 재검증 툴 참고

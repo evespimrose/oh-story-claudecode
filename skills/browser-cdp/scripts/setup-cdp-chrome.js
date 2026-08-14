@@ -1,39 +1,39 @@
 #!/usr/bin/env node
 // setup-cdp-chrome.js
-// 准备带有 CDP（Chrome DevTools Protocol）调试功能的 Chrome 环境（跨平台）。
-// 通过此脚本，agent-browser 可以复用用户的 Chrome 登录态。
+// CDP（Chrome DevTools Protocol）디버깅 기능이 포함된 Chrome 환경을 준비합니다（플랫폼 간）.
+// 이 스크립트를 통해 agent-browser는 사용자의 Chrome 로그인 상태를 재사용할 수 있습니다.
 //
-// 用法:
+// 사용법:
 //   node setup-cdp-chrome.js [port] [options]
 //
 // Options:
-//   --detect-only            只探测当前状态（结构化输出），不做任何修改
-//   --yes                    确认杀死现有 Chrome，跳过交互提示
-//   --reset                  清空 ~/chrome-debug-profile 后重新复制
-//   --profile <name>         使用指定 Chrome profile（默认: Default）
-//   --dry-run                打印将执行的操作，不实际执行
+//   --detect-only            현재 상태만 감지（구조화된 출력），어떤 수정도 하지 않음
+//   --yes                    기존 Chrome 종료 확인，인터랙티브 프롬프트 건너뛰기
+//   --reset                  ~/chrome-debug-profile 비우고 다시 복사
+//   --profile <name>         지정한 Chrome profile 사용（기본값: Default）
+//   --dry-run                실행할 작업 출력만 하고 실제 실행하지 않음
 //
-// 说明：CDP 端口已在监听时默认直接复用现有 Chrome 并退出 0；但传了 --reset 或显式
-//       --profile 时不复用——这两个参数就是要重建 debug profile（登录态过期即走这条路），
-//       会先关闭现有 Chrome（非 TTY 下需 --yes，否则 exit 3 报 NEEDS_CONSENT）。
-//       重建路径上有两道硬闸门：关完进程后端口必须真的不再应答（否则在动 profile 之前就
-//       exit 1 中止，绝不删一个还在运行的 Chrome 的 profile）；启动后必须证明「端口上应答的
-//       就是本次启动的实例」——身份取得到且与重建前不同、spawn 出的进程还活着、端口的 LISTEN
-//       持有者全在这棵进程树里、且树里确有一个持有者带着本次的 --remote-debugging-port。
-//       任何一条证不出来（含查不到）都拒绝报成功，避免把别人的会话当新浏览器交出去。
+// 설명：CDP 포트가 이미 리슨 중이면 기본적으로 기존 Chrome을 직접 재사용하고 0으로 종료；하지만 --reset 또는 명시적
+//       --profile 전달 시 재사용하지 않음——이 두 파라미터는 debug profile을 재구축하려는 것이며（로그인 상태 만료 시 이 경로 사용），
+//       먼저 기존 Chrome을 종료합니다（비 TTY 환경에서는 --yes 필요，아니면 exit 3 NEEDS_CONSENT）.
+//       재구축 경로에는 두 가지 엄격한 검증이 존재: 프로세스를 모두 종료한 후 포트가 실제로 응답하지 않아야 함（그렇지 않으면 profile 수정 전에
+//       exit 1로 중단，실행 중인 Chrome의 profile을 절대 삭제하지 않음）；시작 후 반드시 「포트에서 응답하는 것이
+//       이번에 시작한 인스턴스임」을 증명해야——ID를 확인할 수 있고 재구축 전과 다르며，spawn한 프로세스가 살아 있고，포트의 LISTEN
+//       소유자가 모두 이 프로세스 트리에 속하며，트리 내에 이번 --remote-debugging-port를 가진 소유자가 확실히 존재해야 함.
+//       어느 하나라도 증명하지 못하면（조회 불가 포함）성공을 거부하여，다른 사람의 세션을 새 브라우저로 넘기는 것을 방지.
 //
-// 退出码:
-//   0  成功 / detect-only 完成
-//   1  通用错误（环境缺失、超时等）
-//   2  用户拒绝（TTY 模式下回答 N）
-//   3  需要同意但当前为非 TTY 且未传 --yes
+// 종료 코드:
+//   0  성공 / detect-only 완료
+//   1  일반 오류（환경 누락、타임아웃 등）
+//   2  사용자 거절（TTY 모드에서 N 답변）
+//   3  동의 필요하지만 현재 비 TTY이고 --yes 미전달
 //
-// detect-only 结构化输出（stdout，每行 KEY=value）:
+// detect-only 구조화된 출력（stdout，매 행 KEY=value）:
 //   CDP_STATUS=ready|needs-setup
-//   CDP_URL=...                    (仅当 ready)
-//   BROWSER=...                    (仅当 ready)
+//   CDP_URL=...                    (ready일 때만)
+//   BROWSER=...                    (ready일 때만)
 //   CHROME_RUNNING=yes|no
-//   CHROME_PID_COUNT=N             (仅当 CHROME_RUNNING=yes)
+//   CHROME_PID_COUNT=N             (CHROME_RUNNING=yes일 때만)
 
 "use strict";
 
@@ -46,14 +46,14 @@ const path = require("path");
 const readline = require("readline");
 
 // ---------------------------------------------------------------------------
-// 参数解析
+// 파라미터 파싱
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
   const flags = { dryRun: false, yes: false, detectOnly: false, reset: false };
   let profile = "Default";
-  // 是否显式传了 --profile：默认值 "Default" 无法区分「没传」和「传了 Default」，
-  // 而这两种情况在"CDP 已就绪"分支上的语义不同（复用 vs 按指定 profile 重建）
+  // --profile을 명시적으로 전달했는지 여부：기본값 "Default"는 「안 넘김」과 「Default를 넘김」을 구분할 수 없으며，
+  // 이 두 경우는 "CDP 준비 완료" 분기에서 의미가 다름（재사용 vs 지정 profile로 재구축）
   let profileExplicit = false;
   let port = null;
 
