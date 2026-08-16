@@ -1,7 +1,7 @@
 ---
 name: story-cover
 version: 1.0.0
-description: "소설 표지 생성. 도서명과 작가명을 기반으로 장르 및 스타일을 자동 분석하여, GPT-Image-2를 호출해 제목과 서명이 포함된 전문적인 웹소설 표지를 직접 생성합니다. 트리거 방식: /story-cover, /표지, 「표지 하나 만들어줘」「표지 이미지 생성해줘」「소설 표지 제작」「표지 디자인」."
+description: "웹소설 표지 생성. 도서명과 작가명을 기반으로 장르 및 스타일을 자동 분석하여, GPT-Image-2를 호출해 제목과 작가명이 포함된 전문적인 웹소설 표지를 직접 생성합니다. 트리거 방식: /story-cover, /표지, 「표지 하나 만들어줘」「표지 이미지 생성해줘」「소설 표지 제작」「표지 디자인」."
 metadata: {"openclaw":{"requires":{"env":["GPT_IMAGE_API_KEY"],"bins":["curl","jq","base64"]},"primaryEnv":"GPT_IMAGE_API_KEY","source":"https://github.com/worldwonderer/oh-story-claudecode"}}
 ---
 # story-cover: 소설 표지 생성
@@ -19,8 +19,8 @@ metadata: {"openclaw":{"requires":{"env":["GPT_IMAGE_API_KEY"],"bins":["curl","j
 | `GPT_IMAGE_API_KEY` | ✅ | — | OpenAI 또는 호환 프록시의 API Key |
 | `GPT_IMAGE_BASE_URL` | | `https://api.openai.com/v1` | 호환 프록시 사용 시 이 값을 변경 |
 | `GPT_IMAGE_MODEL` | | `gpt-image-2` | 새 모델 테스트시에만 덮어씀 |
-| `GPT_IMAGE_SIZE` | | `1024x1536` | 목표 비율 힌트(판치에 3:4→`768x1024`, 기본 2:3→`1024x1536`). 공식 gpt-image-2는 16의 배수 크기(비율 ≤3:1)를 지원하지만, **많은 중계 프록시가 size를 무시하고 예설정된 약 2:3 비율을 반환함**(실측 완료). 플랫폼 크기는 이에 의존하지 않고 「플랫폼 업로드 크기 내보내기」 단계에서 최종 보장 |
-| `UPLOAD_SIZE` | | — | 플랫폼 고정 업로드 픽셀(판치에 `600x800`). 설정 시 「플랫폼 업로드 크기 내보내기」 단계에서 중앙 자르기+축소하여 업로드용 버전 생성 (왜곡 없음, 생성 이미지 크기에 비의존) |
+| `GPT_IMAGE_SIZE` | | `1024x1536` | 목표 비율 힌트(예: 3:4→`768x1024`, 기본 2:3→`1024x1536`). 공식 gpt-image-2는 16의 배수 크기(비율 ≤3:1)를 지원하지만, **많은 중계 프록시가 size를 무시하고 미리 설정된 약 2:3 비율을 반환함**(실측 완료). 플랫폼 크기는 이에 의존하지 않고 「플랫폼 업로드 크기 내보내기」 단계에서 최종 보장됨 |
+| `UPLOAD_SIZE` | | — | 플랫폼 고정 업로드 픽셀(예: `600x800`). 설정 시 「플랫폼 업로드 크기 내보내기」 단계에서 중앙 자르기+축소하여 업로드용 버전 생성 (왜곡 없음, 생성 이미지 크기에 무관) |
 | `BOOK_DIR` | ✅ | — | 출력 디렉토리, `./covers/<도서명>` 권장 |
 | `REF_IMAGE` | | — | 참고 이미지 로컬 경로 또는 URL. 설정 시 `images/edits` 이미지 투 이미지 방식 진행 |
 
@@ -42,7 +42,7 @@ metadata: {"openclaw":{"requires":{"env":["GPT_IMAGE_API_KEY"],"bins":["curl","j
 | 판치에 소설 | 600×800 | 3:4 | `768x1024` |
 | 기타 플랫폼 (기본 세로형) | 플랫폼 규격에 따름 | 2:3 | `1024x1536` |
 
-`export GPT_IMAGE_SIZE`로 목표 비율 지정(공식 API는 이를 따르나 프록시는 무시하고 약 2:3 반환할 수 있음). 플랫폼에 고정 업로드 픽셀이 있는 경우 `export UPLOAD_SIZE` 지정(판치에 `600x800`). **플랫폼 크기는 프록시 인식 여부와 관계없이 「플랫폼 업로드 크기 내보내기」 단계의 중앙 자르기+축소로 최종 보장됩니다.** 플랫폼 및 장르별 스타일은 [references/cover-styles.md](references/cover-styles.md)를 참조하세요.
+`export GPT_IMAGE_SIZE`로 목표 비율 지정(공식 API는 이를 따르나 프록시는 무시하고 약 2:3을 반환할 수 있음). 플랫폼에 고정 업로드 픽셀이 있는 경우 `export UPLOAD_SIZE` 지정(예: `600x800`). **플랫폼 크기는 프록시 인식 여부와 관계없이 「플랫폼 업로드 크기 내보내기」 단계의 중앙 자르기+축소로 최종 보장됩니다.** 플랫폼 및 장르별 스타일은 [references/cover-styles.md](references/cover-styles.md)를 참조하세요.
 
 ### Step 2: 장르 판정
 
@@ -154,12 +154,12 @@ MODEL="${GPT_IMAGE_MODEL:-gpt-image-2}"
 SIZE="${GPT_IMAGE_SIZE:-1024x1536}"
 BOOK_DIR="${BOOK_DIR:?export BOOK_DIR=./covers/<도서명> 을 설정하세요}"
 
-mkdir -p "$BOOK_DIR/封面"
+mkdir -p "$BOOK_DIR/cover"
 
 # 기존 생성된 표지를 덮어쓰지 않도록 버전 번호 자동 증가
 i=1
-while [ -f "$BOOK_DIR/封面/封面_v${i}.png" ]; do i=$((i+1)); done
-OUT="$BOOK_DIR/封面/封面_v${i}.png"
+while [ -f "$BOOK_DIR/표지/표지_v${i}.png" ]; do i=$((i+1)); done
+OUT="$BOOK_DIR/표지/표지_v${i}.png"
 RESP=$(mktemp)
 trap 'rm -f "$RESP"' EXIT
 
@@ -191,7 +191,7 @@ jq -er '.data[0].b64_json // empty' "$RESP" | base64 --decode > "$OUT"
 printf '%s\n' "$PROMPT" > "${OUT%.png}.prompt.txt"
 
 file "$OUT"
-ls -lt "$BOOK_DIR/封面/"
+ls -lt "$BOOK_DIR/표지/"
 ```
 
 #### 이미지 투 이미지 (참고 이미지 제공 시)
@@ -208,12 +208,12 @@ SIZE="${GPT_IMAGE_SIZE:-1024x1536}"
 BOOK_DIR="${BOOK_DIR:?export BOOK_DIR=./covers/<도서명> 을 설정하세요}"
 REF_IMAGE="${REF_IMAGE:?export REF_IMAGE=로컬경로_또는_URL 을 설정하세요}"
 
-mkdir -p "$BOOK_DIR/封面"
+mkdir -p "$BOOK_DIR/표지"
 
 # 버전 번호 자동 증가
 i=1
-while [ -f "$BOOK_DIR/封面/封面_v${i}.png" ]; do i=$((i+1)); done
-OUT="$BOOK_DIR/封面/封面_v${i}.png"
+while [ -f "$BOOK_DIR/표지/표지_v${i}.png" ]; do i=$((i+1)); done
+OUT="$BOOK_DIR/표지/표지_v${i}.png"
 RESP=$(mktemp)
 REF_TMP=""
 trap '[ -n "$REF_TMP" ] && rm -f "$REF_TMP"; rm -f "$RESP"' EXIT
@@ -251,7 +251,7 @@ printf '%s\n' "$PROMPT"    > "${OUT%.png}.prompt.txt"
 printf '%s\n' "$REF_IMAGE" > "${OUT%.png}.ref.txt"
 
 file "$OUT"
-ls -lt "$BOOK_DIR/封面/"
+ls -lt "$BOOK_DIR/표지/"
 ```
 
 ### Step 5: 플랫폼 업로드 크기 내보내기 (고정 픽셀 규격 필요시)
@@ -259,10 +259,10 @@ ls -lt "$BOOK_DIR/封面/"
 `UPLOAD_SIZE`가 지정된 경우(판치에 600×800) 원본 이미지를 **중앙 자르기+축소**하여 업로드 사본을 만듭니다.
 
 ```bash
-SRC="${OUT:-$(ls -t "${BOOK_DIR:-.}"/封面/封面_v*.png 2>/dev/null | grep -v _上传 | head -1)}"
+SRC="${OUT:-$(ls -t "${BOOK_DIR:-.}"/표지/표지_v*.png 2>/dev/null | grep -v _업로드 | head -1)}"
 TARGET="${UPLOAD_SIZE:-}"
 if [ -n "$TARGET" ] && [ -f "$SRC" ]; then
-  UP="${SRC%.png}_上传.png"; W="${TARGET%x*}"; H="${TARGET#*x}"
+  UP="${SRC%.png}_업로드.png"; W="${TARGET%x*}"; H="${TARGET#*x}"
   if command -v magick >/dev/null 2>&1; then M=magick
   elif command -v convert >/dev/null 2>&1; then M=convert; else M=""; fi
   if [ -n "$M" ]; then

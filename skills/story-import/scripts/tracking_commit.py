@@ -32,17 +32,17 @@ SNAPSHOT_TARGET_BYTES = 4096
 SNAPSHOT_MAX_BYTES = 8192
 
 CONTEXT_HEADINGS = (
-    "## 当前位置",
-    "## 长期约束",
-    "## 核心角色状态",
-    "## 活跃伏笔",
-    "## 近三章速记",
-    "## 下一章承诺",
-    "## 连贯性风险",
+    "## 현재 위치",
+    "## 장기 제약",
+    "## 핵심 캐릭터 상태",
+    "## 활성 복선",
+    "## 최근 3장 요약",
+    "## 다음 장 예고",
+    "## 개연성 리스크",
 )
-FORESHADOW_STATUSES = ("已埋", "已回收", "已过期", "放弃")
-FORESHADOW_IMPORTANCE = ("高", "中", "低")
-REVEAL_STATUSES = ("未揭示", "部分揭示", "已揭示")
+FORESHADOW_STATUSES = ("설정됨", "회수됨", "만료됨", "포기")
+FORESHADOW_IMPORTANCE = ("높음", "중간", "낮음")
+REVEAL_STATUSES = ("미공개", "부분 공개", "공개됨")
 INVALID_FILE_CHARS = re.compile(r"[<>:\"/\\|?*\x00-\x1f]")
 FORESHADOW_ID = re.compile(r"^F\d{3,}$")
 EVENT_ID = re.compile(r"^E\d{3,}$")
@@ -56,13 +56,13 @@ WINDOWS_RESERVED_NAMES = {
 }
 RETIRED_TRACKING_PATHS = (
     "_tracking-meta.json",
-    "阶段摘要.md",
-    "角色状态.md",
-    "时间线.md",
-    "摘要",
-    "时间线/事件库.json",
+    "단계별_요약.md",
+    "캐릭터_상태.md",
+    "타임라인.md",
+    "요약",
+    "타임라인/이벤트_라이브러리.json",
 )
-RETIRED_ARCHIVE_DIR = "_旧追踪存档"
+RETIRED_ARCHIVE_DIR = "_이전_추적_아카이브"
 
 
 class TrackingError(ValueError):
@@ -135,8 +135,8 @@ def byte_size(text: str) -> int:
 def emit(text: str, *, error: bool = False) -> None:
     """Write UTF-8 bytes directly.
 
-    Windows 的文本 stdout 是 cp1252（含中文即 UnicodeEncodeError），stderr 默认
-    backslashreplace（中文被转义成反斜杠码位，作者看不懂）。两条路都要绕开。
+    Windows의 텍스트 stdout은 cp1252(중국어 포함 시 UnicodeEncodeError 발생)이며, stderr은 기본적으로
+    backslashreplace(중국어가 백슬래시 코드 포인트로 이스케이프되어 작성자가 알아볼 수 없음)를 사용합니다. 두 방식 모두 우회해야 합니다.
     """
     stream = sys.stderr if error else sys.stdout
     stream.flush()
@@ -181,7 +181,7 @@ def write_if_changed(path: Path, payload: str) -> None:
 
 
 def tracking_root(project: Path) -> Path:
-    return project.resolve() / "追踪"
+    return project.resolve() / "추적"
 
 
 def state_path(project: Path) -> Path:
@@ -190,12 +190,12 @@ def state_path(project: Path) -> Path:
 
 def delta_path(tracking: Path, chapter: int) -> Path:
     width = max(3, len(str(chapter)))
-    return tracking / "逐章记录" / f"第{chapter:0{width}d}章.md"
+    return tracking / "장별_기록" / f"제{chapter:0{width}d}장.md"
 
 
 def find_retired_tracking_paths(tracking: Path) -> list[str]:
     found = [relative for relative in RETIRED_TRACKING_PATHS if (tracking / relative).exists()]
-    found.extend(sorted(path.name for path in tracking.glob("基线_截至第*章.md")))
+    found.extend(sorted(path.name for path in tracking.glob("베이스라인_제*장까지.md")))
     return found
 
 
@@ -205,7 +205,7 @@ def require_no_retired_tracking_paths(tracking: Path) -> None:
 
 
 def archive_retired_tracking_paths(tracking: Path) -> list[str]:
-    """Move a pre-transaction 追踪/ aside so init can build the current protocol in place.
+    """트랜잭션 이전의 추적/ 폴더를 한쪽으로 옮겨 init이 현재 프로토콜을 제자리에서 빌드할 수 있도록 합니다."""
 
     Nothing is parsed or converted: the old files are kept verbatim for the author to
     consult, and the new state is reconstructed from the init document alone.
@@ -217,9 +217,9 @@ def archive_retired_tracking_paths(tracking: Path) -> list[str]:
     for relative in retired:
         require(
             not (archive / relative).exists(),
-            f"追踪/{RETIRED_ARCHIVE_DIR}/{relative} already exists; move it away before initializing",
+            f"추적/{RETIRED_ARCHIVE_DIR}/{relative}이(가) 이미 존재합니다. 초기화하기 전에 다른 곳으로 옮기세요.",
         )
-    # 先全量校验再搬运；中断后重跑时已搬走的条目不再出现在待搬列表里，可直接续做。
+    # 전체 검증 후 이동합니다. 중단 후 재실행 시 이미 이동된 항목은 대기 목록에 나타나지 않으므로 바로 이어서 진행할 수 있습니다.
     for relative in retired:
         target = archive / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -276,23 +276,23 @@ def normalize_snapshots(value: object, label: str = "character_snapshots") -> di
 
 def render_snapshot(name: str, snapshot: dict[str, Any], through_chapter: int, revision: int) -> str:
     def section(title: str, values: list[str]) -> list[str]:
-        return [f"## {title}", *(f"- {item}" for item in values or ["无"]), ""]
+        return [f"## {title}", *(f"- {item}" for item in values or ["없음"]), ""]
 
     lines = [
-        f"# {name}｜当前状态",
+        f"# {name}｜현재 상태",
         "",
-        f"- 状态修订：{revision}",
-        f"- 截至章节：第{through_chapter}章",
-        f"- 身份：{snapshot['identity']}",
-        f"- 位置：{snapshot['location']}",
-        f"- 当前目标：{snapshot['goal']}",
-        f"- 身心状态：{snapshot['state']}",
+        f"- 상태 수정: {revision}",
+        f"- 기준 장: 제{through_chapter}장",
+        f"- 신분: {snapshot['identity']}",
+        f"- 위치: {snapshot['location']}",
+        f"- 현재 목표: {snapshot['goal']}",
+        f"- 심신 상태: {snapshot['state']}",
         "",
     ]
-    lines.extend(section("能力与资源", snapshot["abilities_resources"]))
-    lines.extend(section("关键关系", snapshot["relationships"]))
-    lines.extend(section("已知信息", snapshot["knowledge"]))
-    lines.extend(section("未结事项", snapshot["open_threads"]))
+    lines.extend(section("능력 및 자원", snapshot["abilities_resources"]))
+    lines.extend(section("주요 관계", snapshot["relationships"]))
+    lines.extend(section("알려진 정보", snapshot["knowledge"]))
+    lines.extend(section("미결 사항", snapshot["open_threads"]))
     payload = "\n".join(lines).rstrip() + "\n"
     require(
         byte_size(payload) <= SNAPSHOT_MAX_BYTES,
@@ -376,19 +376,19 @@ def normalize_foreshadow_state(value: object, last_chapter: int) -> dict[str, di
 
 def render_foreshadow(rows: dict[str, dict[str, Any]], revision: int) -> str:
     lines = [
-        "# 伏笔当前状态",
+        "# 복선 현재 상태",
         "",
-        f"> 状态修订：{revision}。每个 ID 只保留一行当前状态；历史变化见 `逐章记录/`。",
+        f"> 상태 수정: {revision}. 각 ID당 한 줄의 현재 상태만 유지합니다. 변경 이력은 `장별_기록/`을 참조하세요.",
         "",
-        "| ID | 内容 | 埋设章 | 计划回收章 | 状态 | 重要度 | 最近变更章 |",
+        "| ID | 내용 | 설정 장 | 회수 예정 장 | 상태 | 중요도 | 최근 변경 장 |",
         "|---|---|---:|---:|---|---|---:|",
     ]
     for identifier in sorted(rows):
         row = rows[identifier]
-        planned = f"第{row['planned_resolution_chapter']}章" if row["planned_resolution_chapter"] else "—"
+        planned = f"제{row['planned_resolution_chapter']}장" if row["planned_resolution_chapter"] else "—"
         lines.append(
-            f"| {identifier} | {row['summary']} | 第{row['planted_chapter']}章 | {planned} | "
-            f"{row['status']} | {row['importance']} | 第{row['updated_chapter']}章 |"
+            f"| {identifier} | {row['summary']} | 제{row['planted_chapter']}장 | {planned} | "
+            f"{row['status']} | {row['importance']} | 제{row['updated_chapter']}장 |"
         )
     return "\n".join(lines) + "\n"
 
@@ -416,7 +416,7 @@ def normalize_timeline_change(
     require(reveal_status in REVEAL_STATUSES, f"{label}.reveal_status must be one of {REVEAL_STATUSES}")
     reveal_raw = event.get("reveal_chapter")
     reveal_chapter = None if reveal_raw is None else as_int(reveal_raw, f"{label}.reveal_chapter", minimum=1)
-    if reveal_status == "未揭示":
+    if reveal_status == "미공개":
         require(reveal_chapter is None, f"{label} must not put a future reveal chapter in established timeline facts")
     else:
         require(reveal_chapter is not None, f"{label}.reveal_chapter is required once revealed")
@@ -474,31 +474,31 @@ def normalize_timeline_state(value: object, last_chapter: int) -> dict[str, dict
 
 def render_timeline_views(events: dict[str, dict[str, Any]], revision: int) -> tuple[str, str]:
     author_lines = [
-        "# 作者真相时间线",
+        "# 작가 진실 타임라인",
         "",
-        f"> 状态修订：{revision}。客观事实与读者认知的权威对照；未来揭示计划仍留在大纲。",
+        f"> 상태 수정: {revision}. 객관적 사실과 독자 인지의 대조표이며, 향후 공개 계획은 시놉시스에 유지됩니다.",
         "",
-        "| ID | 首次登记章 | 故事时间 | 客观事实 | 读者当前认知 | 揭示状态 | 实际揭示章 |",
+        "| ID | 최초 등록 장 | 이야기 시간 | 객관적 사실 | 독자의 현재 인지 | 공개 상태 | 실제 공개 장 |",
         "|---|---:|---|---|---|---|---:|",
     ]
     reader_lines = [
-        "# 读者已知时间线",
+        "# 독자 인지 타임라인",
         "",
-        f"> 状态修订：{revision}。只呈现读者截至当前章节已经知道或相信的内容，不泄露作者侧客观真相。",
+        f"> 상태 수정: {revision}. 현재 장까지 독자가 알고 있거나 믿고 있는 내용만 표시하며, 작가 측의 객관적 진실은 누설하지 않습니다.",
         "",
-        "| ID | 读者当前认知 | 认知截至章 |",
+        "| ID | 독자의 현재 인지 | 인지 기준 장 |",
         "|---|---|---:|",
     ]
     for identifier in sorted(events):
         event = events[identifier]
-        reveal = f"第{event['reveal_chapter']}章" if event.get("reveal_chapter") else "—"
-        characters = "、".join(event.get("characters", []))
-        objective = event["objective_fact"] + (f"（涉及：{characters}）" if characters else "")
+        reveal = f"제{event['reveal_chapter']}장" if event.get("reveal_chapter") else "—"
+        characters = ", ".join(event.get("characters", []))
+        objective = event["objective_fact"] + (f" (관련: {characters})" if characters else "")
         author_lines.append(
-            f"| {identifier} | 第{event['first_recorded_chapter']}章 | {event['story_time']} | {objective} | "
+            f"| {identifier} | 제{event['first_recorded_chapter']}장 | {event['story_time']} | {objective} | "
             f"{event['reader_knowledge']} | {event['reveal_status']} | {reveal} |"
         )
-        reader_lines.append(f"| {identifier} | {event['reader_knowledge']} | 第{event['updated_chapter']}章 |")
+        reader_lines.append(f"| {identifier} | {event['reader_knowledge']} | 제{event['updated_chapter']}장 |")
     return "\n".join(author_lines) + "\n", "\n".join(reader_lines) + "\n"
 
 
@@ -548,14 +548,14 @@ def validate_context_input(value: object, *, include_initial_fields: bool) -> di
 
 def active_foreshadow_lines(rows: dict[str, dict[str, Any]]) -> list[str]:
     importance = {value: index for index, value in enumerate(FORESHADOW_IMPORTANCE)}
-    candidates = [row for row in rows.values() if row["status"] == "已埋"]
+    candidates = [row for row in rows.values() if row["status"] == "배치됨"]
     candidates.sort(
         key=lambda row: (importance[row["importance"]], row["planned_resolution_chapter"] or 10**12, row["id"])
     )
     result = []
     for row in candidates[:8]:
-        planned = f"第{row['planned_resolution_chapter']}章" if row["planned_resolution_chapter"] else "回收章未定"
-        result.append(f"{row['id']}｜{row['summary']}｜埋第{row['planted_chapter']}章｜{planned}｜{row['importance']}")
+        planned = f"제{row['planned_resolution_chapter']}장" if row["planned_resolution_chapter"] else "회수 장 미정"
+        result.append(f"{row['id']}｜{row['summary']}｜제{row['planted_chapter']}장 배치｜{planned}｜{row['importance']}")
     return result
 
 
@@ -563,39 +563,39 @@ def render_context(state: dict[str, Any]) -> str:
     context = state["context"]
     position = context["position"]
     current_chapter = (
-        "尚未开篇" if state["last_committed_chapter"] == 0 else f"第{state['last_committed_chapter']}章"
+        "시작 전" if state["last_committed_chapter"] == 0 else f"제{state['last_committed_chapter']}장"
     )
     character_lines = [
         f"{name}｜{state['characters'][name]['identity']}｜{state['characters'][name]['state']}｜"
-        f"目标：{state['characters'][name]['goal']}"
+        f"목표: {state['characters'][name]['goal']}"
         for name in context["active_character_names"]
     ]
     sections: list[tuple[str, list[str]]] = [
         (
-            "## 当前位置",
+            "## 현재 위치",
             [
-                f"当前章：{current_chapter}",
-                f"卷：{position['volume']}（始于第{position['volume_start_chapter']}章）",
-                f"故事时间：{position['story_time']}",
-                f"场景：{position['scene']}",
+                f"현재 장: {current_chapter}",
+                f"권: {position['volume']} (제{position['volume_start_chapter']}장부터 시작)",
+                f"이야기 시간: {position['story_time']}",
+                f"장면: {position['scene']}",
             ],
         ),
-        ("## 长期约束", context["long_term_constraints"]),
-        ("## 核心角色状态", character_lines),
-        ("## 活跃伏笔", active_foreshadow_lines(state["foreshadow"])),
-        ("## 近三章速记", [f"第{item['chapter']}章｜{item['summary']}" for item in context["recent_chapters"]]),
-        ("## 下一章承诺", context["next_chapter_commitments"]),
-        ("## 连贯性风险", context["continuity_risks"]),
+        ("## 장기 제약", context["long_term_constraints"]),
+        ("## 핵심 캐릭터 상태", character_lines),
+        ("## 활성 복선", active_foreshadow_lines(state["foreshadow"])),
+        ("## 최근 3개 장 요약", [f"제{item['chapter']}장｜{item['summary']}" for item in context["recent_chapters"]]),
+        ("## 다음 장 약속", context["next_chapter_commitments"]),
+        ("## 일관성 리스크", context["continuity_risks"]),
     ]
     lines = [
-        f"# 写作连续性上下文 — {state['book_title']}",
+        f"# 집필 연속성 컨텍스트 — {state['book_title']}",
         "",
-        f"> 状态修订：{state['state_revision']}。截至当前章的续写状态卡，只放下一章真正需要的连续性状态。",
+        f"> 상태 수정: {state['state_revision']}. 현재 장까지의 집필 상태 카드이며, 다음 장에 실제로 필요한 연속성 상태만 포함합니다.",
         "",
     ]
     for heading, values in sections:
         lines.append(heading)
-        lines.extend(f"- {value}" for value in values or ["无"])
+        lines.extend(f"- {value}" for value in values or ["없음"])
         lines.append("")
     payload = "\n".join(lines).rstrip() + "\n"
     headings = tuple(line for line in payload.splitlines() if line.startswith("## "))
@@ -634,7 +634,7 @@ def normalize_delta(
         name = safe_file_component(change.get("name"), f"delta.character_changes[{index}].name")
         existing = existing_core_names.get(portable_name_key(name))
         is_core = name in snapshots or existing is not None
-        # 本章退役的角色记录最后一次变化即可，不必再交一份马上要删的快照。
+        # 이번 장에서 퇴장하는 캐릭터는 마지막 변경 사항만 기록하며, 곧 삭제될 스냅샷을 다시 제출할 필요는 없습니다.
         require(
             not is_core or name in snapshots or portable_name_key(name) in retiring,
             f"core character {name} changed but has no current snapshot",
@@ -686,48 +686,48 @@ def normalize_delta(
 
 def render_delta(chapter: int, title: str, delta: dict[str, Any], core_names: set[str]) -> str:
     lines = [
-        f"# 第{chapter:03d}章 · {title}",
-        f"- 结果：{delta['result']}",
-        "- 下一章承诺：" + ("；".join(delta["next_chapter_commitments"]) or "无"),
+        f"# 제{chapter:03d}장 · {title}",
+        f"- 결과: {delta['result']}",
+        "- 다음 장 약속: " + ("; ".join(delta["next_chapter_commitments"]) or "없음"),
         "",
-        "## 角色变化",
+        "## 캐릭터 변화",
     ]
     lines.extend(
-        f"- {item['name']}｜{'核心' if item['name'] in core_names else '临时'}｜{item['change']}"
+        f"- {item['name']}｜{'핵심' if item['name'] in core_names else '임시'}｜{item['change']}"
         for item in delta["character_changes"]
     )
     if not delta["character_changes"]:
-        lines.append("- 无")
-    lines.extend(["", "## 伏笔变化"])
+        lines.append("- 없음")
+    lines.extend(["", "## 복선 변화"])
     for item in delta["foreshadow_changes"]:
         if item["action"] == "delete":
-            lines.append(f"- {item['id']}｜删除当前登记")
+            lines.append(f"- {item['id']}｜현재 등록 삭제")
         else:
-            planned = f"第{item['planned_resolution_chapter']}章" if item["planned_resolution_chapter"] else "未定"
-            lines.append(f"- {item['id']}｜{item['status']}｜{item['summary']}｜回收{planned}")
+            planned = f"제{item['planned_resolution_chapter']}장" if item["planned_resolution_chapter"] else "미정"
+            lines.append(f"- {item['id']}｜{item['status']}｜{item['summary']}｜회수 {planned}")
     if not delta["foreshadow_changes"]:
-        lines.append("- 无")
-    lines.extend(["", "## 时间与揭示"])
+        lines.append("- 없음")
+    lines.extend(["", "## 시간 및 공개"])
     for item in delta["timeline_events"]:
         if item["action"] == "delete":
-            lines.append(f"- {item['id']}｜删除当前登记")
+            lines.append(f"- {item['id']}｜현재 등록 삭제")
         else:
             lines.append(
-                f"- {item['id']}｜{item['story_time']}｜事实：{item['objective_fact']}｜"
-                f"读者：{item['reader_knowledge']}｜{item['reveal_status']}"
+                f"- {item['id']}｜{item['story_time']}｜사실: {item['objective_fact']}｜"
+                f"독자: {item['reader_knowledge']}｜{item['reveal_status']}"
             )
     if not delta["timeline_events"]:
-        lines.append("- 无")
-    lines.extend(["", "## 连贯性约束"])
+        lines.append("- 없음")
+    lines.extend(["", "## 일관성 제약"])
     lines.extend(f"- {item}" for item in delta["constraints"])
     if not delta["constraints"]:
-        lines.append("- 无")
+        lines.append("- 없음")
     retired = delta.get("retired_context_items", []) + [
-        f"角色状态：{name}" for name in delta.get("retired_characters", [])
+        f"캐릭터 상태: {name}" for name in delta.get("retired_characters", [])
     ]
     if retired:
-        # 退役条目在此留档，续写状态卡收缩后仍可回查当初撤下了什么。
-        lines.extend(["", "## 本章退役登记"])
+        # 은퇴 항목은 여기에 기록되며, 상태 카드가 축소된 후에도 당시 무엇이 제거되었는지 확인할 수 있습니다.
+        lines.extend(["", "## 이번 장 은퇴 등록"])
         lines.extend(f"- {item}" for item in retired)
     payload = "\n".join(lines) + "\n"
     size = byte_size(payload)
@@ -893,8 +893,8 @@ def merge_transaction(state: dict[str, Any], transaction: dict[str, Any]) -> dic
     next_state["characters"].update(transaction["snapshots"])
 
     next_context = transaction["context"]
-    # 退役说的是「从此刻起离开当前状态」，只有 append 的逐章记录代表此刻；
-    # 修订记录属于被改写的旧章，落在那里会谎报退役发生的章节。
+    # 은퇴는 '이 시점부터 현재 상태를 벗어남'을 의미하며, append 방식의 장별 기록만이 이 시점을 나타냅니다.
+    # 수정 기록은 개정된 이전 장에 속하므로, 그곳에 기록하면 은퇴가 발생한 장을 오보하게 됩니다.
     is_revision = transaction["mode"] == "revision"
     require(
         not (is_revision and transaction["delta"]["retired_characters"]),
@@ -912,19 +912,19 @@ def merge_transaction(state: dict[str, Any], transaction: dict[str, Any]) -> dic
         )
         next_state["characters"].pop(name)
 
-    # 上下文条目是整份提交的；漏写会静默丢历史裁定，因此掉落必须显式声明。
+    # 컨텍스트 항목은 전체 제출물에 대한 것입니다. 누락 시 이전 판정이 묵시적으로 삭제되므로, 제외(drop)는 반드시 명시적으로 선언해야 합니다.
     previous_items = set(state["context"]["long_term_constraints"]) | set(state["context"]["continuity_risks"])
     dropped = previous_items - (set(next_context["long_term_constraints"]) | set(next_context["continuity_risks"]))
     require(
         not (is_revision and dropped),
         "a revision must resubmit every current context item; retire them in an append transaction instead: "
-        + "；".join(sorted(dropped)),
+        + "; ".join(sorted(dropped)),
     )
     undeclared = sorted(dropped - set(transaction["delta"]["retired_context_items"]))
     require(
         not undeclared,
         "context items were dropped without being declared in delta.retired_context_items: "
-        + "；".join(undeclared),
+        + "; ".join(undeclared),
     )
     transaction["delta"]["retired_context_items"] = sorted(dropped)
 
@@ -964,29 +964,29 @@ def merge_transaction(state: dict[str, Any], transaction: dict[str, Any]) -> dic
 def render_views(state: dict[str, Any]) -> dict[str, str]:
     revision = state["state_revision"]
     views = {
-        "上下文.md": render_context(state),
-        "伏笔.md": render_foreshadow(state["foreshadow"], revision),
+        "문맥.md": render_context(state),
+        "복선.md": render_foreshadow(state["foreshadow"], revision),
     }
     author, reader = render_timeline_views(state["timeline"], revision)
-    views["时间线/作者真相.md"] = author
-    views["时间线/读者已知.md"] = reader
+    views["타임라인/작가의 진실.md"] = author
+    views["타임라인/독자 인지 내용.md"] = reader
     for name, snapshot in state["characters"].items():
-        views[f"角色状态/{name}.md"] = render_snapshot(
+        views[f"캐릭터 상태/{name}.md"] = render_snapshot(
             name, snapshot, state["last_committed_chapter"], revision
         )
     return views
 
 
 def write_views(tracking: Path, views: dict[str, str]) -> None:
-    # 上下文携带 next revision，先写它；任何后续失败都会让 hook/check 发现
-    # 上下文 revision 与最后提交的 _tracking-state.json 不一致。
-    write_if_changed(tracking / "上下文.md", views["上下文.md"])
-    for relative in sorted(path for path in views if path != "上下文.md"):
+    # 문맥에 next revision이 포함되어 있으므로 먼저 작성합니다. 이후의 실패는 hook/check에서 감지됩니다.
+    # 문맥 revision과 마지막으로 커밋된 _tracking-state.json이 일치하지 않습니다.
+    write_if_changed(tracking / "문맥.md", views["문맥.md"])
+    for relative in sorted(path for path in views if path != "문맥.md"):
         write_if_changed(tracking / relative, views[relative])
     expected_character_files = {
-        Path(relative).name for relative in views if relative.startswith("角色状态/")
+        Path(relative).name for relative in views if relative.startswith("캐릭터 상태/")
     }
-    character_dir = tracking / "角色状态"
+    character_dir = tracking / "캐릭터 상태"
     character_dir.mkdir(parents=True, exist_ok=True)
     for path in character_dir.glob("*.md"):
         if path.name not in expected_character_files:
@@ -999,11 +999,11 @@ def warn_sizes(views: dict[str, str], delta_payload: str | None = None) -> None:
             f"WARNING: chapter delta is {byte_size(delta_payload)} bytes; target is <= {DELTA_TARGET_BYTES}",
             error=True,
         )
-    context_size = byte_size(views["上下文.md"])
+    context_size = byte_size(views["문맥.md"])
     if context_size > CONTEXT_TARGET_BYTES:
         emit(f"WARNING: hot context is {context_size} bytes; target is <= {CONTEXT_TARGET_BYTES}", error=True)
     for relative, payload in views.items():
-        if not relative.startswith("角色状态/"):
+        if not relative.startswith("캐릭터 상태/"):
             continue
         size = byte_size(payload)
         if size > SNAPSHOT_TARGET_BYTES:
@@ -1020,17 +1020,17 @@ def initialize(project: Path, document: object) -> dict[str, Any]:
     views = render_views(state)
     state_payload = json_payload(state)
 
-    # 输入全部校验通过后才动用户文件，失败的 init 不会挪走任何东西。
+    # 모든 입력 검증을 통과한 후에만 사용자 파일을 변경하며, 실패한 init은 아무것도 이동시키지 않습니다.
     archived = archive_retired_tracking_paths(tracking)
-    for directory in (tracking / "逐章记录", tracking / "角色状态", tracking / "时间线"):
+    for directory in (tracking / "장별 기록", tracking / "캐릭터 상태", tracking / "타임라인"):
         directory.mkdir(parents=True, exist_ok=True)
     write_views(tracking, views)
     atomic_write_text(state_path(project), state_payload)
     warn_sizes(views)
     if archived:
         emit(
-            f"NOTE: 旧追踪结构已原样移入 追踪/{RETIRED_ARCHIVE_DIR}/：{', '.join(archived)}；"
-            "当前状态以本次 init 输入为准，旧文件不参与解析。",
+            f"NOTE: 기존 추적 구조가 그대로 추적/{RETIRED_ARCHIVE_DIR}/로 이동되었습니다: {', '.join(archived)};"
+            "현재 상태는 이번 init 입력을 기준으로 하며, 기존 파일은 파싱에 참여하지 않습니다.",
             error=True,
         )
     return state
@@ -1047,7 +1047,7 @@ def apply_transaction(project: Path, document: object) -> dict[str, Any]:
         transaction["chapter"],
         transaction["title"],
         transaction["delta"],
-        # 本章退役的角色在 next_state 里已被删除，但本章记录里仍应标为核心。
+        # 이번 장에서 퇴장한 캐릭터는 next_state에서 삭제되었지만, 이번 장의 기록에서는 여전히 핵심 캐릭터로 표시되어야 합니다.
         set(next_state["characters"]) | set(transaction["delta"]["retired_characters"]),
     )
     views = render_views(next_state)
@@ -1061,7 +1061,7 @@ def apply_transaction(project: Path, document: object) -> dict[str, Any]:
 
     write_if_changed(path, delta_payload)
     write_views(tracking, views)
-    # 唯一权威文件最后落盘；在此之前失败可用同一事务直接重跑。
+    # 유일한 권한 파일은 마지막에 디스크에 저장됩니다. 이전에 실패하면 동일한 트랜잭션으로 직접 다시 실행할 수 있습니다.
     atomic_write_text(state_path(project), next_state_payload)
     warn_sizes(views, delta_payload)
     return next_state
@@ -1075,8 +1075,8 @@ def check_project(project: Path) -> dict[str, Any]:
     required_delta_start = state["imported_through_chapter"] + 1
     for chapter in range(required_delta_start, last_chapter + 1):
         require(delta_path(tracking, chapter).exists(), f"chapter delta {chapter} is missing")
-    for path in (tracking / "逐章记录").glob("第*章.md"):
-        match = re.fullmatch(r"第(\d+)章\.md", path.name)
+    for path in (tracking / "장별 기록").glob("제*장.md"):
+        match = re.fullmatch(r"제(\d+)장\.md", path.name)
         require(match is not None, f"chapter delta has an invalid filename: {path.name}")
         chapter = as_int(int(match.group(1)), f"chapter delta {path.name}", minimum=1)
         require(path == delta_path(tracking, chapter), f"chapter delta {chapter} filename is not canonical")
@@ -1092,9 +1092,9 @@ def check_project(project: Path) -> dict[str, Any]:
             f"derived view differs from _tracking-state.json: {relative}",
         )
     expected_character_files = {
-        Path(relative).name for relative in expected_views if relative.startswith("角色状态/")
+        Path(relative).name for relative in expected_views if relative.startswith("캐릭터 상태/")
     }
-    actual_character_files = {path.name for path in (tracking / "角色状态").glob("*.md")}
+    actual_character_files = {path.name for path in (tracking / "캐릭터 상태").glob("*.md")}
     require(actual_character_files == expected_character_files, "character snapshot files differ from tracking state")
     return state
 
@@ -1104,10 +1104,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     for command in ("init", "commit"):
         subparser = subparsers.add_parser(command)
-        subparser.add_argument("--project", type=Path, required=True, help="book project root containing 追踪/")
+        subparser.add_argument("--project", type=Path, required=True, help="추적/ 폴더를 포함하는 도서 프로젝트 루트")
         subparser.add_argument("--input", type=Path, required=True, help="UTF-8 JSON input document")
     check_parser = subparsers.add_parser("check")
-    check_parser.add_argument("--project", type=Path, required=True, help="book project root containing 追踪/")
+    check_parser.add_argument("--project", type=Path, required=True, help="추적/ 폴더를 포함하는 도서 프로젝트 루트")
     return parser
 
 

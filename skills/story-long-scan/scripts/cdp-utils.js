@@ -1,10 +1,10 @@
 /**
- * CDP 工具函数 — 各平台采集脚本的公共依赖
+ * CDP 유틸리티 함수 — 각 플랫폼 수집 스크립트의 공통 의존성
  *
- * 使用方式：
+ * 사용 방식:
  *   const { ab, sleep, evalJSON, evalJSONBase64, scrollLoad, getArg, safeStr, localDateStamp } = require("./cdp-utils");
  *
- * 前置：
+ * 사전 요구 사항:
  *   node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
  */
 
@@ -73,14 +73,14 @@ function buildAgentBrowserInvocation(port, args, platform = process.platform) {
 }
 
 // ---------------------------------------------------------------------------
-// agent-browser 工具函数
+// agent-browser 유틸리티 함수
 // ---------------------------------------------------------------------------
 
 /**
- * 调用 agent-browser CLI
- * @param {number} port - CDP 端口
- * @param  {...string} args - agent-browser 参数
- * @returns {string} stdout（trim 后）
+ * agent-browser CLI 호출
+ * @param {number} port - CDP 포트
+ * @param  {...string} args - agent-browser 매개변수
+ * @returns {string} 표준 출력(trim 후)
  */
 function ab(port, ...args) {
   const invocation = buildAgentBrowserInvocation(port, args);
@@ -103,7 +103,7 @@ function ab(port, ...args) {
   }
 }
 
-/** 等待 ms 毫秒（跨平台，不依赖系统 sleep 命令） */
+/** ms 밀리초 동안 대기(크로스 플랫폼, 시스템 sleep 명령어 비의존) */
 function sleep(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
@@ -126,17 +126,17 @@ function parseJSONResult(raw) {
 }
 
 /**
- * 在浏览器内执行 JS，并解析 JSON 返回值。
- * 一律走 base64（-b）：正文提取用的 JS 常含引号、反斜杠等，作为命令行参数时在 Windows 上
- * 无法逐字透传（.cmd 的 %* 与 PowerShell 都会二次解析）。base64 让参数只含 [A-Za-z0-9+/=]，
- * 和各采集脚本已在用的 evalJSONBase64 走同一条安全通道。
+ * 브라우저 내에서 JS를 실행하고 JSON 반환값을 파싱합니다.
+ * 무조건 base64(-b)를 사용합니다: 본문 추출에 사용되는 JS는 따옴표, 백슬래시 등을 포함하는데, 명령줄 인수로 사용할 때 Windows에서
+ * 정확히 전달할 수 없습니다(.cmd의 %*와 PowerShell 모두 이차 파싱을 수행합니다). base64를 사용하면 인수가 [A-Za-z0-9+/=]만 포함하므로,
+ * 각 수집 스크립트에서 이미 사용 중인 evalJSONBase64와 같은 보안 채널을 사용합니다.
  */
 function evalJSON(port, js) {
   return evalJSONBase64(port, js);
 }
 
 /**
- * 通过 agent-browser 的 base64 参数执行复杂 JS，避免命令行转义和参数边界问题。
+ * agent-browser의 base64 매개변수를 통해 복잡한 JS를 실행하여 명령줄 이스케이프 및 인수 경계 문제를 피합니다.
  */
 function evalJSONBase64(port, js) {
   const encoded = Buffer.from(String(js), "utf8").toString("base64");
@@ -144,20 +144,20 @@ function evalJSONBase64(port, js) {
 }
 
 /**
- * 安全地将值插入浏览器 eval 字符串。
- * 使用 JSON.stringify 确保值不会因特殊字符（引号、反斜杠等）破坏 eval 字符串。
- * @param {*} val - 要插入的值
- * @returns {string} JSON 字符串表示（含引号）
+ * 값을 브라우저 eval 문자열에 안전하게 삽입합니다.
+ * JSON.stringify를 사용하여 값이 특수 문자(따옴표, 백슬래시 등)로 인해 eval 문자열이 손상되지 않도록 합니다.
+ * @param {*} val - 삽입할 값
+ * @returns {string} JSON 문자열 표현(따옴표 포함)
  */
 function safeStr(val) {
   return JSON.stringify(String(val));
 }
 
 /**
- * 滚动页面加载更多内容
- * @param {number} port - CDP 端口
- * @param {number} times - 滚动次数
- * @param {number} [interval=1000] - 每次滚动间隔（ms）
+ * 페이지를 스크롤하여 더 많은 콘텐츠 로드
+ * @param {number} port - CDP 포트
+ * @param {number} times - 스크롤 횟수
+ * @param {number} [interval=1000] - 각 스크롤 간격(ms)
  */
 function scrollLoad(port, times, interval = 1000) {
   for (let i = 0; i < times; i++) {
@@ -166,7 +166,7 @@ function scrollLoad(port, times, interval = 1000) {
   }
 }
 
-/** 解析 --xxx 参数 */
+/** --xxx 매개변수 파싱 */
 function getArg(args, name) {
   const i = args.indexOf(name);
   if (i >= 0) return i + 1 < args.length ? args[i + 1] : null;
@@ -176,11 +176,11 @@ function getArg(args, name) {
 }
 
 /**
- * 输出文件名用的日期戳（YYYYMMDD），一律取**本地日历日**。
- * 不能用 new Date().toISOString().slice(0,10)：那是 UTC 日期，比 UTC+8 晚 8 小时。
- * 文件名是各采集脚本唯一的去重键（一个榜单一天一份），北京时间 00:00-08:00 之间的采集
- * 会退回「昨天」的文件名，静默覆盖前一晚采到的同名报告，且这份数据被标成前一天。
- * @param {Date} [date] - 默认当前时间
+ * 출력 파일명에 사용할 날짜 타임스탬프(YYYYMMDD)는 **로컬 달력 날짜**로 통일합니다.
+ * new Date().toISOString().slice(0,10)을 사용할 수 없습니다: UTC 날짜이므로 UTC+8보다 8시간 뒤입니다.
+ * 파일명은 각 수집 스크립트의 유일한 중복 제거 키입니다(하나의 랭킹은 하루에 한 개). 베이징 시간 00:00-08:00 사이의 수집
+ * 은 「어제」의 파일명을 반환하며, 전날 밤에 수집한 같은 이름의 보고서를 조용히 덮어쓰고, 이 데이터는 전날로 표시됩니다.
+ * @param {Date} [date] - 기본값은 현재 시간
  * @returns {string} YYYYMMDD
  */
 function localDateStamp(date) {

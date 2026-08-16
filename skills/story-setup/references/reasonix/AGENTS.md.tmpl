@@ -1,60 +1,60 @@
-# {项目名} — 网文写作工具集（Reasonix）
+# {프로젝트명} — 웹소설 작성 툴킷 (Reasonix)
 
-本项目已部署 oh-story skills 的 Reasonix 兼容层（skills-only）。
+이 프로젝트는 oh-story skills 의 Reasonix 호환 레이어 (skills-only) 가 배포되었습니다.
 
-## Skill 路由表
+## Skill 라우팅 테이블
 
-Reasonix 会从项目 `.agents/skills`（部署时创建的指向 `skills/` 的 symlink）发现 `SKILL.md`；也可用根 `reasonix-plugin.json` 走 `reasonix plugin install`。优先通过 Reasonix 的 skill 入口调用；若当前客户端未显示直接命令，可用自然语言点名 skill。
+Reasonix 는 프로젝트 `.agents/skills` (배포 시 생성되는 `skills/` 를 가리키는 symlink) 에서 `SKILL.md` 를 발견합니다；또는 루트 `reasonix-plugin.json` 으로 `reasonix plugin install` 을 실행할 수도 있습니다. 우선적으로 Reasonix 의 skill 진입점을 통해 호출하고；현재 클라이언트에 직접 명령이 표시되지 않으면 자연어로 skill 을 지목해서 사용할 수 있습니다.
 
-| 意图 | Skill | 说明 |
+| 의도 | Skill | 설명 |
 |------|-------|------|
-| 写长篇 / 开书 / 续写 | story-long-write | 长篇网文写作（逐章推进） |
-| 写短篇 | story-short-write | 短篇网文写作（情绪驱动） |
-| 长篇拆文 | story-long-analyze | 长篇小说深度拆解 |
-| 短篇拆文 | story-short-analyze | 短篇小说拆文分析 |
-| 长篇扫榜 | story-long-scan | 长篇小说榜单与市场趋势 |
-| 短篇扫榜 | story-short-scan | 短篇小说榜单与情绪风口 |
-| 去 AI 味 | story-deslop | 去除 AI 写作痕迹 |
-| 封面 | story-cover | 生成封面图；需要 `GPT_IMAGE_API_KEY` |
-| 审查 | story-review | 多视角审查；Reasonix 默认 solo/direct fallback |
-| 导入 | story-import | 逆向导入已有小说到项目结构 |
-| 网文工具箱 | story | 模糊意图自动分发 |
-| 准备写书 / 部署 | story-setup | 项目结构与 skill 使用入口 |
-| 浏览器登录态 / 抓取 | browser-cdp | 浏览器 CDP 工具；需平台允许本地脚本/浏览器控制 |
+| 장편쓰기 / 책열기 / 이어쓰기 | story-long-write | 장편 웹소설 작성 (장별 추진) |
+| 단편쓰기 | story-short-write | 단편 웹소설 작성 (감정 구동) |
+| 장편작품분석 | story-long-analyze | 장편소설 심층 분해 |
+| 단편작품분석 | story-short-analyze | 단편소설 작품분석 분석 |
+| 장편순위스캔 | story-long-scan | 장편소설 순위와 시장 동향 |
+| 단편순위스캔 | story-short-scan | 단편소설 순위와 감정 트렌드 |
+| 去AI味 | story-deslop | AI 작성 흔적 제거 |
+| 표지 | story-cover | 표지 이미지 생성；`GPT_IMAGE_API_KEY` 필요 |
+| 심사 | story-review | 다중 시점 심사; Reasonix 기본 solo/direct fallback |
+| 가져오기 | story-import | 기존 소설을 프로젝트 구조로 역방향 가져오기 |
+| 웹소설 툴박스 | story | 모호한 의도 자동 분기 |
+| 책쓰기준비 / 배포 | story-setup | 프로젝트 구조와 skill 사용 진입점 |
+| 브라우저 로그인 상태 / 크롤링 | browser-cdp | 브라우저 CDP 툴；플랫폼에서 로컬 스크립트/브라우저 제어를 허용해야 함 |
 
-## Reasonix 兼容说明
+## Reasonix 호환 설명
 
-- 只部署 skills 与本 `AGENTS.md`：Reasonix 原生扫描 `.agents/skills`（部署时创建的指向 `skills/` 的 symlink）发现 `skills/*/SKILL.md`，并把 `AGENTS.md` 作为项目指令加载。也可用根 `reasonix-plugin.json` 走 `reasonix plugin install`；`reasonix doctor capabilities` 校验 skill 发现。
-- 暂不部署 Reasonix hooks/custom agents：写正文前大纲守卫、commit 提醒、session/compact 自动注入在 Reasonix 下不是硬拦截，只作为 skill 内软约束执行。
-- 涉及专业 Agent 的 Skill（story-review 多视角、story-long-write 的 narrative-writer/story-architect 等）按 solo/direct fallback 执行，并在结果里说明降级。
-- Windows 未启用 symlink 时改走根 `reasonix-plugin.json` 原生 plugin 安装。
-- `story-cover` 依赖 `GPT_IMAGE_API_KEY`，未配置时该 skill 不可用。
+- skills 와 본 `AGENTS.md` 만 배포：Reasonix 는 기본적으로 `.agents/skills` (배포 시 생성되는 `skills/` 를 가리키는 symlink) 를 스캔하여 `skills/*/SKILL.md` 를 발견하고, `AGENTS.md` 를 프로젝트 지시로 로드합니다. 루트 `reasonix-plugin.json` 으로 `reasonix plugin install` 을 사용할 수도 있고；`reasonix doctor capabilities` 로 skill 발견을 검증합니다.
+- Reasonix hooks/custom agents 는 아직 배포하지 않음：본문 작성 전 개요 가드, commit 알림, session/compact 자동 주입은 Reasonix 하에서 하드 인터셉트가 아니며 skill 내 소프트 제약으로만 실행됩니다.
+- 전문 Agent 가 관여하는 Skill (story-review 다중 시점, story-long-write 의 narrative-writer/story-architect 등) 은 solo/direct fallback 으로 실행하며, 결과에 다운그레이드되었음을 명시합니다.
+- Windows 에서 symlink 를 활성화하지 않은 경우 루트 `reasonix-plugin.json` 네이티브 plugin 설치로 대체합니다.
+- `story-cover` 는 `GPT_IMAGE_API_KEY` 에 의존하며, 미설정 시 해당 skill 은 사용 불가합니다.
 
-## 文件结构
+## 파일 구조
 
-- `skills/` — 项目本地 skills，包含 oh-story 的 13 个 skill
-- `拆文库/` — 拆文分析结果存放目录
-- `{书名}/正文/` — 长篇小说正文章节
-- `{书名}/正文.md` — 短篇小说正文
-- `{书名}/设定/` — 角色设定、世界设定
-- `{书名}/大纲/` — 卷纲、细纲
-- `{书名}/追踪/` — `_tracking-state.json` 唯一结构化权威、固定 7 栏 `上下文.md` 续写状态卡、逐章紧凑记录、核心角色独立派生快照、伏笔当前视图、作者与读者双时间线；全部通过追踪工具生成
-- `{书名}/对标/` — 对标作品分析
+- `skills/` — 프로젝트 로컬 skills, oh-story 13 개 skill 포함
+- `작품분석库/` — 작품분석 결과 저장 디렉터리
+- `{책이름}/본문/` — 장편소설 본문 장
+- `{책이름}/본문.md` — 단편소설 본문
+- `{책이름}/설정/` — 캐릭터 설정, 세계 설정
+- `{책이름}/개요/` — 권纲, 세纲
+- `{책이름}/추적/` — `_tracking-state.json` 유일 구조화 권위, 고정 7열 `컨텍스트.md` 연재 상태 카드, 장별 컴팩트 기록, 핵심 캐릭터 독립 파생 스냅샷, 복선 현재 뷰, 작가와 독자 양면 타임라인；전부 추적 툴로 생성
+- `{책이름}/대상/벤치마크/` — 벤치마크 작품 분석
 
-## 写作约束
+## 작성 제약
 
-- 写正文前必须先有对应大纲：长篇 `大纲/细纲_第N章*.md`，短篇 `小节大纲.md`。
-- Reasonix 未部署硬 hook 拦截；执行写作 skill 时必须由 skill 流程自行检查大纲、上下文和追踪文件，不得跳过。
-- 无 custom agents 时按 solo/direct 执行；遇到 skill 要求调用 story-architect、narrative-writer 等 agent 时，改由当前 Agent 直接完成，并在结果里说明降级。
-- **去AI味自锁**（本平台无 hook 兜底，此条是唯一防线）：每章正文落盘后，同一轮内立即按写作 skill 的「最毒句式速查 + 禁用词扫描」自检并清零（能运行 node 时跑 `check-ai-patterns.js --check --fail-on=blocking`）；写下一章前先复查上一章无欠账。唯一豁免＝用户显式说"本章不去味"，豁免章在标题行下加 `<!-- 去味:跳过 -->`。
-- Compact / 新会话后优先读取 `{书名}/追踪/上下文.md` 恢复当前写作状态。
+- 본문 작성 전 반드시 대응 개요 선행：장편은 `개요/세纲_제N장*.md`，단편은 `소절개요.md`.
+- Reasonix 는 하드 hook 인터셉트를 배포하지 않음；작성 skill 실행 시 skill 프로세스 자체에서 개요, 컨텍스트와 추적 파일을 반드시 자체 검사하며 건너뛰면 안 됩니다.
+- custom agents 미존재 시 solo/direct 로 실행；skill 호출 시 story-architect, narrative-writer 등 agent 를 요구하는 경우 현재 Agent 가 직접 완료하며 결과에 다운그레이드되었음을 명시합니다.
+- **去AI味 자동 잠금** (본 플랫폼은 hook 보호막이 없으므로 이 조항이 유일한 방어선)：매 장 본문 디스크 기록 후, 동일 턴 내 즉시 작성 skill 의 「최악 문장 빠른 점검 + 금지어 스캔」으로 자가 검사하고 문제를 모두 제거 (node 를 실행할 수 있는 환경이면 `check-ai-patterns.js --check --fail-on=blocking` 실행)；다음 장 작성 전 앞 장 미결 사항이 없는지 재확인. 유일한 면제＝사용자가 명시적으로 "이번 장去味 안 함" 이라고 말한 경우, 면제 장은 제목 행 아래에 `<!-- 去味:건너뜀 -->` 를 추가.
+- Compact / 새 세션 후 우선 `{책이름}/추적/컨텍스트.md` 를 읽어 현재 작성 상태를 복원.
 
-## Compact 后恢复上下文
+## Compact 후 컨텍스트 복원
 
-写作中的关键上下文：
-1. 当前写作项目名称和进度
-2. 最近讨论的角色设定变更
-3. 未完成的伏笔列表
-4. 当前章节的情绪/节奏目标
+작성 중 핵심 컨텍스트：
+1. 현재 작성 프로젝트 이름과 진행률
+2. 최근 논의한 캐릭터 설정 변경
+3. 미완료 복선 목록
+4. 현재 장의 감정/리듬 목표
 
-如果存在 `{书名}/追踪/上下文.md`，compact 后首先读取该文件恢复上下文。
+`{책이름}/추적/컨텍스트.md` 가 존재한다면, compact 후 가장 먼저 해당 파일을 읽어 컨텍스트를 복원.

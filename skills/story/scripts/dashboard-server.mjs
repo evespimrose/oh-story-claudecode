@@ -22,9 +22,9 @@ import { createHash, randomUUID } from "node:crypto";
 const MODULE_PATH = fileURLToPath(import.meta.url);
 const ASSET_DIR = fileURLToPath(new URL("../assets/", import.meta.url));
 const EDITABLE_EXTENSIONS = new Set([".md", ".txt", ".json", ".yaml", ".yml", ".toml"]);
-const LONG_PROJECT_DIRECTORY_MARKERS = new Set(["正文", "大纲", "设定", "追踪"]);
-const SHORT_PROJECT_BODY_FILE = "正文.md";
-const SHORT_PROJECT_COMPANION_FILES = new Set(["小节大纲.md", "设定.md"]);
+const LONG_PROJECT_DIRECTORY_MARKERS = new Set(["正文", "大纲", "设定", "追踪", "본문", "개요", "설정", "추적"]);
+const SHORT_PROJECT_BODY_FILES = new Set(["正文.md", "본문.md"]);
+const SHORT_PROJECT_COMPANION_FILES = new Set(["小节大纲.md", "设定.md", "소절개요.md", "설정.md"]);
 const IGNORED_DIRECTORIES = new Set([
   ".git",
   ".omc",
@@ -302,33 +302,34 @@ export async function listWorkspaceDirectory(root, requestedPath, cursorValue = 
 
 async function listLibraryRoots(root, scanErrors) {
   const roots = [];
-  const standardRoot = resolve(root, "拆文库");
-  const standardInfo = await lstat(standardRoot).catch(() => null);
-  if (standardInfo?.isDirectory() && !standardInfo.isSymbolicLink()) {
-    // 单个拆文库读不动时保留其他项目，但把残缺扫描显式带回前端；空数组只能表达“确实为空”，
-    // 不能再同时承担权限错误/外挂盘掉线，否则作者会把不可见文稿误当成不存在。
-    const entries = await readdir(standardRoot, { withFileTypes: true }).catch((error) => {
-      recordScanError(scanErrors, root, standardRoot, error);
-      return [];
-    });
-    for (const entry of entries) {
-      if (entry.isDirectory() && !entry.isSymbolicLink()) {
-        roots.push({ absolutePath: resolve(standardRoot, entry.name), relativePath: `拆文库${sep}${entry.name}` });
+  const libraryCandidates = ["拆文库", "작품분석库"];
+  for (const libraryName of libraryCandidates) {
+    const standardRoot = resolve(root, libraryName);
+    const standardInfo = await lstat(standardRoot).catch(() => null);
+    if (standardInfo?.isDirectory() && !standardInfo.isSymbolicLink()) {
+      const entries = await readdir(standardRoot, { withFileTypes: true }).catch((error) => {
+        recordScanError(scanErrors, root, standardRoot, error);
+        return [];
+      });
+      for (const entry of entries) {
+        if (entry.isDirectory() && !entry.isSymbolicLink()) {
+          roots.push({ absolutePath: resolve(standardRoot, entry.name), relativePath: `${libraryName}${sep}${entry.name}` });
+        }
       }
     }
   }
 
-  // 工作区根目录读不动就没有任何可展示的树，直接给出可执行的报错，而不是静默返回空树。
   const rootEntries = await readdir(root, { withFileTypes: true }).catch(() => {
     throw new DashboardError(
       403,
       "workspace_unreadable",
-      `工作区目录无法读取，请检查访问权限：${root}`,
+      `작업 공간 디렉터리를 읽을 수 없습니다. 접근 권한을 확인하세요: ${root}`,
     );
   });
+  const libraryPrefixes = ["拆文库-", "작품분석库-"];
   for (const entry of rootEntries) {
     if (
-      entry.name.startsWith("拆文库-") &&
+      libraryPrefixes.some((prefix) => entry.name.startsWith(prefix)) &&
       entry.isDirectory() &&
       !entry.isSymbolicLink()
     ) {
@@ -337,7 +338,7 @@ async function listLibraryRoots(root, scanErrors) {
   }
 
   return roots.sort((left, right) =>
-    left.relativePath.localeCompare(right.relativePath, "zh-CN", { numeric: true }),
+    left.relativePath.localeCompare(right.relativePath, "ko-KR", { numeric: true }),
   );
 }
 
@@ -371,7 +372,7 @@ async function findProjectRoots(
     childDirectoryNames.has(marker),
   );
   const isShortProject =
-    childFileNames.has(SHORT_PROJECT_BODY_FILE) &&
+    [...SHORT_PROJECT_BODY_FILES].some((marker) => childFileNames.has(marker)) &&
     [...SHORT_PROJECT_COMPANION_FILES].some((marker) => childFileNames.has(marker));
   if (isLongProject || isShortProject) {
     projects.push({
@@ -446,16 +447,16 @@ export async function scanWorkspace(root) {
 export async function searchWorkspace(root, queryValue, scopeValue) {
   const query = typeof queryValue === "string" ? queryValue.trim() : "";
   if (!query || query.length > 100) {
-    throw new DashboardError(400, "invalid_query", "搜索词长度必须在 1–100 个字符之间");
+    throw new DashboardError(400, "invalid_query", "검색어 길이는 1–100자 사이여야 합니다");
   }
   if (!["libraries", "projects"].includes(scopeValue)) {
-    throw new DashboardError(400, "invalid_scope", "搜索范围必须是拆文库或写作项目");
+    throw new DashboardError(400, "invalid_scope", "검색 범위는 작품분석库 또는 작성 프로젝트여야 합니다");
   }
 
   const realRoot = await existingRealRoot(root);
   const { libraryRoots, projectRoots, scanErrors } = await discoverWorkspaceRoots(realRoot);
   const roots = scopeValue === "libraries" ? libraryRoots : projectRoots;
-  const normalizedQuery = query.toLocaleLowerCase("zh-CN");
+  const normalizedQuery = query.toLocaleLowerCase("ko-KR");
   const state = {
     nodes: 0,
     truncatedByResults: false,
@@ -487,7 +488,8 @@ export async function searchWorkspace(root, queryValue, scopeValue) {
     if (!info || info.isSymbolicLink()) return;
     if (info.isFile()) {
       const path = toPosixPath(relativePath);
-      if (basename(absolutePath).toLocaleLowerCase("zh-CN").includes(normalizedQuery)) {
+      if (basename(absolutePath).toLocaleLowerCase("ko-KR").includes(normalizedQuery) ||
+          basename(absolutePath).toLocaleLowerCase("zh-CN").includes(normalizedQuery)) {
         state.results.push({
           name: basename(absolutePath),
           path,
@@ -565,7 +567,7 @@ async function readJsonBody(request) {
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {
-    throw new DashboardError(400, "invalid_json", "请求正文不是有效 JSON");
+    throw new DashboardError(400, "invalid_json", "요청 본문이 유효한 JSON이 아닙니다");
   }
 }
 

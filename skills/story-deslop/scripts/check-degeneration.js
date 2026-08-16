@@ -7,48 +7,48 @@ const path = require('path');
 const USAGE = `Usage: node check-degeneration.js [--check] [--json] [--fail-on=blocking|all] <file...>
 
 Detect model-degeneration fingerprints that a degrading model cannot self-report:
-  - verbatim repetition (复读/打转): a long sentence repeated, or back-to-back identical lines
-  - mid-sentence truncation (截断): file ends without terminal/closing punctuation
-  - placeholder / refusal / meta leakage (元信息泄漏): 作为AI / 我无法继续 / 此处省略 / 乱码
-  - engineering-word leakage (工程词泄漏): 细纲 / 情节点 / 本章 / 下一章 / 任务描述 漏进正文
+  - verbatim repetition (복사 반복/소용돌이): 긴 문장이 반복되거나 연속된 동일한 줄
+  - mid-sentence truncation (절단): 파일이 종료 부호나 마침 부호 없이 끝남
+  - placeholder / refusal / meta leakage (메타정보 유출): AI로서 / 계속할 수 없습니다 / 여기서 생략 / 깨진 문자
+  - engineering-word leakage (공학 용어 유출): 세부 계획 / 스토리 포인트 / 현재 장 / 다음 장 / 작업 설명이 본문에 섞임
 
-Each finding carries severity: blocking (复读/截断/占位拒绝语/tier1 纯工程词，正文里永不合法，
-命中即重写) 或 advisory (tier2 章节/歧义词、对话行里的工程词，只提示、交人/LLM 判)。
---fail-on=blocking 只在出现 blocking finding 时退出 1；默认 --fail-on=all 有任何 finding 即退出 1。
+Each finding carries severity: blocking (복사 반복/절단/자리표시자 거절 문구/tier1 순수 공학 용어, 본문에서 절대 허용 불가,
+명중 시 재작성) 또는 advisory (tier2 장/의미 모호 단어, 대사 줄의 기술 용어는 제안만 하고 사람/LLM 판단)
+--fail-on=blocking은 blocking 발견 시에만 종료 코드 1로 나감. 기본값 --fail-on=all은 어떤 발견이든 종료 코드 1로 나감
 
 Report-only. The script never rewrites — the safe response is to regenerate the
-affected unit (chapter / 摘要) with the finding fed back as a constraint, cap retries,
-then surface the evidence to the user. Conservative by design: 通俗网文 deliberately
-uses 排比/复沓/弹幕刷屏/重复台词 for rhythm, so short and dialogue repetition is exempt.`;
+영향받은 단위(장/요약)에 발견 결과를 제약으로 피드백하고, 재시도를 제한한 후
+사용자에게 근거를 제시함. 보수적으로 설계됨: 통속적 네트워크 문학은 의도적으로
+배비/복타/탄막 스팸/반복 대사를 리듬감 위해 사용하므로, 짧은 문장과 대사 반복은 제외함
 
-// 复读：长句（可见字数 ≥ REPEAT_MIN_LEN）出现 ≥ REPEAT_MIN_COUNT 次判为打转；
-// 紧邻整行重复（可见字数 ≥ ADJACENT_MIN_LEN）判为即时循环。短句/弹幕/对话刷屏豁免。
+// 반복: 긴 문장(보이는 글자 수 ≥ REPEAT_MIN_LEN)이 ≥ REPEAT_MIN_COUNT번 나타나면 맴도는 것으로 판정;
+// 인접한 전체 줄 반복(보이는 글자 수 ≥ ADJACENT_MIN_LEN)은 즉시 루프로 판정. 짧은 문장/채팅/대사 도배는 제외.
 const REPEAT_MIN_LEN = 12;
 const REPEAT_MIN_COUNT = 3;
 const ADJACENT_MIN_LEN = 8;
 
-// hard = 任何行都判（正文里永不合法）；soft = 只在「非对话」叙述行判（角色台词里可能合法，
-// 如「对不起，我无法答应你」是正常对话，不是模型拒绝语）。
+// hard = 모든 줄을 판정(본문에서는 절대 허용되지 않음); soft = 「대사가 아닌」서술 줄에서만 판정(캐릭터 대사에서는 허용될 수 있음,
+// 예: 「죄송해요, 저는 당신의 요청을 받아드릴 수 없어요」는 정상 대사이지 모델 거부가 아님).
 const PLACEHOLDER_PATTERNS = [
-  // 「作为AI」需在自指位置（其后是断句/我/无法… 或句末），避免误报「人工智能时代的产物」这类
-  // 复合名词；并对对话行豁免（系统流/AI 伴侣题材里 AI 角色台词「作为AI，我会保护你」是合法对话）。
-  // 型号后缀（AI语言模型/AI助手/人工智能语言模型/AI模型/AI大模型）必须可选吃掉：否则前视断言紧跟
-  // 在「AI」后面看到的是「语」/「助」/「模」，最典型的退化开场整类漏检（与写后网 story_hook_core.js
-  // SOFT_PATTERNS / story_codex_hook.py _NET_SOFT_PATTERNS 同语义）。
-  { re: /作为(一个)?(AI|人工智能|大?语言模型|智能助手|聊天助手)(?:语言模型|大?模型|助手|机器人)?(?=[，,。、；;：:！!？?\s）)」』"】]|我|无法|不能|没法|$)/, label: '元信息泄漏（AI 自指）', hard: false },
-  { re: /�/, label: '乱码（替换字符 �）', hard: true },
-  { re: /^(Sure|Certainly|Here'?s|As an AI|I (?:cannot|can't|am unable|apologize))/, label: '元信息泄漏（英文 AI 腔）', hard: true },
-  { re: /[（(](此处|以下|这里|下文|后续)?\s*(省略|略)(去|过)?[^）)]{0,10}[）)]/, label: '占位符（括号省略）', hard: true },
-  { re: /(未完待续|TODO|占位符|placeholder)/, label: '占位符', hard: true },
-  { re: /我(无法|不能)(继续(写|创作|生成|下去)|生成(内容|文本|正文)?|创作|续写|完成(这个|本)?(章|篇|创作|请求))/, label: '元信息泄漏（生成拒绝语）', hard: false },
+// 「AI로서」는 자기지시 위치(그 뒤에 끊김/나/할 수 없음… 또는 문말)에 있어야 하며, 「인공지능 시대의 산물」 같은 오보를 피해야 함
+  // 복합명사; 대화행에 면제 적용(시스템 흐름/AI 동반자 주제의 AI 역할 대사 "AI로서 저는 당신을 보호하겠습니다"는 합법적 대화).
+  // 모델 접미사(AI 언어모델/AI 어시스턴트/인공지능 언어모델/AI 모델/AI 대형모델)는 선택적으로 제거 가능해야 함: 그렇지 않으면 전방탐색 단언이 바로 뒤따름
+  // "AI" 뒤에서 "어"/"조"/"모"가 보이는 경우, 가장 전형적인 퇴화 시작 전체 유형 누락(story_hook_core.js의
+  // SOFT_PATTERNS / story_codex_hook.py의 _NET_SOFT_PATTERNS과 동일 의미).
+  { re: /작为(一个)?(AI|人工智能|大?语言模型|智能助手|聊天助手)(?:语言模型|大?模型|助手|机器人)?(?=[，,。、；;：:！!？?\s）)」』"】]|나는|할 수 없다|못한다|방법이 없다|$)/, label: 'AI 자체참조 메타정보 유출', hard: false },
+  { re: /�/, label: '깨진 문자(대체 문자 �)', hard: true },
+  { re: /^(Sure|Certainly|Here'?s|As an AI|I (?:cannot|can't|am unable|apologize))/, label: '메타정보 유출(영문 AI 톤)', hard: true },
+  { re: /[（(](여기|아래|이곳|다음 내용|후속)?\s*(생략|략)(하다|하다)?[^）)]{0,10}[）)]/, label: '자리 표시자(괄호 생략)', hard: true },
+  { re: /(미완성|TODO|자리 표시자|placeholder)/, label: '자리 표시자', hard: true },
+  { re: /나는(할 수 없다|못한다)(계속(쓰다|창작하다|생성하다|진행하다)|내용(을|을|정문)?|텍스트(을|을|정문)?|정문(을|을|정문)?|생성하다|창작하다|속편을 쓰다|완성하다(이것을|이것을)?(장|편|창작|요청))/, label: '메타정보 유출(생성 거부 표현)', hard: false },
 ];
 
-// 工程词泄漏（正文元信息扫描的确定性版）：弱模型把写作工程词漏进正文，破坏代入感
-// （DeepSeek-v4 这类会在对话里冒「该到下一章了」）。漏词的模型自己发现不了，靠脚本兜。
-// tier1 = 纯写作流水线术语，正文里几乎永不合法；tier2 = 章节结构/歧义词，角色在故事内
-// 真实阅读/讨论「第X章」或故事内系统/界面用语时属例外（report-only，交人/LLM 判）。
-const META_TIER1_RE = /细纲|情节点|卷纲|功能标签|目标情绪|字数目标|章首钩子|章尾钩子/;
-const META_TIER2_RE = /第[一二三四五六七八九十百千万两0-9]+章|本章|这一章|上一章|下一章|上章|下章|前一章|后一章|前文|后文|伏笔|读者|任务描述/;
+// 엔지니어링 용어 누출(정문 메타데이터 스캔의 결정성 버전): 약한 모델이 작문 엔지니어링 용어를 정문에 누출시켜 몰입감을 파괴함
+// (DeepSeek-v4 같은 모델은 대화에서 "다음 장으로 넘어갈 때가 되었다"는 식으로 노출됨). 누출 용어는 모델 자체로는 발견할 수 없고, 스크립트로 처리함.
+// tier1 = 순수 작문 파이프라인 용어, 정문에서는 거의 합법적이지 않음; tier2 = 장 구조/중의성 단어, 캐릭터가 스토리 내에서
+// 실제 읽기/논의 시 "제X장" 또는 스토리 내 시스템/인터페이스 용어는 예외임(report-only, 사람/LLM 판단).
+const META_TIER1_RE = /세부 개요|플롯 포인트|권 개요|기능 태그|목표 감정|글자 수 목표|장 시작 훅|장 끝 훅/;
+const META_TIER2_RE = /제[1-9][0-9]*장|본장|이번 장|이전 장|다음 장|이전 장|다음 장|이전 장|다음 장|전문|후문|복선|독자|작업설명/;
 
 const options = { json: false, files: [], failOn: 'all' };
 
@@ -102,7 +102,7 @@ if (options.json) {
 }
 
 if (failed) process.exit(2);
-// --fail-on=blocking 只在出现 blocking finding 时退出 1（advisory 仅报告）；默认 all 沿用「有任何 finding 即 1」。
+// --fail-on=blocking 차단(blocking) 발견 시에만 1로 종료(권고사항은 보고만 함); 기본값 all은 「모든 발견 시 1」을 따름.
 const hasBlocking = allFindings.some((f) => f.severity === 'blocking');
 if (options.failOn === 'blocking' ? hasBlocking : allFindings.length > 0) process.exit(1);
 
@@ -151,11 +151,11 @@ function isContent(trimmed) {
 }
 
 function isDialogueLike(trimmed) {
-  return /[“”"'‘’「」『』【】]/.test(trimmed);
+  return /["""'''「」『』【】]/.test(trimmed);
 }
 
-// 去掉成对引号内的片段（台词/系统词/引用物件），只留引号外叙述。复读判定用：重复台词是体裁
-// 手法（豁免），但「叙述 + 引号内物件/短台词」混合行里引号外叙述的复读仍是退化，不能整行豁免。
+// 쌍을 이루는 인용부호 내 구간(대사/시스템 단어/참조 객체) 제거, 인용부호 외 서술만 보존. 중복 판정용: 반복되는 대사는 체재 수법(면제) 대상이지만, 「서술 + 인용부호 내 객체/짧은 대사」 혼합 행에서 인용부호 외 서술의 중복은 여전히 퇴화로, 전체 행 면제 불가.
+// 면제(exemption), 하지만 「서술 + 인용부호 내 물건/짧은 대사」 혼합 행에서 인용부호 외 서술의 중복은 여전히 퇴화, 전체 행 면제 불가.
 function stripQuoted(text) {
   return text
     .replace(/「[^」]*」/g, '')
@@ -176,8 +176,8 @@ function findRepetition(content) {
   const findings = [];
   const body = content.filter((c) => isContent(c.trimmed));
 
-  // (1) back-to-back identical lines (immediate loop). 纯台词/弹幕复沓（引号外叙述很短）豁免；
-  // 「叙述 + 引号内物件」混合行的整行复读仍判（去引号后叙述够长）。
+  // (1) back-to-back identical lines (immediate loop). 순수 대사/채팅 반복(따옴표 외 설명이 매우 짧음)은 제외; 
+  // 「설명 + 따옴표 내 객체」혼합행의 전체행 반복은 여전히 판정(따옴표 제거 후 설명이 충분히 김).
   for (let i = 1; i < body.length; i += 1) {
     if (
       body[i].trimmed === body[i - 1].trimmed &&
@@ -188,14 +188,14 @@ function findRepetition(content) {
         column: 1,
         type: 'verbatim-repeat',
         severity: 'blocking',
-        message: '逐行复读（紧邻整行重复）：疑似模型打转，重写本段、删掉重复。',
+        message: '줄 단위 반복(인접 전체행 중복): 모델이 제자리걸음을 하는 것으로 의심되며, 이 부분을 다시 작성하고 중복을 삭제하세요.',
         excerpt: compact(body[i].trimmed),
       });
     }
   }
 
   // (2) any long sentence repeated >= REPEAT_MIN_COUNT times across the file.
-  // 只豁免引号内台词（体裁手法），引号外叙述句仍参与复读计数（含「叙述+引号内物件」混合行）。
+  // 인용부호 내 대사만 제외합니다(문체 기법). 인용부호 외 서술문은 여전히 반복 횟수를 계산합니다(「서술+인용부호 내 객체」혼합행 포함).
   const counts = new Map();
   for (const { trimmed } of body) {
     for (const sentence of stripQuoted(trimmed).split(/[。！？!?]/)) {
@@ -221,7 +221,7 @@ function findRepetition(content) {
             column: 1,
             type: 'verbatim-repeat',
             severity: 'blocking',
-            message: `长句复读（同句出现 ${counts.get(s).count} 次）：疑似模型打转，重写、保留一处。`,
+            message: `장문 반복(동일 문장 ${counts.get(s).count}회 출현): 모델이 루프를 도는 것으로 의심됩니다. 재작성 또는 한 곳만 보존하세요.`,
             excerpt: compact(s),
           });
           flagged.delete(s); // report each repeated sentence once, at its first occurrence
@@ -238,13 +238,13 @@ function findTruncation(content) {
   if (body.length === 0) return [];
   const last = body[body.length - 1];
   // a finished chapter ends on terminal/closing punctuation; otherwise it was cut off.
-  if (/[。！？!?…”"』」）)】]$/.test(last.trimmed)) return [];
+  if (/[。！？!?…""』」）)】]$/.test(last.trimmed)) return [];
   return [{
     line: last.lineNo,
     column: last.trimmed.length,
     type: 'truncated',
     severity: 'blocking',
-    message: '疑似截断：正文末尾未以句末/收尾标点结束，可能被模型中途切断；补完结尾或重写收尾。',
+    message: '의심되는 절단: 본문 끝이 문장 끝/종료 문장 부호로 끝나지 않아, 모델에 의해 중도에 중단되었을 가능성이 있습니다; 끝을 보완하거나 종료를 다시 작성하세요.',
     excerpt: compact(last.trimmed.slice(-24)),
   }];
 }
@@ -255,7 +255,7 @@ function findPlaceholders(content) {
     if (!isContent(trimmed)) continue;
     const dialogue = isDialogueLike(trimmed);
     for (const { re, label, hard } of PLACEHOLDER_PATTERNS) {
-      if (!hard && dialogue) continue; // soft 拒绝语在对话行里可能是正常台词，豁免
+      if (!hard && dialogue) continue; // soft 거부 문구가 대사 줄에 있을 수 있으므로 정상 대사로 간주하여 제외합니다.
       const m = re.exec(trimmed);
       if (m) {
         findings.push({
@@ -263,7 +263,7 @@ function findPlaceholders(content) {
           column: (m.index || 0) + 1,
           type: 'placeholder-leak',
           severity: 'blocking',
-          message: `${label}：正文混入元信息/拒绝语/占位符，重写本段干净落地。`,
+          message: `${label}: 본문에 메타정보/거부 문구/placeholder가 혼입되었습니다. 이 섹션을 명확하게 다시 작성하세요.`,
           excerpt: compact(trimmed.slice(Math.max(0, (m.index || 0) - 4), (m.index || 0) + 20)),
         });
         break; // one finding per line is enough
@@ -280,23 +280,23 @@ function findMetaLeak(content) {
     if (!isContent(trimmed)) continue;
     if (!firstContentSeen) {
       firstContentSeen = true;
-      // 标题行（第N章 章名，无 ## 前缀时也算）属「标题行以外的正文」之外，排除
+      // 제목 줄(제N장 장명, ## 접두사가 없을 때도 포함)은 「제목 줄 외 본문」에서 제외됩니다.
       if (/^第[一二三四五六七八九十百千万两0-9]+章/.test(trimmed)) continue;
     }
     const dialogue = isDialogueLike(trimmed);
     let m = META_TIER1_RE.exec(trimmed);
     if (m) {
-      // tier1 纯工程词正文里几乎永不合法→blocking；但写手/编剧题材里角色在故事内真讨论创作，
-      // 台词（对话行）里可能合法，降级为 advisory（仍报告，交人/LLM 判，不强制回炉）。
+      // tier1 순공학 용어는 정문에서 거의 항상 부적절함→blocking; 하지만 작가/시나리오 소재에서는 캐릭터가 이야기 내에서 창작을 실제로 논의할 때,
+      // 대사(대화 줄)에서는 합법일 수 있으므로 advisory로 강등함(여전히 보고하지만, 사람/LLM이 판단하며 강제 수정 없음).
       findings.push({
         line: lineNo,
         column: m.index + 1,
         type: 'meta-leak',
         severity: dialogue ? 'advisory' : 'blocking',
-        message: `工程词泄漏：「${m[0]}」是写作流水线术语，正文里不该出现；改成角色/场景内表达。${dialogue ? '例外：角色为作者/编剧、在故事内真实讨论创作时，台词里可能合法。' : ''}`,
+        message: `공학 용어 유출: 「${m[0]}」은(는) 작문 파이프라인 용어로, 정문에 나타나면 안 됨; 캐릭터/장면 내 표현으로 수정하세요.${dialogue ? '예외: 캐릭터가 작가/시나리오 작가이고 이야기 내에서 창작을 실제로 논의할 때는 대사에서 합법일 수 있음.' : ''}`,
         excerpt: compact(trimmed.slice(Math.max(0, m.index - 6), m.index + 18)),
       });
-      continue; // tier1 命中即可，不再叠 tier2
+      continue; // tier1 명중 시 충분함, tier2 중첩 금지
     }
     m = META_TIER2_RE.exec(trimmed);
     if (m) {
@@ -305,7 +305,7 @@ function findMetaLeak(content) {
         column: m.index + 1,
         type: 'meta-leak',
         severity: 'advisory',
-        message: `元信息泄漏：「${m[0]}」疑似工程/章节结构词混入正文；改成角色当下可感知的事件锚点或相对时间。例外：角色在故事内真实阅读/讨论「第X章」、真身为作者/读者、或故事内系统/界面用语。`,
+        message: `메타정보 유출: 「${m[0]}」은(는) 공학/장 구조 용어가 정문에 섞인 것으로 의심됨; 캐릭터가 현재 감지 가능한 이벤트 앵커포인트 또는 상대적 시간으로 수정하세요. 예외: 캐릭터가 이야기 내에서 실제로 「제X장」을 읽거나/논의하거나, 실제 정체가 작가/독자이거나, 이야기 내 시스템/인터페이스 용어인 경우.`,
         excerpt: compact(trimmed.slice(Math.max(0, m.index - 6), m.index + 18)),
       });
     }

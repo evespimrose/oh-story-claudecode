@@ -1,29 +1,29 @@
 #!/usr/bin/env node
 /**
- * 起点中文网 排行榜采集脚本
+ * 起点中文网 랭킹 수집 스크립트
  *
- * 配合 browser-cdp skill 使用。先启动 Chrome CDP 环境，再运行本脚本。
- * 采集策略：
- *   1. 默认优先读取 m.qidian.com 的 SSR pageContext JSON（不依赖 CDP，规避 PC 站风控页）。
- *   2. 移动端不可用时再回退到 Chrome CDP 采集 PC 页面。
- * 输出 Markdown 格式匹配 scan-output-format.md 规范。
+ * browser-cdp skill과 함께 사용합니다. 먼저 Chrome CDP 환경을 시작한 후 본 스크립트를 실행하세요.
+ * 수집 전략:
+ *   1. 기본적으로 m.qidian.com의 SSR pageContext JSON을 우선 읽습니다(CDP에 의존하지 않으며, PC 사이트 보안 페이지를 우회합니다).
+ *   2. 모바일 버전을 사용할 수 없을 때는 Chrome CDP를 사용하여 PC 페이지를 수집합니다.
+ * Markdown 형식으로 출력하며 scan-output-format.md 규범을 준수합니다.
  *
- * 用法：
- *   node qidian-rank-scraper.js --type hotsales               # 畅销榜
- *   node qidian-rank-scraper.js --type yuepiao                 # 月票榜
- *   node qidian-rank-scraper.js --type signnewbook             # 签约作者新书榜
- *   node qidian-rank-scraper.js --type pubnewbook              # 公众作者新书榜
- *   node qidian-rank-scraper.js --type newauthor               # 新人作者新书榜
- *   node qidian-rank-scraper.js --type newsign                 # 新人签约新书榜
- *   node qidian-rank-scraper.js --type recom                   # 原创推荐榜
- *   node qidian-rank-scraper.js --type sanjiang                 # 三江推荐（/sanjiang/，非 /rank/ 路径）
- *   node qidian-rank-scraper.js --type all                     # 全部榜单
- *   node qidian-rank-scraper.js --type hotsales --mode mobile  # 仅使用移动端 SSR
- *   node qidian-rank-scraper.js --type hotsales --mode cdp     # 仅使用备用 CDP/PC 页面
+ * 사용법:
+ *   node qidian-rank-scraper.js --type hotsales               # 베스트셀러 순위표
+ *   node qidian-rank-scraper.js --type yuepiao                 # 월간 투표 순위표
+ *   node qidian-rank-scraper.js --type signnewbook             # 계약 작가 신작 순위표
+ *   node qidian-rank-scraper.js --type pubnewbook              # 공개 저자 신작 랭킹
+ *   node qidian-rank-scraper.js --type newauthor               # 신인 저자 신작 랭킹
+ *   node qidian-rank-scraper.js --type newsign                 # 신인 계약 신작 랭킹
+ *   node qidian-rank-scraper.js --type recom                   # 원창 추천 랭킹
+ *   node qidian-rank-scraper.js --type sanjiang                 # 삼강 추천 (/sanjiang/, /rank/ 경로 아님)
+ *   node qidian-rank-scraper.js --type all                     # 전체 순위표
+ *   node qidian-rank-scraper.js --type hotsales --mode mobile  # 모바일 SSR만 사용
+ *   node qidian-rank-scraper.js --type hotsales --mode cdp     # 백업 CDP/PC 페이지만 사용
  *
- * 前置：
- *   默认 mobile/auto 模式不需要 Chrome。
- *   cdp 模式需要：node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
+ * 사전 요구사항:
+ *   기본 mobile/auto 모드는 Chrome이 필요하지 않습니다.
+ *   CDP 모드에 필요: node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
  */
 
 const fs = require("fs");
@@ -34,11 +34,11 @@ const { ab, sleep, evalJSON, scrollLoad, getArg, localDateStamp, runCli } = requ
 const PC_BASE_URL = "https://www.qidian.com/rank";
 const MOBILE_BASE_URL = "https://m.qidian.com";
 
-/** 验证码自动重试最大次数 */
+/** 캡차 자동 재시도 최대 횟수 */
 const MAX_CAPTCHA_RETRIES = 3;
-/** 等待用户手动解决验证码的最大秒数 */
+/** 사용자가 수동으로 캡차를 해결하기 위해 기다리는 최대 초 */
 const MAX_CAPTCHA_WAIT_SEC = 120;
-/** 轮询验证码是否解除的间隔（毫秒） */
+/** 캡차 해제 여부를 폴링하는 간격(밀리초) */
 const CAPTCHA_POLL_INTERVAL = 5000;
 
 const MOBILE_HEADERS = {
@@ -51,54 +51,54 @@ const MOBILE_HEADERS = {
 };
 
 const RANK_TYPES = [
-  { id: "hotsales", label: "畅销榜", mobilePath: "/rank/hotsales/" },
-  { id: "yuepiao", label: "月票榜", mobilePath: "/rank/yuepiao/" },
+  { id: "hotsales", label: "베스트셀러 랭킹", mobilePath: "/rank/hotsales/" },
+  { id: "yuepiao", label: "월표 순위", mobilePath: "/rank/yuepiao/" },
   {
     id: "signnewbook",
-    label: "签约作者新书榜",
+    label: "계약 작가 신작 순위",
     mobilePath: "/rank/sign/",
-    mobileLabel: "签约榜",
+    mobileLabel: "계약 순위",
   },
   {
     id: "pubnewbook",
-    label: "公众作者新书榜",
+    label: "공개 작가 신작 순위",
     mobilePath: "/rank/newbook/",
-    mobileLabel: "新书榜",
+    mobileLabel: "신작 순위",
   },
-  { id: "newauthor", label: "新人作者新书榜", mobilePath: "/rank/newauthor/", mobileLabel: "新人榜" },
+  { id: "newauthor", label: "신인 작가 신작 랭킹", mobilePath: "/rank/newauthor/", mobileLabel: "신인 랭킹" },
   {
     id: "newsign",
-    label: "新人签约新书榜",
+    label: "신인 계약 신작 랭킹",
     mobilePath: "/rank/sign/",
-    mobileLabel: "签约榜",
+    mobileLabel: "계약 랭킹",
   },
-  { id: "recom", label: "原创推荐榜", mobilePath: "/rank/rec/", mobileLabel: "推荐榜" },
-  { id: "readindex", label: "阅读指数榜", mobilePath: "/rank/readindex/" },
+  { id: "recom", label: "오리지널 추천 랭킹", mobilePath: "/rank/rec/", mobileLabel: "추천 랭킹" },
+  { id: "readindex", label: "열독 지수 랭킹", mobilePath: "/rank/readindex/" },
   {
     id: "collect",
-    label: "收藏榜",
+    label: "수장 랭킹",
     mobilePath: "/rank/newfans/",
-    mobileLabel: "书友榜（移动端替代）",
+    mobileLabel: "서우 랭킹(모바일 대체)",
   },
   {
     id: "sanjiang",
-    label: "三江推荐",
+    label: "3강 추천",
     baseUrl: "https://www.qidian.com/sanjiang/",
     mobilePath: "/sanjiang/",
   },
 ];
 
 // ---------------------------------------------------------------------------
-// 页面提取
+// 페이지 추출
 // ---------------------------------------------------------------------------
 
 /**
- * 提取起点 SSR 榜单页面的书籍列表。
- * 起点页面结构：.book-img-text ul > li，每个 li 内：
- *   h2 > a          → 书名+链接
- *   p.author         → 作者 | 题材 · 子题材 | 状态
- *   p.intro          → 简介
- *   p.update > a+span → 最新更新章节+日期
+ * 기점 SSR 랭킹 페이지의 도서 목록을 추출합니다.
+ * 起点 페이지 구조: .book-img-text ul > li, 각 li 내:
+ *   h2 > a          → 책명+링크
+ *   p.author         → 저자 | 장르 · 소장르 | 상태
+ *   p.intro          → 개요
+ *   p.update > a+span → 최신 업데이트 챕터+날짜
  */
 function extractBookList(port) {
   const js =
@@ -106,7 +106,7 @@ function extractBookList(port) {
     "var items=[];" +
     "var lis=document.querySelectorAll('.book-img-text ul li');" +
     "if(!lis.length){" +
-    // 兜底：用 H2 链接定位
+    // 폴백: H2 링크로 위치 결정
     "  var h2s=document.querySelectorAll('h2 a[href*=\"/book/\"]');" +
     "  h2s.forEach(function(a,idx){" +
     "    var c=a.parentElement;" +
@@ -124,23 +124,23 @@ function extractBookList(port) {
     "  var title=titleEl.textContent.trim();" +
     "  var href=titleEl.getAttribute('href')||titleEl.href||'';" +
     "  var url=href?(href.indexOf('http')===0?href:'https:'+href):'';" +
-    // 作者：p.author > a.name
+    // 저자: p.author > a.name
     "  var authorEl=li.querySelector('p.author a.name');" +
     "  var author=authorEl?authorEl.textContent.trim():'';" +
-    // 题材：p.author > a (非 .name 非 .go-sub-type)
+    // 장르: p.author > a (비 .name 비 .go-sub-type)
     "  var genreEls=li.querySelectorAll('p.author a');" +
     "  var genre='';var subGenre='';" +
     "  genreEls.forEach(function(a){" +
     "    if(a.classList.contains('name'))return;" +
     "    if(!genre){genre=a.textContent.trim()}else if(!subGenre){subGenre=a.textContent.trim()}" +
     "  });" +
-    // 状态：p.author > span:last-child
+    // 상태: p.author > span:last-child
     "  var statusEl=li.querySelector('p.author span');" +
     "  var status=statusEl?statusEl.textContent.trim():'';" +
-    // 简介：p.intro
+    // 소개: p.intro
     "  var introEl=li.querySelector('p.intro');" +
     "  var descText=introEl?introEl.textContent.trim():'';" +
-    // 更新：p.update
+    // 업데이트: p.update
     "  var updateEl=li.querySelector('p.update');" +
     "  var updateText=updateEl?updateEl.textContent.replace(/\\s+/g,' ').trim():'';" +
     "  if(title){" +
@@ -152,7 +152,7 @@ function extractBookList(port) {
   return evalJSON(port, js) || [];
 }
 
-/** 从详情页提取标签和简介 */
+/** 상세 페이지에서 태그와 소개 추출 */
 function extractDetail(port) {
   const js =
     "JSON.stringify((()=>{" +
@@ -167,17 +167,17 @@ function extractDetail(port) {
 }
 
 /**
- * 检测当前页面是否被验证码/安全验证拦截。
- * 起点常见拦截页面特征：页面中出现验证码关键词，或页面缺少榜单 DOM 元素。
- * @returns {{ blocked: boolean, reason: string } | null} 若被拦截返回原因对象，否则 null
+ * 현재 페이지가 CAPTCHA/보안 인증으로 차단되었는지 감지합니다.
+ * 起点 일반적인 차단 페이지 특징: 페이지에 CAPTCHA 키워드가 나타나거나, 페이지에 랭킹 DOM 요소가 없습니다.
+ * @returns {{ blocked: boolean, reason: string } | null} 차단되면 사유 객체를 반환하고, 아니면 null
  */
 function isCaptchaPage(port) {
   const js =
     "JSON.stringify((()=>{" +
     "var bodyText=document.body?(document.body.innerText||'').substring(0,3000):'';" +
     "var lower=bodyText.toLowerCase();" +
-    "var keywords=['验证','captcha','verify','安全验证','滑块','拖动','请完成验证'," +
-    "'混元','人机验证','异常请求','访问验证','操作频繁','请求过于频繁','waf','请稍后再试'];" +
+    "var keywords=['검증','captcha','verify','보안검증','슬라이더','드래그','검증을 완료하세요'," +
+    "'혼원','사람과 기계 검증','비정상 요청','접근 검증','작업 빈번함','요청이 너무 많음','waf','잠시 후 다시 시도하세요'];" +
     "for(var i=0;i<keywords.length;i++){" +
     "  if(lower.indexOf(keywords[i])>-1){" +
     "    return {blocked:true,reason:keywords[i]};" +
@@ -185,7 +185,7 @@ function isCaptchaPage(port) {
     "}" +
     "var hasContent=document.querySelector('.book-img-text ul li,.rank-body,.rank-list,.book-img-text');" +
     "if(!hasContent){" +
-    "  return {blocked:true,reason:'页面无榜单内容(可能被拦截)'};" +
+    "  return {blocked:true,reason:'페이지에 순위 목록 내용이 없음(차단되었을 수 있음)'};" +
     "}" +
     "return {blocked:false,reason:''};" +
     "})())";
@@ -194,53 +194,53 @@ function isCaptchaPage(port) {
 }
 
 /**
- * 打开 URL 并等待页面加载，自动处理验证码拦截。
- * 重试策略：
- *   1. 正常加载页面
- *   2. 检测到验证码 → 等待递增延时后刷新重试（最多 MAX_CAPTCHA_RETRIES 次）
- *   3. 仍被拦截 → 提示用户在 Chrome CDP 窗口手动完成验证，轮询等待直到解除或超时
+ * URL을 열고 페이지 로드를 기다리며, 자동으로 인증 차단을 처리합니다.
+ * 재시도 전략:
+ *   1. 정상적으로 페이지 로드
+ *   2. 검증 코드 감지 → 증분 지연 후 새로고침 재시도（최대 MAX_CAPTCHA_RETRIES 회）
+ *   3. 계속 차단됨 → Chrome CDP 창에서 수동으로 검증 완료하도록 사용자에게 안내, 해제될 때까지 또는 타임아웃까지 폴링 대기
  *
- * @returns {boolean} true=页面已就绪，false=无法通过验证码
+ * @returns {boolean} true=페이지 준비됨, false=검증 코드를 통과할 수 없음
  */
 function openWithCaptchaHandling(port, url) {
   for (let attempt = 1; attempt <= MAX_CAPTCHA_RETRIES; attempt++) {
     ab(port, "open", url);
-    // 首次 3 秒，后续每次多等 2 秒
+    // 첫 번째 3초, 이후 매번 2초씩 추가 대기
     sleep(3000 + (attempt - 1) * 2000);
 
     const captcha = isCaptchaPage(port);
     if (!captcha) {
       return true;
     }
-    console.log(`  ⚠ 检测到安全拦截 (${captcha.reason})，第 ${attempt}/${MAX_CAPTCHA_RETRIES} 次重试...`);
-    // 递增等待后再次尝试
+    console.log(`  ⚠ 보안 차단 감지됨 (${captcha.reason}), 재시도 ${attempt}/${MAX_CAPTCHA_RETRIES}회...`);
+    // 대기 시간을 증가시킨 후 다시 시도
     sleep(attempt * 5000);
   }
 
-  // 自动重试全部失败 → 等待用户手动处理
-  console.log(`  ⚠ 自动重试未通过验证码，请在 Chrome CDP 窗口手动完成验证`);
-  console.log(`  ⏳ 等待手动验证（最长 ${MAX_CAPTCHA_WAIT_SEC} 秒）...`);
+  // 자동 재시도 전부 실패 → 사용자의 수동 처리 대기
+  console.log(`  ⚠ 자동 재시도로 검증을 통과하지 못했습니다. Chrome CDP 창에서 수동으로 검증을 완료하세요`);
+  console.log(`  ⏳ 수동 검증 대기 중(최대 ${MAX_CAPTCHA_WAIT_SEC}초)...`);
 
   const startTime = Date.now();
   while (Date.now() - startTime < MAX_CAPTCHA_WAIT_SEC * 1000) {
     sleep(CAPTCHA_POLL_INTERVAL);
-    // 刷新页面检查验证码是否已解除
+    // 페이지를 새로고침하여 captcha가 해제되었는지 확인
     ab(port, "open", url);
     sleep(3000);
     const captcha = isCaptchaPage(port);
     if (!captcha) {
-      console.log(`  ✓ 验证码已解除，继续采集`);
+      console.log(`  ✓ captcha가 해제되었습니다. 계속 수집합니다`);
       return true;
     }
     const elapsed = Math.round((Date.now() - startTime) / 1000);
-    process.stdout.write(`  等待中... (${elapsed}s)\r`);
+    process.stdout.write(`  대기 중... (${elapsed}s)\r`);
   }
-  console.log(`  ✗ 等待超时，验证码仍未解除`);
+  console.log(`  ✗ 대기 시간 초과, captcha가 여전히 해제되지 않았습니다`);
   return false;
 }
 
 // ---------------------------------------------------------------------------
-// 移动端 SSR 提取（默认路径）
+// 모바일 SSR 추출 (기본 경로)
 // ---------------------------------------------------------------------------
 
 function mobileUrl(pathname) {
@@ -292,7 +292,7 @@ function extractMobilePageContext(html) {
   try {
     return JSON.parse(m[1]);
   } catch (e) {
-    console.log(`  ⚠ 移动端 pageContext JSON 解析失败: ${e.message}`);
+    console.log(`  ⚠ 모바일 pageContext JSON 파싱 실패: ${e.message}`);
     return null;
   }
 }
@@ -303,7 +303,7 @@ function normalizeMobileBook(record, idx) {
   const genre = [record.cat, record.subCat].filter(Boolean).join("·");
   const stats = [];
   if (record.cnt) stats.push(record.cnt);
-  if (record.rankCnt) stats.push(`榜单值 ${record.rankCnt}`);
+  if (record.rankCnt) stats.push(`순위표 값 ${record.rankCnt}`);
 
   return {
     rank: record.rankNum || idx + 1,
@@ -320,12 +320,12 @@ function normalizeMobileBook(record, idx) {
 function renderMarkdown(rt, books, url, sourceMode, extraLines = []) {
   const now = new Date().toISOString();
   const lines = [
-    `# 起点 · ${rt.label}`,
+    `# 기점 · ${rt.label}`,
     "",
-    `- 来源：${url}`,
-    `- 抓取方式：${sourceMode}`,
-    `- 抓取时间：${now}`,
-    `- 条目数：${books.length}`,
+    `- 출처: ${url}`,
+    `- 수집 방식: ${sourceMode}`,
+    `- 스크래핑 시간: ${now}`,
+    `- 항목 수: ${books.length}`,
     ...extraLines,
     "",
     "---",
@@ -337,12 +337,12 @@ function renderMarkdown(rt, books, url, sourceMode, extraLines = []) {
     lines.push(`## #${b.rank || i + 1} ${b.title}`);
     const meta = [b.author, b.genre, b.status].filter(Boolean).join(" · ");
     if (meta) lines.push(`*${meta}*`);
-    if (b.updateText) lines.push(`**最新更新：** ${b.updateText}`);
-    if (b.tags?.length) lines.push(`**标签：** ${b.tags.join("、")}`);
-    if (b.url) lines.push(`[作品页](${b.url})`);
+    if (b.updateText) lines.push(`**최신 업데이트:** ${b.updateText}`);
+    if (b.tags?.length) lines.push(`**태그:** ${b.tags.join("、")}`);
+    if (b.url) lines.push(`[작품 페이지](${b.url})`);
     if (b.descText) {
       lines.push("");
-      lines.push("**简介**");
+      lines.push("**소개**");
       lines.push("");
       lines.push(b.descText);
     }
@@ -355,16 +355,16 @@ function renderMarkdown(rt, books, url, sourceMode, extraLines = []) {
 async function scrapeRankMobile(rankTypeId) {
   const rt = RANK_TYPES.find((r) => r.id === rankTypeId);
   if (!rt) {
-    console.log(`  ⚠ 未知榜单类型: ${rankTypeId}`);
+    console.log(`  ⚠ 알 수 없는 랭킹 타입: ${rankTypeId}`);
     return null;
   }
   if (!rt.mobilePath) {
-    console.log(`  ⚠ 榜单 ${rankTypeId} 暂无移动端 SSR 路径`);
+    console.log(`  ⚠ 랭킹 ${rankTypeId}에 모바일 SSR 경로가 없습니다`);
     return null;
   }
 
   const url = mobileUrl(rt.mobilePath);
-  console.log(`\n→ 采集 起点${rt.label}（移动端 SSR）...`);
+  console.log(`\n→ 치디안${rt.label}(모바일 SSR) 수집 중...`);
   console.log(`  URL: ${url}`);
 
   const html = await fetchText(url);
@@ -374,25 +374,25 @@ async function scrapeRankMobile(rankTypeId) {
   const books = records.map(normalizeMobileBook).filter((b) => b.title);
 
   if (!books.length) {
-    console.log("  ⚠ 移动端 SSR 未提取到书籍");
+    console.log("  ⚠ 모바일 SSR에서 도서를 추출하지 못했습니다");
     return null;
   }
 
-  console.log(`  ✓ 提取 ${books.length} 本`);
+  console.log(`  ✓ ${books.length}권 추출됨`);
 
   const extraLines = [];
   if (rt.mobileLabel && rt.mobileLabel !== rt.label) {
-    extraLines.push(`- 移动端实际榜单：${rt.mobileLabel}`);
+    extraLines.push(`- 모바일 실제 순위표: ${rt.mobileLabel}`);
   }
   if (FETCH_DETAIL) {
-    extraLines.push("- 说明：移动端 SSR 已包含简介；--detail 在 mobile/auto 模式下不会额外打开详情页。");
+    extraLines.push("- 설명: 모바일 SSR에는 이미 소개가 포함되어 있으며, --detail은 mobile/auto 모드에서 추가로 상세 페이지를 열지 않습니다.");
   }
 
   return renderMarkdown(rt, books, url, "mobile-ssr", extraLines);
 }
 
 // ---------------------------------------------------------------------------
-// 主流程
+// 메인 프로세스
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
@@ -405,17 +405,17 @@ const FETCH_DETAIL = (getArg(args, "--detail") || "no") === "yes";
 function scrapeRankCDP(port, rankTypeId) {
   const rt = RANK_TYPES.find((r) => r.id === rankTypeId);
   if (!rt) {
-    console.log(`  ⚠ 未知榜单类型: ${rankTypeId}`);
+    console.log(`  ⚠ 알 수 없는 순위표 유형: ${rankTypeId}`);
     return null;
   }
 
   const url = rt.baseUrl || `${PC_BASE_URL}/${rankTypeId}/`;
-  console.log(`\n→ 采集 起点${rt.label}（CDP/PC）...`);
+  console.log(`\n→ 시작점${rt.label} 수집 중(CDP/PC)...`);
   console.log(`  URL: ${url}`);
 
   const pageReady = openWithCaptchaHandling(port, url);
   if (!pageReady) {
-    console.log("  ✗ 起点采集失败：页面无法通过验证码拦截");
+    console.log("  ✗ 시작점 수집 실패: 페이지가 CAPTCHA 차단을 통과하지 못함");
     return null;
   }
 
@@ -424,14 +424,14 @@ function scrapeRankCDP(port, rankTypeId) {
 
   const books = extractBookList(port);
   if (!books.length) {
-    console.log("  ⚠ 未提取到书籍");
+    console.log("  ⚠ 도서를 추출하지 못함");
     return null;
   }
-  console.log(`  ✓ 提取 ${books.length} 本`);
+  console.log(`  ✓ ${books.length}권 추출 완료`);
 
-  // 可选：逐条获取详情页补充数据
+  // 선택사항: 각 항목의 상세 페이지에서 추가 데이터 가져오기
   if (FETCH_DETAIL) {
-    console.log("  正在获取详情页补充数据...");
+    console.log("  상세 페이지 보충 데이터를 가져오는 중...");
     for (let i = 0; i < Math.min(books.length, 20); i++) {
       const b = books[i];
       if (!b.url) continue;
@@ -445,7 +445,7 @@ function scrapeRankCDP(port, rankTypeId) {
       }
       console.log(`    [${i + 1}/${books.length}] ${b.title}`);
     }
-    // 返回榜单页
+    // 랭킹 페이지로 반환
     ab(port, "open", url);
     sleep(2000);
   }
@@ -455,7 +455,7 @@ function scrapeRankCDP(port, rankTypeId) {
 
 async function scrapeRank(rankTypeId) {
   if (!["auto", "mobile", "cdp"].includes(SCRAPE_MODE)) {
-    throw new Error(`未知 --mode: ${SCRAPE_MODE}（可选 auto/mobile/cdp）`);
+    throw new Error(`알 수 없는 --mode: ${SCRAPE_MODE}(선택 가능: auto/mobile/cdp)`);
   }
 
   if (SCRAPE_MODE !== "cdp") {
@@ -463,13 +463,13 @@ async function scrapeRank(rankTypeId) {
       const content = await scrapeRankMobile(rankTypeId);
       if (content || SCRAPE_MODE === "mobile") return content;
     } catch (e) {
-      console.log(`  ⚠ 移动端 SSR 采集失败: ${e.message}`);
+      console.log(`  ⚠ 모바일 SSR 수집 실패: ${e.message}`);
       if (SCRAPE_MODE === "mobile") return null;
     }
   }
 
   if (SCRAPE_MODE !== "mobile") {
-    console.log("  → 回退到 CDP/PC 页面采集");
+    console.log("  → CDP/PC 페이지 수집으로 폴백");
     return scrapeRankCDP(PORT, rankTypeId);
   }
 
@@ -477,9 +477,9 @@ async function scrapeRank(rankTypeId) {
 }
 
 async function main() {
-  // 参数错误是配置问题，不是单个榜单的瞬时失败：先于 per-榜单隔离快速失败
+  // 매개변수 오류는 설정 문제이므로 단일 순위표의 일시적 실패보다 먼저 처리됨: per-순위표 격리를 통한 빠른 실패
   if (!["auto", "mobile", "cdp"].includes(SCRAPE_MODE)) {
-    throw new Error(`未知 --mode: ${SCRAPE_MODE}（可选 auto/mobile/cdp）`);
+    throw new Error(`알 수 없는 --mode: ${SCRAPE_MODE}（선택 가능: auto/mobile/cdp）`);
   }
 
   const rankTypes = RANKTYPE === "all" ? RANK_TYPES.map((r) => r.id) : [RANKTYPE];
@@ -488,8 +488,8 @@ async function main() {
   const partialReasons = [];
 
   for (const rt of rankTypes) {
-    // per-榜单隔离：移动端 SSR 失败后的 CDP 回退会直接抛（ab() 不吞错），
-    // 一个榜单的瞬时失败不该掐掉 --type all 后面的榜单（与番茄/刺猬猫一致）
+    // per-순위표 격리: 모바일 SSR 실패 후 CDP 폴백은 직접 던짐 (ab()은 오류를 무시하지 않음)
+    // 단일 순위표의 일시적 실패가 --type all 이후의 순위표를 중단해서는 안 됨 (토마토 노벨/시큐어캣과 일관성 유지)
     try {
       const content = await scrapeRank(rt);
       if (!content) {
@@ -501,19 +501,19 @@ async function main() {
 
       const rtInfo = RANK_TYPES.find((r) => r.id === rt);
       const date = localDateStamp();
-      const filename = `起点${rtInfo.label}_${date}.md`;
+      const filename = `Qidian${rtInfo.label}_${date}.md`;
       fs.mkdirSync(OUTDIR, { recursive: true });
       const filepath = path.join(OUTDIR, filename);
       fs.writeFileSync(filepath, content, "utf-8");
       written++;
-      console.log(`  ✓ 已保存: ${filepath}`);
+      console.log(`  ✓ 저장됨: ${filepath}`);
     } catch (rankErr) {
       failed++;
       const rtInfo = RANK_TYPES.find((r) => r.id === rt);
       const message = rankErr && rankErr.message ? rankErr.message : String(rankErr);
       partialReasons.push(`${rtInfo ? rtInfo.label : rt}: ${message}`);
       console.error(
-        `[qidian] ${rtInfo ? rtInfo.label : rt} 采集失败，跳过: ${message}`
+        `[qidian] ${rtInfo ? rtInfo.label : rt} 수집 실패, 건너뜀: ${message}`
       );
     }
   }
@@ -527,7 +527,7 @@ async function main() {
 }
 
 if (require.main === module) {
-  runCli(main, "起点采集");
+  runCli(main, "치디안 수집");
 }
 
 module.exports = {

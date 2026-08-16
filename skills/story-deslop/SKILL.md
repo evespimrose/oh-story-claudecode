@@ -1,7 +1,7 @@
 ---
 name: story-deslop
 version: 1.0.0
-description: "웹소설 AI 냄새(AI slop) 제거. 텍스트에서 AI 집필 흔적을 감지하고 제거하여 글을 자연스럽고 비템플릿화된 형태로 다듬습니다. 트리거 방식: /story-deslop, /去AI味, 「AI 냄새 지워줘」「이 글 너무 AI 같다」「웹소설 디슬롭」."
+description: "웹소설 AI 냄새(AI slop) 제거. 텍스트에서 AI 집필 흔적을 감지하고 제거하여 글을 자연스럽고 정형화되지 않은 형태로 다듬습니다. 트리거 방식: /story-deslop, /AI냄새제거, 「AI 냄새 지워줘」 「이 글 너무 AI 같다」 「웹소설 디슬롭」."
 metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claudecode"}}
 ---
 # story-deslop: 웹소설 AI 냄새 제거 (Deslop)
@@ -18,7 +18,7 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 
 ## 핵심 철학
 
-### 원칙 1: 교정이 아닌 어투/맛(味) 개선을 우선할 것
+### 원칙 1: 단순 교정이 아닌 문체와 느낌 개선을 우선할 것
 
 AI 냄새는 문법 오류가 아니므로 "교정" 대상이 아닙니다. 지나치게 문어적이거나, 대칭성이 과하거나, 지나치게 미사여구가 풍부한 스타일의 문제입니다. AI 냄새 제거의 본질은 글로 쓴 텍스트를 과도하게 정제된 상태에서 구체적이고 자연스러우며 읽기 편한 상태로 끌어오는 것입니다.
 

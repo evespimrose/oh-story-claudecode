@@ -1,53 +1,53 @@
-# {项目名} — 网文写作工具集（ZCode）
+# {프로젝트명} — 웹소설 작성 툴킷 (ZCode)
 
-本项目已通过 oh-story 接入 ZCode。优先用 `$skill-name` 调用 Skill，也可从 `/` 面板选择同名 Skill 或 Command。
+이 프로젝트는 oh-story를 통해 ZCode와 연동되었습니다. 우선적으로 `$skill-name` 으로 Skill을 호출하거나, `/` 패널에서 동일한 이름의 Skill 또는 Command를 선택할 수 있습니다.
 
-## Skill 路由表
+## Skill 라우팅 테이블
 
-| 命令/意图 | Skill | 说明 |
+| 명령/의도 | Skill | 설명 |
 |---|---|---|
-| `$story-long-write`、写长篇 | story-long-write | 长篇网文写作（逐章推进） |
-| `$story-short-write`、写短篇 | story-short-write | 短篇网文写作（情绪驱动） |
-| `$story-long-analyze`、长篇拆文 | story-long-analyze | 长篇小说深度拆解 |
-| `$story-short-analyze`、短篇拆文 | story-short-analyze | 短篇小说拆文分析 |
-| `$story-long-scan`、长篇扫榜 | story-long-scan | 长篇小说榜单与市场趋势 |
-| `$story-short-scan`、短篇扫榜 | story-short-scan | 短篇小说榜单与情绪风口 |
-| `$story-deslop`、去 AI 味 | story-deslop | 去除 AI 写作痕迹 |
-| `$story-cover`、封面 | story-cover | 生成封面图 |
-| `$story-review`、审查 | story-review | 多视角审查；项目 custom agents 不可用时降级 solo |
-| `$story-import`、导入 | story-import | 逆向导入已有小说到项目结构 |
-| `$story`、网文 | story | 模糊意图自动分发 |
-| `$story-setup`、准备写书 | story-setup | 部署 ZCode Skills、Commands、Hooks 与 AGENTS.md |
-| `$browser-cdp` | browser-cdp | 浏览器 CDP 工具 |
+| `$story-long-write`、장편쓰기 | story-long-write | 장편 웹소설 작성 (장별 추진) |
+| `$story-short-write`、단편쓰기 | story-short-write | 단편 웹소설 작성 (감정 구동) |
+| `$story-long-analyze`、장편작품분석 | story-long-analyze | 장편소설 심층 분해 |
+| `$story-short-analyze`、단편작품분석 | story-short-analyze | 단편소설 작품분석 분석 |
+| `$story-long-scan`、장편순위스캔 | story-long-scan | 장편소설 순위와 시장 동향 |
+| `$story-short-scan`、단편순위스캔 | story-short-scan | 단편소설 순위와 감정 트렌드 |
+| `$story-deslop`、去AI味 | story-deslop | AI 작성 흔적 제거 |
+| `$story-cover`、표지 | story-cover | 표지 이미지 생성 |
+| `$story-review`、심사 | story-review | 다중 시점 심사; 프로젝트 custom agents 미가용 시 solo로 다운그레이드 |
+| `$story-import`、가져오기 | story-import | 기존 소설을 프로젝트 구조로 역방향 가져오기 |
+| `$story`、웹소설 | story | 모호한 의도 자동 분기 |
+| `$story-setup`、책쓰기준비 | story-setup | ZCode Skills, Commands, Hooks 와 AGENTS.md 배포 |
+| `$browser-cdp` | browser-cdp | 브라우저 CDP 툴 |
 
-## 文件结构
+## 파일 구조
 
-- `.zcode/skills/` — 项目本地 Skills，优先于同名 plugin Skills
-- `.zcode/commands/` — 项目本地 Commands
-- `.zcode/hooks/` — oh-story ZCode Hook runner
-- `拆文库/` — 拆文分析结果
-- `{书名}/正文/` — 长篇章节正文
-- `{书名}/正文.md` — 短篇正文
-- `{书名}/设定/` — 角色、世界和题材设定
-- `{书名}/大纲/` — 卷纲与逐章细纲
-- `{书名}/追踪/` — `_tracking-state.json` 唯一结构化权威、固定 7 栏 `上下文.md` 续写状态卡、逐章紧凑记录、核心角色独立派生快照、伏笔当前视图、作者与读者双时间线；全部通过追踪工具生成
-- `{书名}/对标/` — 当前项目引用的对标分析
+- `.zcode/skills/` — 프로젝트 로컬 Skills, 동일 plugin Skill 보다 우선
+- `.zcode/commands/` — 프로젝트 로컬 Commands
+- `.zcode/hooks/` — oh-story ZCode Hook 실행기
+- `작품분석库/` — 작품분석 결과
+- `{책이름}/본문/` — 장편 장별 본문
+- `{책이름}/본문.md` — 단편 본문
+- `{책이름}/설정/` — 캐릭터, 세계관, 소재 설정
+- `{책이름}/개요/` — 권纲과 장별 세纲
+- `{책이름}/추적/` — `_tracking-state.json` 유일 구조화 권위, 고정 7열 `컨텍스트.md` 연재 상태 카드, 장별 기록, 핵심 캐릭터 독립 파생 스냅샷, 복선 현재 뷰, 작가와 독자 양면 타임라인；전부 추적 툴로 생성
+- `{책이름}/대상/벤치마크/` — 현재 프로젝트가 참조하는 대상 분석
 
-## ZCode 项目约定
+## ZCode 프로젝트 규약
 
-- 写正文前必须先有对应大纲：长篇需要 `大纲/细纲_第N章*.md`，短篇需要 `小节大纲.md`。PreToolUse Hook 会做机械守卫，Skill 流程本身也必须遵守。
-- 正文写入后，PostToolUse Hook 会检查落盘、截断、占位符、工程词泄漏、复读、字数欠账和标题重复；有发现时先处理再继续。
-- ZCode 3.3.4 不执行项目/plugin 自定义 Agent。遇到 `story-architect`、`narrative-writer`、`consistency-checker` 等角色调用时，由当前 Agent 按同一规则直接完成，并在结果中报告 `Fallback: project custom agents unavailable -> solo`。
-- 不读取 `.zcode/rules` 或嵌套 `AGENTS.md`；关键规则以本文件和对应 Skill 为准。
-- Compact 后优先读取 `{书名}/追踪/上下文.md` 恢复当前写作状态。
+- 본문 작성 전 반드시 대응 개요 선행: 장편은 `개요/세纲_제N장*.md`，단편은 `소절개요.md`. PreToolUse Hook 이 기계적 가드를 수행하며，Skill 프로세스 자체도 반드시 준수.
+- 본문 작성 후, PostToolUse Hook 이 디스크 기록 여부, 잘림, 플레이스홀더, 공학 용어 누출, 반복, 글자수 미달과 제목 중복을 검사；발견 시 우선 처리한 뒤 계속 진행.
+- ZCode 3.3.4 는 프로젝트/플러그인 custom Agent 를 실행하지 않음. `story-architect`、`narrative-writer`、`consistency-checker` 등 역할 호출 시, 현재 Agent 가 동일 규칙에 따라 직접 완료하며 결과에 `Fallback: project custom agents unavailable -> solo` 를 보고.
+- `.zcode/rules` 또는 중첩 `AGENTS.md` 는 읽지 않음；핵심 규칙은 본 파일과 해당 Skill 을 기준으로 함.
+- Compact 후 우선 `{책이름}/추적/컨텍스트.md` 를 읽어 현재 작성 상태를 복원.
 
-## Compact 后恢复上下文
+## Compact 후 컨텍스트 복원
 
-恢复写作前确认：
+작성 재개 전 확인:
 
-1. 当前书目与已完成章节；
-2. 最近的角色/设定变更；
-3. 未回收伏笔；
-4. 当前章节的情绪和节奏目标。
+1. 현재 도서와 완료된 장；
+2. 최근 캐릭터/설정 변경；
+3. 미회수 복선；
+4. 현재 장의 감정과 리듬 목표.
 
-如果存在 `{书名}/追踪/上下文.md`，先读取该文件再继续写作。
+`{책이름}/추적/컨텍스트.md` 가 존재한다면, 해당 파일을 먼저 읽은 뒤 작성 계속.

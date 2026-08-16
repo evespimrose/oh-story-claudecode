@@ -1,52 +1,52 @@
-# {项目名} — 网文写作工具集（通用 Agent / Web AI）
+# {프로젝트명} — 웹소설 작성 툴킷 (일반 Agent / Web AI)
 
-本项目按通用文件方式接入 oh-story skills。若当前平台没有 Claude Code / OpenCode / Codex / ZCode / OpenClaw 的 hooks 或 custom agents，仍可直接让 Agent 读取 `skills/*/SKILL.md` 和 `skills/*/references/` 执行；只是运行时硬拦截和多 agent 自动协作不会自动生效。
+이 프로젝트는 일반 파일 방식으로 oh-story skills 와 연동되었습니다. 현재 플랫폼에 Claude Code / OpenCode / Codex / ZCode / OpenClaw 의 hooks 또는 custom agents 가 없더라도, Agent 가 직접 `skills/*/SKILL.md` 와 `skills/*/references/` 를 읽어 실행 가능；단 런타임 하드 인터셉트와 다중 agent 자동 협업은 자동으로 적용되지 않습니다.
 
-## Skill 路由表
+## Skill 라우팅 테이블
 
-优先用自然语言点名 skill；如果平台支持自定义命令，也可以把下表映射成命令。
+우선적으로 자연어로 skill 을 지목；플랫폼에서 커스텀 명령을 지원한다면 아래 표를 명령으로 매핑할 수도 있습니다.
 
-| 意图 | Skill | 说明 |
+| 의도 | Skill | 설명 |
 |------|-------|------|
-| 写长篇 / 开书 / 续写 | story-long-write | 长篇网文写作（逐章推进） |
-| 写短篇 | story-short-write | 短篇网文写作（情绪驱动） |
-| 长篇拆文 | story-long-analyze | 长篇小说深度拆解 |
-| 短篇拆文 | story-short-analyze | 短篇小说拆文分析 |
-| 长篇扫榜 | story-long-scan | 长篇小说榜单与市场趋势 |
-| 短篇扫榜 | story-short-scan | 短篇小说榜单与情绪风口 |
-| 去 AI 味 | story-deslop | 去除 AI 写作痕迹 |
-| 封面 | story-cover | 生成封面图 |
-| 审查 | story-review | 多视角审查；无 custom agents 时降级为单线程审查 |
-| 导入 | story-import | 逆向导入已有小说到项目结构 |
-| 网文工具箱 | story | 模糊意图自动分发 |
-| 准备写书 / 部署 | story-setup | 通用项目结构与 skill 使用入口 |
-| 浏览器登录态 / 抓取 | browser-cdp | 浏览器 CDP 工具；需平台允许本地脚本/浏览器控制 |
+| 장편쓰기 / 책열기 / 이어쓰기 | story-long-write | 장편 웹소설 작성 (장별 추진) |
+| 단편쓰기 | story-short-write | 단편 웹소설 작성 (감정 구동) |
+| 장편작품분석 | story-long-analyze | 장편소설 심층 분해 |
+| 단편작품분석 | story-short-analyze | 단편소설 작품분석 분석 |
+| 장편순위스캔 | story-long-scan | 장편소설 순위와 시장 동향 |
+| 단편순위스캔 | story-short-scan | 단편소설 순위와 감정 트렌드 |
+| 去AI味 | story-deslop | AI 작성 흔적 제거 |
+| 표지 | story-cover | 표지 이미지 생성 |
+| 심사 | story-review | 다중 시점 심사; custom agents 미존재 시 단일 스레드 심사로 다운그레이드 |
+| 가져오기 | story-import | 기존 소설을 프로젝트 구조로 역방향 가져오기 |
+| 웹소설 툴박스 | story | 모호한 의도 자동 분기 |
+| 책쓰기준비 / 배포 | story-setup | 일반 프로젝트 구조와 skill 사용 진입점 |
+| 브라우저 로그인 상태 / 크롤링 | browser-cdp | 브라우저 CDP 툴；플랫폼에서 로컬 스크립트/브라우저 제어를 허용해야 함 |
 
-## 文件结构
+## 파일 구조
 
-- `skills/` — 项目本地 skills；Agent 应先读对应 `SKILL.md`，再按需读取 `references/`
-- `拆文库/` — 拆文分析结果存放目录
-- `{书名}/正文/` — 长篇小说正文章节
-- `{书名}/正文.md` — 短篇小说正文
-- `{书名}/设定/` — 角色设定、世界设定
-- `{书名}/大纲/` — 卷纲、细纲
-- `{书名}/追踪/` — `_tracking-state.json` 唯一结构化权威、固定 7 栏 `上下文.md` 续写状态卡、逐章紧凑记录、核心角色独立派生快照、伏笔当前视图、作者与读者双时间线；全部通过追踪工具生成
-- `{书名}/对标/` — 对标作品分析
+- `skills/` — 프로젝트 로컬 skills；Agent 는 대응하는 `SKILL.md` 를 먼저 읽은 뒤 필요에 따라 `references/` 를 읽어야 함
+- `작품분석库/` — 작품분석 결과 저장 디렉터리
+- `{책이름}/본문/` — 장편소설 본문 장
+- `{책이름}/본문.md` — 단편소설 본문
+- `{책이름}/설정/` — 캐릭터 설정, 세계 설정
+- `{책이름}/개요/` — 권纲, 세纲
+- `{책이름}/추적/` — `_tracking-state.json` 유일 구조화 권위, 고정 7열 `컨텍스트.md` 연재 상태 카드, 장별 컴팩트 기록, 핵심 캐릭터 독립 파생 스냅샷, 복선 현재 뷰, 작가와 독자 양면 타임라인；전부 추적 툴로 생성
+- `{책이름}/대상/벤치마크/` — 벤치마크 작품 분석
 
-## 通用使用约定
+## 일반 사용 규약
 
-- 写正文前先有大纲：长篇需要 `大纲/细纲_第N章*.md`，短篇需要 `小节大纲.md`。
-- 无 hooks 的平台不会自动拦截越权写正文，Agent 必须在执行写作 skill 时自行检查大纲、上下文和追踪文件。
-- 无 custom agents 的平台按 solo/direct 执行；遇到 skill 要求调用 story-architect、narrative-writer 等 agent 时，改由当前 Agent 直接完成，并在结果里说明降级。
-- **去AI味自锁**（无 hook 平台此条是唯一防线）：每章正文落盘后，同一轮内立即按写作 skill 的「最毒句式速查 + 禁用词扫描」自检并清零（能运行 node 时跑 `check-ai-patterns.js --check --fail-on=blocking`）；写下一章前先复查上一章无欠账。唯一豁免＝用户显式说"本章不去味"，豁免章在标题行下加 `<!-- 去味:跳过 -->`。
-- Compact / 新会话后优先读取 `{书名}/追踪/上下文.md` 恢复当前写作状态。
+- 본문 작성 전 개요 선행：장편은 `개요/세纲_제N장*.md` 가 필요하며, 단편은 `소절개요.md` 가 필요.
+- hooks 없는 플랫폼은 본문 월권 쓰기를 자동 인터셉트하지 않으므로, Agent 는 작성 skill 실행 시 개요, 컨텍스트와 추적 파일을 반드시 자체 검사해야 합니다.
+- custom agents 미존재 시 solo/direct 로 실행；skill 호출 시 story-architect, narrative-writer 등 agent 를 요구하는 경우 현재 Agent 가 직접 완료하며 결과에 다운그레이드되었음을 명시합니다.
+- **去AI味 자동 잠금** (hook 없는 플랫폼은 이 조항이 유일한 방어선)：매 장 본문 디스크 기록 후, 동일 턴 내 즉시 작성 skill 의 「최악 문장 빠른 점검 + 금지어 스캔」으로 자가 검사하고 문제를 모두 제거 (node 를 실행할 수 있는 환경이면 `check-ai-patterns.js --check --fail-on=blocking` 실행)；다음 장 작성 전 앞 장 미결 사항이 없는지 재확인. 유일한 면제＝사용자가 명시적으로 "이번 장去味 안 함" 이라고 말한 경우, 면제 장은 제목 행 아래에 `<!-- 去味:건너뜀 -->` 를 추가.
+- Compact / 새 세션 후 우선 `{책이름}/추적/컨텍스트.md` 를 읽어 현재 작성 상태를 복원.
 
-## Compact 后恢复上下文
+## Compact 후 컨텍스트 복원
 
-写作中的关键上下文：
-1. 当前写作项目名称和进度
-2. 最近讨论的角色设定变更
-3. 未完成的伏笔列表
-4. 当前章节的情绪/节奏目标
+작성 중 핵심 컨텍스트：
+1. 현재 작성 프로젝트 이름과 진행률
+2. 최근 논의한 캐릭터 설정 변경
+3. 미완료 복선 목록
+4. 현재 장의 감정/리듬 목표
 
-如果存在 `{书名}/追踪/上下文.md`，compact 后首先读取该文件恢复上下文。
+`{책이름}/추적/컨텍스트.md` 가 존재한다면, compact 후 가장 먼저 해당 파일을 읽어 컨텍스트를 복원.

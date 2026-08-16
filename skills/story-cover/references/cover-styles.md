@@ -5,32 +5,32 @@
 
 ## 플랫폼 스타일
 
-### 판타지 소설 (番茄小说)
+### 판치에 소설
 
 시각: 고채도 고대비 / 인물 60% 이상 차지하며 얼굴 선명 / 제목 크고 굵으며 광 효과(금/빨/흰) / 증명사진 구도 + 화려한 배경
 키워드: `vibrant saturated colors, eye-catching bold design, character portrait dominating frame, mass-market novel cover style, high contrast`
 
-### 기점 (起点)
+### 치디엔
 
 시각: 섬세하고 정교한 사실주의 일러스트 / 구도에 계층 풍부 / 제목은 전통 붓 해체체 / 색상 차분 / 인물과 장면 균형 잡히고 영화감 있음
 키워드: `polished refined illustration, detailed cinematic composition, epic atmospheric, mature sophisticated style, premium quality`
 
-### 진장 (晋江)
+### 진장
 
 시각: 부드러운 톤(분/보라/하늘/따뜻한 흰) / 아름다운 화풍에 큰 눈과 정교한 이목구비 / 꽃잎 보케 실크 보석 장식 / 중앙 대칭에 화면 깔끔 / 제목은 우아한 행서나 세로 원형체
 키워드: `dreamy ethereal aesthetic, soft pastel tones, elegant romantic, delicate beauty, flower petals and bokeh`
 
-### 즈후옌언 (知乎盐言)
+### 즈후 옌옌
 
 시각: 많은 여백의 미니멀 / 차가운 색(회/파/흰/어두운) / 분위기 > 인물 디테일, 장면/물건/추상적 이미지 많이 사용 / 제목은 모던 심플 산세리프 / 독립 영화 포스터 질감
 키워드: `minimalist literary style, clean composition with negative space, subtle moody atmosphere, independent film poster aesthetic`
 
-### 치마오 (七猫)
+### 치마오
 
 시각: 극도로 채도 높고 강렬한 임팩트 / 인물 화려한 복식과 장비 풍부 / 화염 뇌전 영력 특수효과 / 제목 대형 발광 비중 큼 / 포스터 느낌 정보 밀도 높음
 키워드: `striking high-impact design, vivid dramatic colors, spectacular visual effects, attention-grabbing poster style`
 
-### 차웨이마오 (刺猬猫)
+### 치웨이마오
 
 시각: 일러스트 애니메이션 2D / 색상 밝고 선 명확 / Q판 요소 / 제목 카툰 손그림풍 / 가볍고 발랄
 키워드: `anime illustration style, vibrant colorful, detailed character art, Japanese light novel aesthetic`
@@ -41,16 +41,16 @@
 
 | 키워드 | 장르 | 스타일 태그 |
 |:-------|:-----|:---------|
-| 선/도/검/영/수/종/천/제/존/신 | 판타지/선협 (玄幻/仙侠) | xianxia fantasy |
-| 도시/총재/캠퍼스/환생/시스템/학바/의사/병왕 | 도시 (都市) | urban modern |
-| 비/황/후/궁/적/서/후/조/봉/란 | 고대 로맨스 (古言) | ancient romance |
-| 총재/계약/대체 시집/달콤한 반려/아내/귀염둥이 아기/번개 결혼 | 현대 로맨스 (现言) | modern romance |
-| 괴이/사건/탐정/서스펜스/추리/밀실/연쇄 | 미스터리 스릴러 (悬疑) | mystery thriller |
-| 스타/포스트 아포칼립스/메카/사이버/폐허/진화 | 공상과학 (科幻) | sci-fi |
-| 용/기사/마법/이세계/엘프/영주 | 서양 판타지 (西幻) | western fantasy |
-| 삼국/대명/대당/전장/장군/모사 | 역사 (历史) | historical epic |
-| 귀신/강시/음양/풍수/도굴/주 | 초자연 공포 (灵异) | supernatural horror |
-| 귀여움/냥이/단체 반려/어리다/전생 | 라이트 노벨 (轻小说) | light novel |
+| 선/도/검/령/수/종/천/제/존/신 | 판타지/선협 | xianxia fantasy |
+| 도시/총재/캠퍼스/환생/시스템/학원/의사/병왕 | 도시 | urban modern |
+| 비/황/후/궁/적/서/후/조/봉/란 | 고대 로맨스 | ancient romance |
+| 총재/계약/대역 시집/달콤한 로맨스/아내/육아/번개 결혼 | 현대 로맨스 | modern romance |
+| 괴담/사건/탐정/서스펜스/추리/밀실/연쇄 | 미스터리 스릴러 | mystery thriller |
+| 성간/포스트 아포칼립스/메카/사이버/폐허/진화 | SF | sci-fi |
+| 드래곤/기사/마법/이세계/엘프/영주 | 서양 판타지 | western fantasy |
+| 삼국/대명/대당/전장/장군/모사 | 역사 | historical epic |
+| 귀신/강시/음양/풍수/도굴/저주 | 초자연 공포 | supernatural horror |
+| 귀여움/고양이/부둥부둥/어린아이/전생 | 라이트 노벨 | light novel |
 
 ---
 
@@ -117,7 +117,7 @@ holding a glowing blue spirit sword
 
 ## 스타일 라이브러리
 
-### 판타지 / 선협 (玄幻 / 仙侠)
+### 판타지 / 선협
 
 **태그**: `xianxia Chinese fantasy art style, ethereal atmosphere`
 **색상**: 청람+금색+현흑, 한색 위주, 금색/따뜻한 색 광원 포인트
@@ -137,7 +137,7 @@ Color palette: deep blue, gold, white, black.
 Professional book cover, high detail digital painting, portrait 2:3 ratio, no watermark
 ```
 
-### 도시 (都市)
+### 도시
 
 **태그**: `modern urban contemporary style, clean cinematic composition`
 **색상**: 남색+회색+금색, 네온 포인트(야경)/따뜻한 주황(황혼)
@@ -145,7 +145,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 도시 스카이라인, 고급 사무실, 캠퍼스, 네온 가로등
 **광 효과**: `sharp city lights, sunset glow reflecting on glass buildings, neon rim light`
 
-### 고대 로맨스 / 궁중 암투 (古言 / 宫斗)
+### 고대 로맨스 / 궁중 암투
 
 **태그**: `ancient Chinese romance palace drama, elegant classical beauty`
 **색상**: 정홍+금색+묵흑, 화려하고 무게감
@@ -153,7 +153,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 궁전, 정원, 붉은 담장, 주렴, 병풍, 등불
 **광 효과**: `warm lantern light, golden candle glow, silk fabric shimmering`
 
-### 현대 로맨스 / 달콤한 반려 (现言 / 甜宠)
+### 현대 로맨스 / 달콤한 로맨스
 
 **태그**: `modern romance cover art, soft dreamy warm atmosphere`
 **색상**: 분홍+따뜻한 흰+연금, 따뜻하고 부드러움
@@ -161,7 +161,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 카페, 정원, 아늑한 실내, 석양 해변
 **광 효과**: `soft warm backlighting, dreamy bokeh, gentle sunset glow`
 
-### 미스터리 / 추리 (悬疑 / 推理)
+### 미스터리 / 추리
 
 **태그**: `dark mystery thriller, noir atmosphere, high contrast shadows`
 **색상**: 검정+짙은 회+어두운 파랑, 피빨강/차가운 흰 포인트
@@ -169,7 +169,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 비 오는 밤 거리, 낡은 건물, 밀실, 어두운 골목
 **광 효과**: `dramatic chiaroscuro, single spotlight, rain-slicked reflections`
 
-### SF / 포스트 아포칼립스 (科幻 / 末世)
+### SF / 포스트 아포칼립스
 
 **태그**: `sci-fi cyberpunk, futuristic technology, post-apocalyptic`
 **색상**: 남색+검정+은색, 네온 블루/전자 보라/에너지 그린 포인트
@@ -177,7 +177,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 우주, 폐허 도시, 실험실, 우주 정거장
 **광 효과**: `holographic blue glow, neon rim lighting, energy arcs`
 
-### 서양 판타지 (西幻)
+### 서양 판타지
 
 **태그**: `western high fantasy, epic medieval atmosphere`
 **색상**: 남색+어두운 금+은백, 불꽃 빨강/마법 보라 포인트
@@ -185,7 +185,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 성, 용의 둥지, 마법진, 넓은 평야
 **광 효과**: `magic spell glow, dramatic stormy sky, firelight from torches`
 
-### 역사 / 군사 (历史 / 军事)
+### 역사 / 군사
 
 **태그**: `historical Chinese war epic, grand battlefield panorama`
 **색상**: 철회+어두운 붉은+누르스름, 금갑 광택/봉화 주황 포인트
@@ -193,7 +193,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 전장, 성벽, 군영, 봉화
 **광 효과**: `dramatic battlefield firelight, smoke-filled sky, sunset over war`
 
-### 초자연 / 공포 (灵异 / 恐怖)
+### 초자연 / 공포
 
 **태그**: `Chinese supernatural horror, eerie ghostly atmosphere`
 **색상**: 묵흑+유령 녹색+어두운 붉은, 종이 흰/촛불 노랑 포인트
@@ -201,7 +201,7 @@ Professional book cover, high detail digital painting, portrait 2:3 ratio, no wa
 **배경**: 묘지, 고사찰, 어두운 골목, 관
 **광 효과**: `eerie green glow, flickering candlelight, cold ghostly luminescence`
 
-### 라이트 노벨 / 2D (轻小说 / 二次元)
+### 라이트 노벨 / 서브컬처
 
 **태그**: `anime light novel cover, vibrant colorful moe style`
 **색상**: 밝고 다채로움, 별빛/꽃잎 포인트

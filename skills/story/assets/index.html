@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#f7f8fa">
-    <title>OH STORY · 本地写作工作台</title>
+    <title>OH STORY · 로컬 집필 워크벤치</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <a class="skip-link" href="#editorPanel">跳到文稿台</a>
+    <a class="skip-link" href="#editorPanel">편집기로 건너뛰기</a>
 
     <div class="app-shell">
       <header class="masthead">
-        <div class="brand-lockup" aria-label="OH STORY 本地写作工作台">
+        <div class="brand-lockup" aria-label="OH STORY 로컬 집필 워크벤치">
           <span class="brand-seal" aria-hidden="true">OH</span>
           <span class="brand-copy">
             <strong>OH STORY</strong>
@@ -26,22 +26,22 @@
             <path d="M3.5 6.5h6l2 2h9v10h-17z"></path>
           </svg>
           <span class="workspace-copy">
-            <strong id="workspaceName">正在辨认书架…</strong>
+            <strong id="workspaceName">책장 확인 중...</strong>
             <span id="workspacePath" class="workspace-path"></span>
           </span>
         </div>
 
         <div class="masthead-actions">
-          <div class="workspace-summary" aria-label="工作区统计">
-            <span><b id="libraryCount">—</b> 拆文库</span>
-            <span><b id="projectCount">—</b> 项目</span>
-            <span><b id="fileCount">—</b> 文稿</span>
+          <div class="workspace-summary" aria-label="워크스페이스 통계">
+            <span><b id="libraryCount">—</b> 분석 라이브러리</span>
+            <span><b id="projectCount">—</b> 프로젝트</span>
+            <span><b id="fileCount">—</b> 원고</span>
           </div>
           <div id="connectionStatus" class="connection-status" role="status">
             <span class="status-dot" aria-hidden="true"></span>
-            <span>连接中</span>
+            <span>연결 중</span>
           </div>
-          <button id="refreshButton" class="icon-button" type="button" title="刷新工作区" aria-label="刷新工作区">
+          <button id="refreshButton" class="icon-button" type="button" title="워크스페이스 새로고침" aria-label="워크스페이스 새로고침">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M20 6v5h-5"></path>
               <path d="M18.2 15.7A7 7 0 1 1 19 9.3L20 11"></path>
@@ -52,14 +52,14 @@
 
       <main class="desk">
         <aside class="archive-panel" aria-labelledby="archiveTitle">
-          <h1 id="archiveTitle" class="sr-only">工作区文件</h1>
+          <h1 id="archiveTitle" class="sr-only">워크스페이스 파일</h1>
 
-          <div class="archive-tabs" role="tablist" aria-label="工作区内容">
+          <div class="archive-tabs" role="tablist" aria-label="워크스페이스 콘텐츠">
             <button id="librariesTab" type="button" role="tab" aria-selected="true" aria-controls="treePanel" data-view="libraries">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M4 5.5h6l2 2h8v11H4z"></path>
               </svg>
-              <span>拆文库</span>
+              <span>분석 라이브러리</span>
               <b id="librariesBadge">0</b>
             </button>
             <button id="projectsTab" type="button" role="tab" aria-selected="false" aria-controls="treePanel" data-view="projects">
@@ -67,7 +67,7 @@
                 <path d="M5 4.5h14v15H5z"></path>
                 <path d="M8 8h8M8 12h8M8 16h5"></path>
               </svg>
-              <span>写作项目</span>
+              <span>집필 프로젝트</span>
               <b id="projectsBadge">0</b>
             </button>
           </div>
@@ -77,22 +77,22 @@
               <circle cx="11" cy="11" r="6.5"></circle>
               <path d="m16 16 4 4"></path>
             </svg>
-            <span class="sr-only">搜索文件名</span>
-            <input id="treeSearch" type="search" autocomplete="off" placeholder="搜索文件、角色或章节">
+            <span class="sr-only">파일명 검색</span>
+            <input id="treeSearch" type="search" autocomplete="off" placeholder="파일, 캐릭터 또는 챕터 검색">
             <kbd>⌘ K</kbd>
           </label>
 
           <div id="treePanel" class="tree-panel" role="tabpanel" aria-labelledby="librariesTab">
             <div id="treeLoading" class="tree-message">
               <span class="loading-mark" aria-hidden="true"></span>
-              <p>正在整理案卷…</p>
+              <p>파일 정리 중...</p>
             </div>
-            <div id="fileTree" class="file-tree" aria-label="文件树"></div>
+            <div id="fileTree" class="file-tree" aria-label="파일 트리"></div>
           </div>
 
           <footer class="archive-note">
             <span class="status-dot" aria-hidden="true"></span>
-            <p>本地工作区 · 文稿不会上传</p>
+            <p>로컬 워크스페이스 · 원고는 업로드되지 않습니다</p>
           </footer>
         </aside>
 
@@ -104,26 +104,26 @@
                 <path d="M31 7v7h6M18 21h13M18 27h13M18 33h9"></path>
               </svg>
             </div>
-            <h2>选择一份文稿开始工作</h2>
-            <p>从左侧打开 Markdown、TXT 或配置文本，直接阅读、校订并保存。</p>
+            <h2>원고를 선택하여 작업을 시작하세요</h2>
+            <p>왼쪽에서 Markdown, TXT 또는 설정 텍스트를 열어 직접 읽고 교정하며 저장할 수 있습니다.</p>
             <div class="empty-shortcuts">
-              <span><kbd>⌘ K</kbd> 搜索</span>
-              <span><kbd>⌘ S</kbd> 保存</span>
+              <span><kbd>⌘ K</kbd> 검색</span>
+              <span><kbd>⌘ S</kbd> 저장</span>
             </div>
           </div>
 
           <div id="editorWorkspace" class="editor-workspace" hidden>
             <header class="editor-toolbar">
-              <button id="mobileBackButton" class="mobile-back-button" type="button" aria-label="返回文件列表">
+              <button id="mobileBackButton" class="mobile-back-button" type="button" aria-label="파일 목록으로 돌아가기">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="m15 5-7 7 7 7"></path>
                 </svg>
-                <span>文件</span>
+                <span>파일</span>
               </button>
               <div class="document-identity">
-                <nav id="breadcrumbs" class="breadcrumbs" aria-label="文件路径"></nav>
+                <nav id="breadcrumbs" class="breadcrumbs" aria-label="파일 경로"></nav>
                 <div class="document-title-row">
-                  <h2 id="editorTitle">未命名文稿</h2>
+                  <h2 id="editorTitle">제목 없는 문서</h2>
                 </div>
               </div>
 
@@ -132,43 +132,43 @@
                   id="deleteButton"
                   class="icon-button document-delete-button"
                   type="button"
-                  title="删除当前文件"
-                  aria-label="删除当前文件"
+                  title="현재 파일 삭제"
+                  aria-label="현재 파일 삭제"
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M4.5 7h15M9 7V4.5h6V7M7 7l.8 13h8.4L17 7M10 10.5v6M14 10.5v6"></path>
                   </svg>
                 </button>
-                <div class="mode-switch" role="group" aria-label="文稿模式">
-                  <button type="button" data-mode="edit" aria-pressed="true">编辑</button>
-                  <button type="button" data-mode="preview" aria-pressed="false">预览</button>
+                <div class="mode-switch" role="group" aria-label="문서 모드">
+                  <button type="button" data-mode="edit" aria-pressed="true">편집</button>
+                  <button type="button" data-mode="preview" aria-pressed="false">미리보기</button>
                 </div>
               </div>
             </header>
 
             <div id="editorBody" class="editor-body">
-              <label class="sr-only" for="editorInput">文件内容</label>
+              <label class="sr-only" for="editorInput">파일 내용</label>
               <textarea id="editorInput" spellcheck="true"></textarea>
-              <article id="previewPane" class="preview-pane" aria-label="Markdown 预览" hidden></article>
+              <article id="previewPane" class="preview-pane" aria-label="Markdown 미리보기" hidden></article>
             </div>
 
             <footer class="editor-footer">
               <div class="document-status">
-                <span id="cursorPosition">第 1 行，第 1 列</span>
+                <span id="cursorPosition">1행, 1열</span>
                 <span id="documentMeta" class="document-meta"></span>
                 <span id="encodingLabel">UTF-8 · LF</span>
               </div>
               <div class="save-controls">
                 <span id="dirtyStatus" class="save-state" data-state="saved">
                   <span aria-hidden="true"></span>
-                  <span>已保存</span>
+                  <span>저장됨</span>
                 </span>
                 <button id="saveButton" class="save-button" type="button" disabled>
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M5 4h12l2 2v14H5z"></path>
                     <path d="M8 4v6h8V4M8 20v-6h8v6"></path>
                   </svg>
-                  <span>保存</span>
+                  <span>저장</span>
                   <kbd>⌘ S</kbd>
                 </button>
               </div>
@@ -182,13 +182,13 @@
 
     <dialog id="conflictDialog" class="conflict-dialog" aria-labelledby="conflictTitle">
       <form method="dialog">
-        <span class="dialog-seal" aria-hidden="true">校</span>
-        <span class="eyebrow">检测到外部修改</span>
-        <h2 id="conflictTitle">磁盘上的文稿比当前版本更新</h2>
-        <p>为避免覆盖其他程序写入的内容，Dashboard 已暂停保存。你可以保留当前编辑继续比对，或重新载入磁盘版本。</p>
+        <span class="dialog-seal" aria-hidden="true">교</span>
+        <span class="eyebrow">외부 수정 사항 감지됨</span>
+        <h2 id="conflictTitle">디스크의 문서가 현재 버전보다 최신입니다</h2>
+        <p>다른 프로그램이 작성한 내용을 덮어쓰지 않도록 Dashboard 저장이 일시 중지되었습니다. 현재 편집 내용을 유지하여 비교를 계속하거나, 디스크 버전을 다시 불러올 수 있습니다.</p>
         <div class="dialog-actions">
-          <button value="cancel" class="secondary-button">保留当前编辑</button>
-          <button id="reloadConflictButton" value="reload" class="danger-button">重新载入磁盘版本</button>
+          <button value="cancel" class="secondary-button">현재 편집 내용 유지</button>
+          <button id="reloadConflictButton" value="reload" class="danger-button">디스크 버전 다시 불러오기</button>
         </div>
       </form>
     </dialog>

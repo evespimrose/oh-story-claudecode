@@ -14,7 +14,7 @@ const state = {
   searchTruncation: null,
   searchSequence: 0,
   searchTimer: null,
-  // 记住作者手动展开/收起过的目录，重绘文件树时不要把人正在翻的章节文件夹关掉
+  // 작가가 수동으로 확장/축소한 디렉토리를 기억하고, 파일 트리를 다시 그릴 때 사용자가 현재 보고 있는 챕터 폴더를 닫지 마세요
   expandedDirs: new Set(),
   collapsedDirs: new Set(),
 };
@@ -68,8 +68,8 @@ async function requestJson(url, options) {
   try {
     response = await fetch(url, options);
   } catch {
-    setConnection("offline", "连接中断");
-    throw new ApiError(0, "network_error", "无法连接本地 Dashboard 服务");
+    setConnection("offline", "연결 끊김");
+    throw new ApiError(0, "network_error", "로컬 Dashboard 서비스에 연결할 수 없습니다");
   }
 
   let payload;
@@ -83,10 +83,10 @@ async function requestJson(url, options) {
     throw new ApiError(
       response.status,
       payload?.error?.code || "request_failed",
-      payload?.error?.message || `请求失败（${response.status}）`,
+      payload?.error?.message || `요청 실패(${response.status})`,
     );
   }
-  setConnection("online", "仅本机");
+    setConnection("online", "로컬 전용");
   return payload;
 }
 
@@ -120,8 +120,8 @@ function countCharacters(content) {
   return [...content.replace(/\s/g, "")].length;
 }
 
-// textarea 的 value 永远是 LF：读盘时先归一化，写盘时再换回原文件的换行符，
-// 否则 CRLF 稿件会被一次改动整篇重写，而且脏标记永远对不上、清不掉。
+// textarea의 value는 항상 LF입니다: 읽을 때 먼저 정규화하고, 쓸 때 원본 파일의 줄바꿈 문자로 다시 변환합니다.
+// 그렇지 않으면 CRLF 원고가 한 번의 변경으로 전체가 다시 쓰여지고, dirty 표시가 항상 맞지 않아 지워지지 않습니다.
 function detectEol(content) {
   let crlf = 0;
   let lf = 0;
@@ -138,8 +138,8 @@ function detectEol(content) {
       lf += 1;
     }
   }
-  // 按 LF/CRLF 的主流风格回写；只有纯 CR 文件才保留 CR。一个粘贴进来的孤立 CR
-  // 不能把每个 LF 都扩散成 CR，反过来也不能让 CRLF 稿件整篇变成 LF。
+  // LF/CRLF의 주류 스타일에 따라 다시 씁니다. 순수 CR 파일만 CR을 유지합니다. 붙여넣기로 들어온 단독 CR은
+  // 모든 LF를 CR로 확산시킬 수 없고, 반대로 CRLF 원고 전체를 LF로 변경할 수도 없습니다.
   if (crlf > lf) return "\r\n";
   if (lf > 0) return "\n";
   if (cr > 0) return "\r";
@@ -183,7 +183,7 @@ function createTreeEntry(node, depth = 0) {
       state.expandedDirs.has(node.path) ||
       (depth === 0 && !state.collapsedDirs.has(node.path));
     details.open = shouldOpen;
-    // 只记录作者亲手的展开/收起；首层程序化展开不算偏好。
+    // 저자가 직접 펼친/접은 것만 기록합니다. 최상위 레벨의 프로그래밍된 펼침은 선호도로 계산하지 않습니다.
     let recorded = shouldOpen;
     details.addEventListener("toggle", () => {
       if (details.open === recorded) return;
@@ -213,21 +213,21 @@ function createTreeEntry(node, depth = 0) {
     if (node.loading) {
       const loading = document.createElement("li");
       loading.className = "tree-inline-status";
-      loading.textContent = "正在读取目录…";
+      loading.textContent = "디렉터리를 읽는 중…";
       list.append(loading);
     } else if (node.loadError) {
       const retry = document.createElement("li");
       retry.className = "tree-inline-status";
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = "目录加载失败，点击重试";
+      button.textContent = "디렉터리 로드 실패, 클릭하여 재시도";
       button.addEventListener("click", () => loadDirectory(node));
       retry.append(button);
       list.append(retry);
     } else if (node.loaded && node.children.length === 0) {
       const empty = document.createElement("li");
       empty.className = "tree-inline-status";
-      empty.textContent = "空目录";
+      empty.textContent = "빈 디렉터리";
       list.append(empty);
     }
     if (node.nextCursor && !node.loading) {
@@ -235,7 +235,7 @@ function createTreeEntry(node, depth = 0) {
       more.className = "tree-inline-status";
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = "加载更多";
+      button.textContent = "더 보기";
       button.addEventListener("click", () => loadDirectory(node, { append: true }));
       more.append(button);
       list.append(more);
@@ -258,7 +258,7 @@ function createTreeEntry(node, depth = 0) {
   button.dataset.path = node.path;
   button.dataset.active = String(state.activeFile?.path === node.path);
   button.disabled = !node.editable;
-  button.title = node.editable ? node.path : `${node.path}（此文件类型只展示，不可编辑）`;
+  button.title = node.editable ? node.path : `${node.path}(이 파일 형식은 표시만 가능하며 편집할 수 없습니다)`;
   button.innerHTML = iconSvg("file");
 
   const label = document.createElement("span");
@@ -324,11 +324,11 @@ function loadedFileCount() {
 function renderLoadedFileCount() {
   if (!state.workspace) return;
   const count = loadedFileCount();
-  elements.fileCount.textContent = count ? `${formatNumber(count)}+` : "按需";
-  elements.fileCount.title = "文稿随目录展开按需加载，不预先遍历整个工作区";
+  elements.fileCount.textContent = count ? `${formatNumber(count)}+` : "필요에 따라";
+  elements.fileCount.title = "문서는 디렉터리 전개 시 필요에 따라 로드되며, 작업 영역 전체를 미리 스캔하지 않습니다";
 }
 
-// 只改当前高亮行，不重建整棵树——重建会把作者正在翻的目录全部收起
+// 현재 하이라이트된 행만 수정하고 전체 트리를 다시 구성하지 않습니다. 다시 구성하면 작가가 열고 있는 디렉터리가 모두 접혀집니다
 function syncActiveRow() {
   const activePath = state.activeFile?.path;
   elements.fileTree.querySelectorAll(".file-row").forEach((row) => {
@@ -342,25 +342,25 @@ function searchTruncationMessage() {
   const messages = [];
   if (status.byResults) {
     messages.push(
-      `匹配结果超过 ${formatNumber(status.limits.maxResults)} 条，仅显示最先找到的部分，请输入更精确的文件名`,
+      `일치하는 결과가 ${formatNumber(status.limits.maxResults)}개를 초과하여, 가장 먼저 발견된 항목만 표시합니다. 더 정확한 파일명을 입력하세요`,
     );
   }
   if (status.byNodes) {
     messages.push(
-      `搜索达到 ${formatNumber(status.limits.maxNodes)} 个节点的扫描上限，后续目录尚未检查，请直接展开目标目录查找`,
+      `검색이 ${formatNumber(status.limits.maxNodes)}개 노드의 스캔 한계에 도달했습니다. 이후 디렉터리는 아직 확인되지 않았으니 대상 디렉터리를 직접 전개하여 찾으세요`,
     );
   }
   if (status.byDepth) {
     messages.push(
-      `部分目录超过 ${formatNumber(status.limits.maxDepth)} 层，更深处未搜索；其他项目已继续搜索`,
+      `일부 디렉토리가 ${formatNumber(status.limits.maxDepth)} 계층을 초과하여 더 깊은 곳은 검색되지 않았습니다. 다른 항목은 계속 검색되었습니다.`,
     );
   }
   if (status.byReadError) {
     const paths = status.scanErrors.map((entry) => entry.path).filter(Boolean);
-    const shown = paths.slice(0, 3).join("、") || "部分目录";
-    const more = paths.length > 3 ? `等 ${formatNumber(paths.length)} 处` : "";
+    const shown = paths.slice(0, 3).join("、") || "일부 디렉토리";
+    const more = paths.length > 3 ? `등 ${formatNumber(paths.length)}개 위치` : "";
     messages.push(
-      `${shown}${more}无法读取，搜索结果可能不完整。请检查目录访问权限或外挂盘挂载状态`,
+      `${shown}${more}을(를) 읽을 수 없어 검색 결과가 불완전할 수 있습니다. 디렉토리 접근 권한이나 외장 드라이브 마운트 상태를 확인하세요.`,
     );
   }
   return messages.join("；");
@@ -378,7 +378,7 @@ function renderTree() {
     const message = document.createElement("div");
     message.className = "tree-message";
     const text = document.createElement("p");
-    text.textContent = `正在搜索“${query}”…`;
+    text.textContent = `"${query}"을(를) 검색 중…`;
     message.append(text);
     elements.fileTree.append(message);
     return;
@@ -390,11 +390,11 @@ function renderTree() {
     const text = document.createElement("p");
     text.textContent = query
       ? state.searchTruncation
-        ? `搜索未完成，暂时无法确认是否存在“${query}”`
-        : `没有找到“${query}”`
+        ? `검색이 완료되지 않았습니다. 현재 "${query}"가(이) 존재하는지 확인할 수 없습니다`
+        : `"${query}"을(를) 찾을 수 없습니다`
       : state.activeView === "libraries"
-        ? "工作区里还没有拆文库。运行拆文 skill 后，档案会出现在这里。"
-        : "还没有识别到写作项目。长篇需包含正文、大纲、设定或追踪目录；短篇需包含正文.md，并同时包含小节大纲.md或设定.md。";
+        ? "작업 공간에 아직 분해 파일 라이브러리가 없습니다. 분해 skill을 실행한 후 파일이 여기에 나타납니다."
+        : "아직 작성 프로젝트가 인식되지 않았습니다. 장편은 본문, 개요, 설정 또는 추적 목차를 포함해야 하고, 단편은 본문.md를 포함하고 동시에 소절 개요.md 또는 설정.md를 포함해야 합니다.";
     message.append(text);
     elements.fileTree.append(message);
     const truncation = searchTruncationMessage();
@@ -428,9 +428,9 @@ function renderTree() {
 
 function truncationMessage(scanErrors = []) {
   const paths = scanErrors.map((entry) => entry.path).filter(Boolean);
-  const shown = paths.slice(0, 3).join("、") || "部分目录";
-  const more = paths.length > 3 ? `等 ${formatNumber(paths.length)} 处` : "";
-  return `${shown}${more}无法读取，其中的文稿没有列出。请检查这些目录的访问权限和外挂盘挂载状态，恢复后刷新目录。`;
+  const shown = paths.slice(0, 3).join("、") || "일부 디렉토리";
+  const more = paths.length > 3 ? `등 ${formatNumber(paths.length)}개` : "";
+  return `${shown}${more}을(를) 읽을 수 없습니다. 그 안의 문서가 나열되지 않았습니다. 이 디렉토리의 접근 권한과 외부 저장소 마운트 상태를 확인하고, 복구 후 디렉토리를 새로고침하세요.`;
 }
 
 function renderTruncationNotice(limits, scanErrors) {
@@ -470,7 +470,7 @@ async function loadWorkspace({ announce = false } = {}) {
   state.searchSequence += 1;
   elements.treeLoading.hidden = false;
   elements.fileTree.replaceChildren();
-  setConnection("", "连接中");
+  setConnection("", "연결 중");
   try {
     state.workspace = await requestJson("/api/workspace");
     state.searchResults = [];
@@ -478,7 +478,7 @@ async function loadWorkspace({ announce = false } = {}) {
     state.searching = Boolean(state.filter.trim());
     renderWorkspace();
     if (state.filter.trim()) scheduleSearch();
-    if (announce) showToast("工作区目录已刷新");
+    if (announce) showToast("작업 공간 디렉토리가 새로고침되었습니다");
   } catch (error) {
     elements.treeLoading.hidden = true;
     const message = document.createElement("div");
@@ -492,13 +492,13 @@ async function loadWorkspace({ announce = false } = {}) {
 }
 
 function confirmDiscard() {
-  return !state.dirty || window.confirm("当前文稿还有未保存的修改。确定放弃并打开另一份文件吗？");
+  return !state.dirty || window.confirm("현재 문서에 저장되지 않은 수정 사항이 있습니다. 포기하고 다른 파일을 열시겠습니까?");
 }
 
 function setDirty(dirty) {
   state.dirty = dirty;
   elements.dirtyStatus.dataset.state = dirty ? "dirty" : "saved";
-  elements.dirtyStatus.querySelector("span:last-child").textContent = dirty ? "待保存" : "已保存";
+  elements.dirtyStatus.querySelector("span:last-child").textContent = dirty ? "저장 대기 중" : "저장됨";
   syncActionAvailability();
 }
 
@@ -512,10 +512,10 @@ function setSaving(saving) {
   state.saving = saving;
   elements.dirtyStatus.dataset.state = saving ? "saving" : state.dirty ? "dirty" : "saved";
   elements.dirtyStatus.querySelector("span:last-child").textContent = saving
-    ? "保存中"
+    ? "저장 중"
     : state.dirty
-      ? "待保存"
-      : "已保存";
+      ? "저장 대기 중"
+      : "저장됨";
   syncActionAvailability();
 }
 
@@ -538,7 +538,7 @@ function updateDocumentMeta() {
   const content = elements.editorInput.value;
   elements.documentMeta.textContent = [
     formatBytes(currentByteSize()),
-    `${formatNumber(countCharacters(content))} 字符`,
+    `${formatNumber(countCharacters(content))} 글자`,
     fileExtension(state.activeFile.name).toUpperCase(),
   ].join("  ·  ");
 }
@@ -548,7 +548,7 @@ function updateCursorPosition() {
   const caret = elements.editorInput.selectionStart;
   const before = content.slice(0, caret);
   const lines = before.split("\n");
-  elements.cursorPosition.textContent = `第 ${lines.length} 行，第 ${[...lines.at(-1)].length + 1} 列`;
+  elements.cursorPosition.textContent = `${lines.length}줄, ${[...lines.at(-1)].length + 1}열`;
 }
 
 async function openFile(path, { force = false } = {}) {
@@ -678,8 +678,8 @@ function setMode(mode) {
 
 async function saveFile() {
   if (!state.activeFile || !state.dirty || state.saving || state.deleting) return;
-  // 请求发出前就把身份和正文快照下来：保存期间作者可能换文件、也可能接着敲字，
-  // 收尾只允许写回这次真正送出去的那份，绝不能落到别的文稿头上。
+  // 요청 전송 전에 미리 작성자 정보와 본문을 스냅샷으로 저장합니다: 저장 중에 작성자가 파일을 바꾸거나 계속 입력할 수 있으므로,
+  // 마무리할 때는 이번에 실제로 보낸 사본에만 되돌릴 수 있으며, 다른 문서에 잘못 저장되어서는 안 됩니다.
   const file = state.activeFile;
   const sent = elements.editorInput.value;
   setSaving(true);
@@ -696,15 +696,15 @@ async function saveFile() {
     file.mtimeMs = saved.mtimeMs;
     file.version = saved.version;
     file.size = saved.size;
-    showToast(`已保存《${file.name}》`);
+    showToast(`《${file.name}》이(가) 저장되었습니다`);
     if (state.activeFile !== file) return;
     state.originalContent = sent;
-    // 保存途中敲进来的字仍是未保存修改，不能被这次结果抹平成「已保存」
+    // 저장 중에 입력된 텍스트는 여전히 저장되지 않은 수정 사항이며, 이번 결과로 "저장됨"으로 덮어쓸 수 없습니다.
     setDirty(elements.editorInput.value !== sent);
     updateDocumentMeta();
   } catch (error) {
     if (state.activeFile !== file) {
-      showToast(`《${file.name}》保存失败：${error.message}`, "error");
+      showToast(`《${file.name}》저장 실패: ${error.message}`, "error");
       return;
     }
     setDirty(true);
@@ -722,8 +722,8 @@ async function deleteFile() {
   if (!state.activeFile || state.saving || state.deleting) return;
   const file = state.activeFile;
   const warning = state.dirty
-    ? `《${file.name}》还有未保存修改。删除会永久移除磁盘文件并丢弃这些修改，且无法撤销。确定删除吗？`
-    : `确定永久删除《${file.name}》吗？此操作无法撤销。`;
+    ? `《${file.name}》에 저장되지 않은 수정 사항이 있습니다. 삭제하면 디스크 파일이 영구적으로 제거되고 이러한 수정 사항이 폐기되며 복구할 수 없습니다. 정말 삭제하시겠습니까?`
+    : `《${file.name}》을(를) 영구적으로 삭제하시겠습니까? 이 작업은 복구할 수 없습니다.`;
   if (!window.confirm(warning)) return;
 
   state.deleting = true;
@@ -745,7 +745,7 @@ async function deleteFile() {
     document.body.classList.remove("document-open");
     setDirty(false);
     await loadWorkspace();
-    showToast(`已删除《${file.name}》`);
+    showToast(`《${file.name}》이(가) 삭제되었습니다.`);
   } catch (error) {
     showToast(error.message, "error");
   } finally {
