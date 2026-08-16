@@ -86,8 +86,8 @@ function loadFresh(modulePath) {
 }
 
 // ---------------------------------------------------------------------------
-// 采集脚本 end-to-end 夹具：一个按 eval 载荷分派响应的 agent-browser 替身，
-// 加一个把 sleep/scrollLoad 掉空的预加载，让整条 main() 流程能在毫秒级跑完。
+// 수집 스크립트 end-to-end fixture: eval 페이로드에 따라 응답을 분배하는 agent-browser stub,
+// sleep/scrollLoad를 제거하는 프리로드를 추가하여 전체 main() 흐름이 밀리초 단위로 완료될 수 있도록 함.
 // ---------------------------------------------------------------------------
 
 const SCRIPTED_AGENT_BROWSER = `#!/usr/bin/env node
@@ -115,37 +115,37 @@ if (js.indexOf("host:location.host") > -1) {
   out({ host: process.env.SCAN_FAKE_HOST || "www.jjwxc.net", len: 5000 });
 }
 if (js.indexOf("onebook.php") > -1) {
-  // 晋江详情批次：模拟 ab() 的 20s 超时/非 JSON 返回
+  // 진강 상세 배치: ab()의 20s 타임아웃/non-JSON 반환을 시뮬레이션
   if (process.env.SCAN_FAKE_FAIL_DETAIL) {
     process.stderr.write("spawnSync agent-browser ETIMEDOUT\\n");
     process.exit(1);
   }
   if (process.env.SCAN_FAKE_PARTIAL_DETAIL) {
     out({
-      1: { id: "1", collect: "12345", words: "300000", status: "连载中" },
+      1: { id: "1", collect: "12345", words: "300000", status: "연재 중" },
       2: { id: "2", err: "detail timeout" },
     });
   }
-  out({ 1: { id: "1", collect: "12345", words: "300000", status: "连载中" } });
+  out({ 1: { id: "1", collect: "12345", words: "300000", status: "연재 중" } });
 }
 if (js.indexOf("result={channels:[]}") > -1) {
-  const books = [{ title: "甲书", author: "作者甲", novelid: "1" }];
+  const books = [{ title: "갑 서적", author: "작가 갑", novelid: "1" }];
   if (process.env.SCAN_FAKE_TWO_BOOKS) {
-    books.push({ title: "乙书", author: "作者乙", novelid: "2" });
+    books.push({ title: "을 서적", author: "작가 을", novelid: "2" });
   }
-  out({ channels: [{ name: "古代言情", books }] });
+  out({ channels: [{ name: "고대 로맨스", books }] });
 }
 if (js.indexOf("blocked") > -1) out({ blocked: false, reason: "" });
 if (js.indexOf("book-img-text") > -1) {
   out([
     {
       rank: 1,
-      title: "起点甲书",
+      title: "기점 갑 서적",
       url: "https://www.qidian.com/book/1/",
-      author: "起作者",
-      genre: "玄幻",
-      status: "连载中",
-      descText: "简介",
+      author: "기 작가",
+      genre: "판타지",
+      status: "연재 중",
+      descText: "소개",
       updateText: "",
     },
   ]);
@@ -153,13 +153,13 @@ if (js.indexOf("book-img-text") > -1) {
 out({});
 `;
 
-const SLEEP_STUB = `// 预加载：掉空 sleep/scrollLoad，采集脚本的真实等待不必在测试里等
+const SLEEP_STUB = `// 사전 로드: 빈 sleep/scrollLoad 제거, 수집 스크립트의 실제 대기가 테스트에서 필요 없음
 const utils = require(process.env.SCAN_TEST_UTILS);
 utils.sleep = () => {};
 if (process.env.SCAN_TEST_STUB_SCROLL) utils.scrollLoad = () => {};
 `;
 
-/** 在 tmpDir 里铺好 agent-browser 替身（含 Windows 的 .cmd shim）+ sleep 预加载 */
+/** tmpDir에 agent-browser 대체물(Windows의 .cmd shim 포함) + sleep 사전 로드 배치 */
 function makeScraperHarness(tmpDir) {
   const program = path.join(tmpDir, "fake-agent-browser.js");
   fs.writeFileSync(program, SCRIPTED_AGENT_BROWSER, "utf8");
@@ -179,7 +179,7 @@ function makeScraperHarness(tmpDir) {
   return preload;
 }
 
-/** 跑一个采集脚本的 CLI 主流程，返回 { status, stdout, stderr, files } */
+/** 수집 스크립트의 CLI 메인 플로우를 실행하여 { status, stdout, stderr, files }를 반환 */
 function runScraper(scraperPath, args, env) {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "story-scan-e2e-"));
   try {
@@ -220,13 +220,13 @@ function testCdpUtils(modulePath) {
     const utils = loadFresh(modulePath);
     assert.strictEqual(typeof utils.evalJSONBase64, "function");
 
-    // argv 合约：① 注入安全——参数绝不进 shell 求值；② 逐字透传真实参数里会出现的元字符
-    // ——空格、& | ^ ; $()、中文，以及 URL 里的 & 和 =。裸双引号/反斜杠不在合约内：带引号的
-    // eval 载荷一律经 base64 下发（evalJSONBase64 / evalJSON），命令行参数只会是 base64 串、
-    // URL 和这类无引号 token，Windows 的 .cmd/PowerShell 无法逐字透传裸双引号。
+    // argv 규약: ① 보안 주입 방지——매개변수는 절대 shell 평가에 들어가지 않음; ② 실제 매개변수에 나타나는 특수문자를 그대로 전달
+    // ——공백, & | ^ ; $()、중문, 그리고 URL의 & 와 =. 큰따옴표나 백슬래시는 규약에 포함되지 않음: 따옴표가 있는
+    // eval 페이로드는 모두 base64로 전송 (evalJSONBase64 / evalJSON), 명령줄 매개변수는 base64 문자열,
+    // URL 및 이와 같은 따옴표 없는 토큰만 해당, Windows의 .cmd/PowerShell은 큰따옴표를 그대로 전달할 수 없음.
     const shellLikeArg = `$(touch ${injected})`;
     const urlLikeArg = "https://x.example/rank?a=1&b=2&c=d#top";
-    const unicodeSpecialArg = `中文参数 / 空 格 & | ^ ! $() ; [] {} = '`;
+    const unicodeSpecialArg = `중문 매개변수 / 공 백 & | ^ ! $() ; [] {} = '`;
     assert.strictEqual(
       utils.ab(
         9222,
@@ -250,17 +250,17 @@ function testCdpUtils(modulePath) {
     ]);
 
     process.env.AGENT_BROWSER_STDOUT = JSON.stringify(
-      JSON.stringify({ ok: true, nested: "中文" })
+      JSON.stringify({ ok: true, nested: "중문" })
     );
     assert.deepStrictEqual(utils.evalJSON(9222, "({ok:true})"), {
       ok: true,
-      nested: "中文",
+      nested: "중문",
     });
 
     process.env.AGENT_BROWSER_CAPTURE = capture;
     assert.deepStrictEqual(utils.evalJSONBase64(9222, "window.__x = '$()'"), {
       ok: true,
-      nested: "中文",
+      nested: "중문",
     });
     const base64Args = JSON.parse(fs.readFileSync(capture, "utf8"));
     assert.deepStrictEqual(base64Args.slice(0, 4), ["--cdp", "9222", "eval", "-b"]);
@@ -308,7 +308,7 @@ function testWindowsInvocationBuilder(modulePath) {
     );
     process.env.PATH = `${tmpDir}${path.delimiter}${oldPath}`;
     const shellLikeArg = '& calc.exe | echo "unsafe"';
-    const unicodeSpecialArg = `中文参数 / 空 格 & | ^ ! $() ; [] {} = ' " \\`;
+    const unicodeSpecialArg = `중문 매개변수 / 공 백 & | ^ ! $() ; [] {} = ' " \\`;
     const invocation = utils.buildAgentBrowserInvocation(
       9222,
       ["eval", shellLikeArg, "space arg", unicodeSpecialArg],
@@ -408,18 +408,18 @@ function testCliResultGate(modulePath) {
   assert.match(rejected.stderr, /probe failed: boom/);
 }
 
-// 输出文件名的日期戳必须是本地日历日。用 UTC（toISOString）的话，UTC+8 作者在本地
-// 00:00-08:00 之间采集会退回前一天的文件名——文件名是唯一去重键，前一晚的报告被静默覆盖。
+// 출력 파일명의 날짜 스탬프는 반드시 로컬 달력 날짜여야 합니다. UTC(toISOString)를 사용하면, UTC+8 작성자가 로컬 00:00-08:00 사이에 수집할 때 전날 파일명으로 돌아갑니다——파일명은 유일한 중복 제거 키이며, 전날 저녁 보고서가 조용히 덮어씌워집니다.
+// new Date(y,m,d,...) 는 로컬 시간으로 구성되므로, 이 두 단언문은 호스트 시간대와 관계없습니다.
 function testLocalDateStamp(modulePath) {
   const utils = loadFresh(modulePath);
   assert.strictEqual(typeof utils.localDateStamp, "function");
 
-  // new Date(y,m,d,...) 按本地时间构造，因此这两条断言与宿主时区无关
+  // 회귀 지점 본체: 베이징 시간 2026-07-27 07:30의 그 순간, UTC 날짜는 여전히 07-26입니다.
   assert.strictEqual(utils.localDateStamp(new Date(2026, 6, 27, 0, 30)), "20260727");
   assert.strictEqual(utils.localDateStamp(new Date(2026, 0, 1, 23, 59)), "20260101");
   assert.match(utils.localDateStamp(), /^\d{8}$/);
 
-  // 回归点本体：北京时间 2026-07-27 07:30 的那一刻，UTC 日期还是 07-26
+  // 런타임이 정말로 TZ=Asia/Shanghai를 인정할 때만 일일 경계 동작을 단언합니다(Windows에서 TZ는 무시될 수 있습니다).
   const probe = spawnSync(
     process.execPath,
     [
@@ -439,30 +439,30 @@ function testLocalDateStamp(modulePath) {
   );
   assert.strictEqual(probe.status, 0, probe.stderr);
   const seen = JSON.parse(probe.stdout);
-  // 只有运行时真的认了 TZ=Asia/Shanghai 才断言跨日界行为（Windows 上 TZ 可能被忽略）
+
   if (seen.offset === -480) {
-    assert.strictEqual(seen.utc, "20260726", "UTC 日期确实落在前一天");
-    assert.strictEqual(seen.local, "20260727", "文件名日期必须跟本地日历日");
+    assert.strictEqual(seen.utc, "20260726", "UTC 날짜가 실제로 전날에 해당합니다");
+    assert.strictEqual(seen.local, "20260727", "파일명 날짜는 로컬 캘린더 날짜와 일치해야 합니다");
   }
 }
 
-// 静态守卫：任何采集脚本都不许再用 UTC 日期拼文件名
+// 정적 가드: 모든 수집 스크립트는 더 이상 UTC 날짜로 파일명을 만들 수 없습니다
 function testScraperFilenameDatesAreLocal() {
   for (const scraperPath of listScraperPaths()) {
     const src = fs.readFileSync(scraperPath, "utf8");
     const name = path.basename(scraperPath);
     assert(
       !/toISOString\(\)\s*\.slice\(0,\s*10\)/.test(src),
-      `${name}: 文件名日期不能用 UTC（toISOString().slice(0,10)），必须用 localDateStamp()`
+      `${name}: 파일명 날짜는 UTC(toISOString().slice(0,10))를 사용할 수 없으며, localDateStamp()를 사용해야 합니다`
     );
     assert(
       src.includes("localDateStamp()"),
-      `${name}: 输出文件名必须用 localDateStamp() 取本地日历日`
+      `${name}: 출력 파일명은 반드시 localDateStamp()로 로컬 캘린더 날짜를 가져와야 합니다`
     );
   }
 }
 
-// 晋江：详情批次瞬时失败只该丢详情，不该丢已解析的列表，更不该掐掉后面的榜单
+// Jinjing: 상세정보 배치 순간 실패 시 상세정보만 버려야 하고, 이미 파싱된 리스트는 버리면 안 되며, 뒤의 랭킹도 잘라내면 안 됨
 function testJjwxcDetailFailureIsolation() {
   const scraper = path.join(
     repoRoot,
@@ -474,38 +474,38 @@ function testJjwxcDetailFailureIsolation() {
   assert.strictEqual(
     run.status,
     2,
-    `详情失败应保留列表但标成 partial: ${run.stderr || run.stdout}`
+    `상세정보 실패 시 리스트는 유지되어야 하지만 partial로 표시됨: ${run.stderr || run.stdout}`
   );
   assert.strictEqual(
     run.files.length,
     6,
-    `--type all 的 6 个榜单都应落盘，实际 ${run.files.length}: ${run.files.join(", ")}`
+    `--type all의 6개 랭킹이 모두 저장되어야 하는데, 실제 ${run.files.length}: ${run.files.join(", ")}`
   );
-  assert.match(run.stderr, /详情批次 1（1 本）获取失败，跳过/);
-  assert.match(run.stderr, /晋江采集 partial:/);
+  assert.match(run.stderr, /상세정보 배치 1（1개）획득 실패, 스킵/);
+  assert.match(run.stderr, /Jinjing 수집 partial:/);
   for (const content of run.contents) {
-    assert.match(content, /数据质量：\[详情解析异常\/登录态缺失\]/);
-    assert.match(content, /### #1 甲书/, "已解析的列表数据必须保住");
+    assert.match(content, /데이터 품질：\[상세 분석 예외\/로그인 상태 누락\]/);
+    assert.match(content, /### #1 갑서/, "이미 파싱된 목록 데이터는 유지되어야 함");
   }
 
-  // 对照：详情正常时质量门不误报
+  // 대조: 상세 정보가 정상일 때 품질 게이트 오탐 없음
   const healthy = runScraper(scraper, ["--type", "12"], {});
   assert.strictEqual(healthy.status, 0, healthy.stderr);
   assert.strictEqual(healthy.files.length, 1);
-  assert.match(healthy.contents[0], /数据质量：\[OK\]/);
-  assert.match(healthy.contents[0], /收藏 1\.2万/);
+  assert.match(healthy.contents[0], /데이터 품질：\[OK\]/);
+  assert.match(healthy.contents[0], /즐겨찾기 1\.2만/);
 
   const partial = runScraper(scraper, ["--type", "12"], {
     SCAN_FAKE_TWO_BOOKS: "1",
     SCAN_FAKE_PARTIAL_DETAIL: "1",
   });
   assert.strictEqual(partial.status, 2, partial.stderr);
-  assert.match(partial.stderr, /晋江采集 partial:/);
-  assert.match(partial.contents[0], /详情采集：1 \/ 2/);
-  assert.match(partial.contents[0], /数据质量：\[部分详情缺失\]/);
+  assert.match(partial.stderr, /진강 수집 partial:/);
+  assert.match(partial.contents[0], /상세정보수집：1 \/ 2/);
+  assert.match(partial.contents[0], /데이터 품질：\[부분 상세정보 누락\]/);
 }
 
-// 起点：一个榜单打不开只跳这一个，剩下 9 个照采（--type all 不再被一次超时掐死）
+// 시작점：한 개의 랭킹 목록이 열리지 않으면 이것만 건너뛰고, 나머지 9개는 계속 수집 (--type all이 더이상 한 번의 타임아웃으로 중단되지 않음)
 function testQidianRankIsolation() {
   const scraper = path.join(
     repoRoot,
@@ -519,35 +519,35 @@ function testQidianRankIsolation() {
   assert.strictEqual(
     run.status,
     2,
-    `单个榜单失败应保留其余产物但标成 partial: ${run.stderr || run.stdout}`
+    `단일 랭킹 목록 실패 시 나머지 산출물은 보존하되 partial 표시: ${run.stderr || run.stdout}`
   );
-  assert.match(run.stderr, /\[qidian\] 畅销榜 采集失败，跳过/);
-  assert.match(run.stderr, /起点采集 partial: wrote 9\/10; failed 1/);
+  assert.match(run.stderr, /\[qidian\] 베스트셀러 목록 수집 실패, 건너뜀/);
+  assert.match(run.stderr, /시작점수집 partial: wrote 9\/10; failed 1/);
   assert.strictEqual(
     run.files.length,
     9,
-    `失败的畅销榜之外 9 个榜单都应落盘，实际 ${run.files.length}: ${run.files.join(", ")}`
+    `실패한 베스트셀러 목록을 제외한 9개 목록은 모두 저장되어야 하는데, 실제로 ${run.files.length}개: ${run.files.join(", ")}`
   );
   assert(
-    !run.files.some((name) => name.startsWith("起点畅销榜_")),
-    "打不开的榜单不该写出空文件"
+    !run.files.some((name) => name.startsWith("시작점베스트셀러_")),
+    "열 수 없는 목록은 빈 파일을 생성하지 않아야 합니다"
   );
 
-  // 参数错误仍要快速失败，不能被 per-榜单隔离吞掉
+  // 매개변수 오류는 여전히 빠르게 실패해야 하며, per-leaderboard 격리에 의해 무시될 수 없습니다
   const badMode = runScraper(scraper, ["--type", "all", "--mode", "bogus"], {});
-  assert.strictEqual(badMode.status, 1, "未知 --mode 必须失败");
-  assert.match(badMode.stderr, /未知 --mode: bogus/);
+  assert.strictEqual(badMode.status, 1, "알 수 없는 --mode는 반드시 실패해야 합니다");
+  assert.match(badMode.stderr, /알 수 없는 --mode: bogus/);
   assert.strictEqual(badMode.files.length, 0);
 }
 
-// 黑岩：字段漂移必须拦在写盘前，字数格式不许随宿主 locale 变
+// heiyan: 필드 변동은 반드시 디스크 쓰기 전에 차단되어야 하며, 문자 수 형식은 호스트 locale을 따르지 않아야 합니다
 function testHeiyanFieldDriftAndWordFormat() {
   const heiyan = loadFresh(
     path.join(repoRoot, "skills/story-short-scan/scripts/heiyan-booklist-scraper.js")
   );
   assert.strictEqual(typeof heiyan.fmtWords, "function");
-  assert.strictEqual(heiyan.fmtWords(123456), "123,456字");
-  assert.strictEqual(heiyan.fmtWords("123456"), "123,456字");
+  assert.strictEqual(heiyan.fmtWords(123456), "123,456자");
+  assert.strictEqual(heiyan.fmtWords("123456"), "123,456자");
   assert.strictEqual(heiyan.fmtWords(0), "");
   assert.strictEqual(heiyan.fmtWords(undefined), "");
   assert.strictEqual(typeof heiyan.outputFilename, "function");
@@ -558,16 +558,16 @@ function testHeiyanFieldDriftAndWordFormat() {
   assert.strictEqual(
     new Set(channelFiles).size,
     channelFiles.length,
-    `黑岩产物名必须包含频道，不能同日互相覆盖: ${channelFiles.join(", ")}`
+    `흑암 산출물 이름은 반드시 채널을 포함해야 하며, 같은 날에 서로 덮어쓸 수 없습니다: ${channelFiles.join(", ")}`
   );
   assert.deepStrictEqual(channelFiles, [
-    `黑岩书库列表_male_${date}.md`,
-    `黑岩书库列表_female_${date}.md`,
-    `黑岩书库列表_all_${date}.md`,
+    `흑암서고목록_male_${date}.md`,
+    `흑암서고목록_female_${date}.md`,
+    `흑암서고목록_all_${date}.md`,
   ]);
-  assert.throws(() => heiyan.outputFilename("../../escape", date), /未知 --channel/);
+  assert.throws(() => heiyan.outputFilename("../../escape", date), /알 수 없는 --channel/);
 
-  // toLocaleString() 在 de_* 下会写成 123.456（读起来像 123 字），fmtWords 必须不受影响
+  // toLocaleString()은 de_* 아래에서 123.456으로 표시됨(123자처럼 읽힘), fmtWords는 반드시 영향을 받지 않아야 함
   const probe = spawnSync(
     process.execPath,
     [
@@ -583,15 +583,15 @@ function testHeiyanFieldDriftAndWordFormat() {
     }
   );
   assert.strictEqual(probe.status, 0, probe.stderr);
-  assert.strictEqual(probe.stdout, "123,456字", "字数格式不能跟宿主 locale 变");
+  assert.strictEqual(probe.stdout, "123,456자", "글자 수 형식이 호스트 locale과 달라지면 안 됨");
 
-  // 缺字段不能被拼成 "undefined/undefined" 写进报告
+  // 필드 누락이 "undefined/undefined"로 연결되어 보고서에 쓰여지면 안 됨
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "story-scan-heiyan-"));
   try {
     const filepath = path.join(tmpDir, "out.md");
     const books = [
-      { name: "甲书", userName: "作者甲", classifyStr: "男频", typeDesc: "都市", words: 123456 },
-      { name: "乙书", userName: "作者乙", classifyStr: "女频", typeDesc: null, words: 50000 },
+      { name: "갑의 책", userName: "작가 갑", classifyStr: "남성향", typeDesc: "도시", words: 123456 },
+      { name: "을서", userName: "저자을", classifyStr: "여성향", typeDesc: null, words: 50000 },
     ];
     const origLog = console.log;
     console.log = () => {};
@@ -601,10 +601,10 @@ function testHeiyanFieldDriftAndWordFormat() {
       console.log = origLog;
     }
     const written = fs.readFileSync(filepath, "utf8");
-    assert(!written.includes("undefined"), `报告里不能出现 undefined:\n${written}`);
-    assert(!written.includes("/null"), `报告里不能出现 null:\n${written}`);
-    assert(written.includes("*作者甲 · 男频/都市 · 123,456字 · 未公开*"), written);
-    assert(written.includes("*作者乙 · 女频 · 50,000字 · 未公开*"), written);
+    assert(!written.includes("undefined"), `보고서에 undefined가 나타날 수 없음:\n${written}`);
+    assert(!written.includes("/null"), `보고서에 null이 나타날 수 없음:\n${written}`);
+    assert(written.includes("*저자갑 · 남성향/도시 · 123,456자 · 비공개*"), written);
+    assert(written.includes("*저자을 · 여성향 · 50,000자 · 비공개*"), written);
 
     const malePath = path.join(tmpDir, heiyan.outputFilename("male", date));
     const femalePath = path.join(tmpDir, heiyan.outputFilename("female", date));
@@ -615,23 +615,23 @@ function testHeiyanFieldDriftAndWordFormat() {
     } finally {
       console.log = origLog;
     }
-    assert(fs.existsSync(malePath), "男频报告不应被女频采集覆盖");
-    assert(fs.existsSync(femalePath), "女频报告必须独立落盘");
-    assert(fs.readFileSync(malePath, "utf8").includes("甲书"));
-    assert(fs.readFileSync(femalePath, "utf8").includes("乙书"));
+    assert(fs.existsSync(malePath), "남성향 리포트가 여성향 수집으로 덮어써지면 안 됩니다");
+    assert(fs.existsSync(femalePath), "여성향 리포트는 반드시 독립적으로 저장되어야 합니다");
+    assert(fs.readFileSync(malePath, "utf8").includes("갑서"));
+    assert(fs.readFileSync(femalePath, "utf8").includes("을서"));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 }
 
 // ---------------------------------------------------------------------------
-// setup-cdp-chrome.js 的 --reset 闸门夹具。
-// 全程只碰 127.0.0.1 上一个临时端口，不发外部请求、不碰真 Chrome：
-//   fake-cdp.js          只答 /json/version 的假 CDP 端点，identity 由 --id 决定
-//   fake-chrome-*.js     假 Chrome：立刻退出 / 起一个新 identity 的端点并常驻
-//   cdp-preload.js       把脚本对系统的三处依赖换掉——Chrome 可执行路径的探测、
-//                        spawn 的目标、以及 pgrep/pkill（tasklist/taskkill）的语义
-// 进程存活一律走文件标记，不用真信号，Windows 上同样成立。
+// setup-cdp-chrome.js의 --reset 게이트 픽스처입니다.
+// 전 과정에서 127.0.0.1의 임시 포트만 사용하며, 외부 요청을 보내지 않고 실제 Chrome에 접근하지 않습니다:
+//   fake-cdp.js          /json/version CDP 엔드포인트만 응답하는 가짜 CDP, identity는 --id로 결정됨
+//   fake-chrome-*.js     가짜 Chrome: 즉시 종료하거나 새로운 identity의 엔드포인트를 시작하고 상주
+//   cdp-preload.js       스크립트가 시스템에 의존하는 세 곳을 변경합니다 - Chrome 실행 경로 탐지,
+//                        spawn의 대상, 그리고 pgrep/pkill(tasklist/taskkill)의 의미
+// 프로세스 생존 여부는 모두 파일 마크를 통해 확인하며, 실제 신호를 사용하지 않습니다. Windows에서도 동일하게 적용됩니다.
 // ---------------------------------------------------------------------------
 
 const FAKE_CDP = `"use strict";
@@ -647,7 +647,7 @@ const id = arg("--id", "fake-cdp");
 const portfile = arg("--portfile", null);
 const stopfile = arg("--stopfile", null);
 const status = Number(arg("--status", 200));
-// --no-identity：照答 /json/version，但不给 webSocketDebuggerUrl，模拟「身份取不到」
+// --no-identity: /json/version에 응답하지만 webSocketDebuggerUrl을 제공하지 않아 「신원 정보를 얻을 수 없음」을 모의합니다.
 const noIdentity = process.argv.indexOf("--no-identity") > -1;
 let port = Number(arg("--port", arg("--remote-debugging-port", 0)));
 if (!Number.isInteger(port) || port < 0) port = 0;
@@ -664,7 +664,7 @@ const server = http.createServer((req, res) => {
 server.listen(port, "127.0.0.1", () => {
   if (portfile) fs.writeFileSync(portfile, String(server.address().port), "utf8");
 });
-// 停机也走文件标记：跨平台，不依赖真信号
+// 중지도 파일 마크를 사용합니다: 크로스 플랫폼이며 실제 신호에 의존하지 않습니다.
 if (stopfile) setInterval(() => { if (fs.existsSync(stopfile)) process.exit(0); }, 50);
 `;
 
@@ -677,14 +677,14 @@ for (const a of process.argv) {
   const m = a.match(/^--remote-debugging-port=(\\d+)$/);
   if (m) port = Number(m[1]);
 }
-// 用自己的 stopfile（H_STOPFILE 那个在 pkill 时就写过了，会让新端点一起来就退）
+// 자신의 stopfile을 사용합니다(H_STOPFILE은 pkill 시점에 이미 작성되었으며, 새 엔드포인트가 시작되면 종료됩니다).
 process.argv = [process.argv[0], "fake-cdp", "--port", String(port),
   "--id", "fresh-launched-cdp", "--stopfile", process.env.H_STOPFILE_NEW];
 require(path.join(__dirname, "fake-cdp.js"));
 `;
 
-// 假 Chrome：把端点甩给一个脱离的孙进程，自己立刻退出。spawn 出来的 pid 死了，
-// 但端口上有个「新身份」的端点在应答——identity 检查挡不住，只能靠 pid 存活检查挡。
+// 가짜 Chrome: 엔드포인트를 분리된 손자 프로세스에 전달하고 즉시 종료됩니다. spawn으로 생성된 pid가 죽어도,
+// 하지만 포트에 새로운 "신원"을 가진 엔드포인트가 응답 중——identity 확인으로는 막을 수 없고, pid 생존 확인으로만 막을 수 있다.
 const FAKE_CHROME_ORPHAN = `"use strict";
 const path = require("path");
 const { spawn } = require("child_process");
@@ -704,9 +704,9 @@ child.unref();
 setTimeout(() => process.exit(0), 300);
 `;
 
-// 同上，但 launcher 常驻——这就是复审给的最小变异。于是「旧端点消失过 + 身份变了 +
-// spawn 出的进程还活着」三条间接证据全成立，而端口其实握在另一个进程手里。
-// 光靠这三条推不出「端口归它」，只有把端口和进程真正绑上的检查才拦得住。
+// 위와 동일하지만 launcher는 상주——이것이 재검토에서 제시한 최소 변형이다. 따라서 "기존 엔드포인트 사라짐 + 신원 변경 +
+// spawn된 프로세스가 살아있음" 세 가지 간접 증거가 모두 성립하는데, 포트는 실제로 다른 프로세스가 점유하고 있다.
+// 이 세 가지 조건만으로는 "포트가 그것의 것"이라는 결론을 낼 수 없고, 포트와 프로세스를 실제로 바인딩한 확인만이 이를 막을 수 있다.
 const FAKE_CHROME_FOREIGN_ALIVE = `"use strict";
 const fs = require("fs");
 const path = require("path");
@@ -723,14 +723,14 @@ const child = spawn(
   { detached: true, stdio: "ignore" }
 );
 child.unref();
-// 变异点：launcher 不退出，只在测试收尾写 stopfile 时才退
+// 변형점: launcher는 종료하지 않고, 테스트 마무리 시 stopfile을 작성할 때만 종료한다.
 setInterval(() => { if (fs.existsSync(process.env.H_STOPFILE_NEW)) process.exit(0); }, 50);
 `;
 
-// 端口被一个「不在本次 spawn 的进程树里」的进程握着，而 launcher 照样活着。
-// 两级 spawn：中间那层立刻退出，端点进程被 init 收养，脱离本次启动的进程树。
-// 它还故意带上和本次启动一模一样的 --remote-debugging-port=<port>，唯一的区别就是
-// 「不是我们起的」——这条测的正是 pid 归属本身。
+// 포트가 「이번 spawn의 프로세스 트리에 없는」 프로세스에 의해 점유되어 있으며, launcher는 여전히 실행 중이다.
+// 2단계 spawn: 중간 계층은 즉시 종료되고, 엔드포인트 프로세스는 init에 의해 채택되어 이번 시작의 프로세스 트리에서 분리된다.
+// 의도적으로 이번 시작과 정확히 동일한 --remote-debugging-port=<port>를 가져오며, 유일한 차이점은
+// 「우리가 시작하지 않은 것」——이 테스트는 바로 pid 소유권 자체를 테스트하는 것이다.
 const FAKE_CHROME_OUTSIDE_TREE = `"use strict";
 const fs = require("fs");
 const path = require("path");
@@ -755,10 +755,10 @@ relay.unref();
 setInterval(() => { if (fs.existsSync(process.env.H_STOPFILE_NEW)) process.exit(0); }, 50);
 `;
 
-// 真 Chrome 的常见形态：launcher 自己不监听，端口由它拉起来的 browser 进程持有
-// （macOS 上启动的二进制还可能 re-exec）。这个子进程继承了本次启动的
-// --remote-debugging-port，人也在 spawn 出来的进程树里——归属校验必须认这种形态，
-// 否则真实启动会被误杀。这是归属校验的假阴性守卫。
+// 실제 Chrome의 일반적인 형태: launcher 자신은 수신하지 않고, 포트는 이것이 시작한 browser 프로세스에 의해 점유된다.
+// (macOS에서 시작한 바이너리는 re-exec될 수도 있음). 이 자식 프로세스는 이번 시작의
+// --remote-debugging-port를 상속받았고, 또한 spawn된 프로세스 트리 내에 있음 — 소유권 검증은 이러한 형태를 인정해야 하고,
+// 그렇지 않으면 실제 시작이 잘못 종료될 수 있음. 이것은 소유권 검증의 거짓 음성 방어입니다.
 const FAKE_CHROME_CHILD_BROWSER = `"use strict";
 const fs = require("fs");
 const path = require("path");
@@ -777,8 +777,8 @@ spawn(
 setInterval(() => { if (fs.existsSync(process.env.H_STOPFILE_NEW)) process.exit(0); }, 50);
 `;
 
-// 端口由 launcher 本进程亲自绑住（归属这条是真成立的），但 /json/version 里没有
-// webSocketDebuggerUrl——cdpIdentity() 返回 null。按它自己的合约，null 只能当「无法比对」。
+// 포트는 launcher 본 프로세스가 직접 바인딩함 (소유권은 실제로 성립), 하지만 /json/version에는
+// webSocketDebuggerUrl이 없음 — cdpIdentity()가 null을 반환함. 자신의 계약에 따르면, null은 "비교 불가능"하다고만 해석할 수 있음.
 const FAKE_CHROME_NO_IDENTITY = `"use strict";
 const path = require("path");
 let port = 0;
@@ -794,8 +794,8 @@ require(path.join(__dirname, "fake-cdp.js"));
 const CDP_PRELOAD = `"use strict";
 const fs = require("fs");
 const cp = require("child_process");
-// Chrome 可执行文件的候选路径是按平台硬编码的，这里按「长得像 Chrome 可执行文件」来认，
-// 不必在测试里重抄一份平台表
+// Chrome 실행 파일의 후보 경로는 플랫폼별로 하드코딩되어 있으므로, 여기서는 「Chrome 실행 파일처럼 보이는」것으로 인식합니다.
+// 테스트에서 플랫폼 테이블을 다시 작성할 필요가 없습니다.
 const CHROME_RE = /(?:Google Chrome|google-chrome(?:-stable)?|chrome\\.exe)$/;
 const realExistsSync = fs.existsSync;
 fs.existsSync = function (p) {
@@ -815,13 +815,13 @@ cp.execSync = function (cmd, opts) {
     if (process.env.H_PIDS === "old" && !realExistsSync.call(fs, process.env.H_KILLED_MARK)) {
       return process.platform === "win32" ? '"chrome.exe","424242"' : "424242\\n";
     }
-    const e = new Error("no process found"); // pgrep 找不到进程时的真实行为：非零退出
+    const e = new Error("no process found"); // pgrep이 프로세스를 찾지 못할 때의 실제 동작: 0이 아닌 종료 코드
     e.status = 1;
     throw e;
   }
   if (/^pkill/.test(cmd) || /^taskkill\\s+\\/F\\s+\\/IM\\s+chrome\\.exe/i.test(cmd)) {
     fs.writeFileSync(process.env.H_KILLED_MARK, "killed", "utf8");
-    // kill 生效的场景才真的让旧端点停下来；noop 场景模拟「kill 没起作用」
+    // kill이 작동하는 시나리오에서만 실제로 이전 엔드포인트를 중지합니다. noop 시나리오는 「kill이 작동하지 않음」을 시뮬레이션합니다.
     if (process.env.H_KILL === "real") fs.writeFileSync(process.env.H_STOPFILE, "stop", "utf8");
     return "";
   }
@@ -830,8 +830,8 @@ cp.execSync = function (cmd, opts) {
 `;
 
 /**
- * 跑一次 setup-cdp-chrome.js。scenario 决定 pgrep/pkill 语义与假 Chrome 行为。
- * 返回 { status, stdout, stderr, sentinelSurvived, debugProfileSurvived }。
+ * setup-cdp-chrome.js를 한 번 실행합니다. scenario는 pgrep/pkill의 의미와 가짜 Chrome 동작을 결정합니다.
+ * { status, stdout, stderr, sentinelSurvived, debugProfileSurvived }를 반환합니다.
  */
 function runSetupCdp(scenario) {
   const setup = path.join(
@@ -856,7 +856,7 @@ function runSetupCdp(scenario) {
       fs.writeFileSync(path.join(tmpDir, name), body, "utf8");
     }
 
-    // 假 HOME：源 profile + 一个已存在的 debug profile（里面的哨兵文件用来证明中止时没被删）
+    // 가짜 HOME: 원본 profile + 기존의 debug profile(안의 sentinel 파일은 종료 시 삭제되지 않았음을 증명)
     const home = path.join(tmpDir, "home");
     const srcDefault = path.join(
       home,
@@ -884,9 +884,9 @@ function runSetupCdp(scenario) {
       childHoldsPort: { args: ["--reset", "--yes"], pids: "old", kill: "real", chrome: "fake-chrome-child-browser.js" },
       nullIdentity: { args: ["--reset", "--yes"], pids: "old", kill: "real", chrome: "fake-chrome-no-identity.js" },
     }[scenario];
-    assert(plan, `harness: 未知场景 ${scenario}`);
+    assert(plan, `harness: 알 수 없는 시나리오 ${scenario}`);
 
-    // 起「旧 CDP」，让它自己挑端口并报回来——测试之间不会抢固定端口
+    // 오래된 CDP를 시작하고, 포트를 직접 선택한 후 보고하도록 함——테스트 간 고정 포트 충돌 없음
     const portfile = path.join(tmpDir, "port");
     const stopfile = path.join(tmpDir, "stop");
     oldCdp = spawn(
@@ -905,7 +905,7 @@ function runSetupCdp(scenario) {
       sleepSyncMs(50);
       if (fs.existsSync(portfile)) port = fs.readFileSync(portfile, "utf8").trim();
     }
-    assert(port, "harness: 假旧 CDP 没起来");
+    assert(port, "harness: 가짜 오래된 CDP가 시작되지 않음");
 
     const result = spawnSync(
       process.execPath,
@@ -936,8 +936,8 @@ function runSetupCdp(scenario) {
       listenerAliveBeforeCleanup: canConnectTcp(port),
     };
   } finally {
-    // 收掉旧端点和假 Chrome 留下的常驻端点：先让它们自己按 stopfile 退（跨平台可靠），
-    // 再用 lsof/netstat 兜底，最后才删目录
+    // 기존 엔드포인트와 가짜 Chrome이 남긴 상주 엔드포인트를 정리합니다: 먼저 stopfile로 자동 종료하게 한 후(크로스 플랫폼 호환), lsof/netstat로 남은 것을 정리하고, 마지막에 디렉터리를 삭제합니다.
+    // 재시도 로직: lsof/netstat 결과가 비어있을 때까지 반복합니다.
     for (const f of ["stop", "stop-new"]) {
       try { fs.writeFileSync(path.join(tmpDir, f), "stop", "utf8"); } catch {}
     }
@@ -953,7 +953,7 @@ function sleepSyncMs(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-/** 同步探测 TCP 端口，专门用于在 harness finally 清理前观察被测脚本是否收掉了启动树。 */
+/** TCP 포트를 동기식으로 탐지합니다. harness finally 정리 전에 테스트 중인 스크립트가 시작 트리를 정리했는지 확인하기 위해 사용됩니다. */
 function canConnectTcp(port) {
   const probe = spawnSync(
     process.execPath,
@@ -969,7 +969,7 @@ function canConnectTcp(port) {
   return probe.status === 0;
 }
 
-/** 收掉测试期间还占着端口的假端点（尽力而为，失败不影响断言） */
+/** 테스트 중 포트를 여전히 점유하고 있는 가짜 엔드포인트를 정리합니다(최선을 다하되, 실패해도 assertion에 영향을 주지 않습니다). */
 function killPortListener(port) {
   try {
     const out =
@@ -992,242 +992,242 @@ function killPortListener(port) {
   } catch {}
 }
 
-// 回归点：--reset 撞上一个关不掉的旧 CDP 时，绝不许报「重建成功」。
-// 老行为是最坏的一种结果——照样删 debug profile、照样启动，然后 probeCDP 被旧端点答上，
-// exit 0 报成功，调用方以为拿到了新浏览器，之后每一次采集读的都是旧会话。
+// 회귀 지점: --reset이 닫을 수 없는 기존 CDP와 만났을 때, 절대 "재구성 성공"을 보고하면 안 됩니다.
+// 이전 동작은 최악의 결과였습니다 - debug profile을 삭제하고 시작하지만, probeCDP가 구형 엔드포인트에서 응답을 받아
+// exit 0으로 성공 처리되고, 호출자는 새 브라우저를 받았다고 생각한 후, 이후 매번 수집된 데이터는 구형 세션을 읽습니다.
 function testCdpResetRefusesStaleEndpoint() {
   const run = runSetupCdp("staleHolder");
 
   assert.strictEqual(
     run.status,
     1,
-    `关不掉的旧 CDP 必须让 --reset 非零退出，实际 ${run.status}:\n${run.stdout}\n${run.stderr}`
+    `종료할 수 없는 구형 CDP는 --reset이 0이 아닌 종료 코드를 반환해야 하는데, 실제 ${run.status}:\n${run.stdout}\n${run.stderr}`
   );
-  assert.match(run.stderr, /仍在应答，已中止/);
-  // 端口被无法识别的进程占用：必须点名说清，不能静默复用
-  assert.match(run.stderr, /端口被无法识别的进程占用/);
+  assert.match(run.stderr, /여전히 응답 중이며, 중단됨/);
+  // 포트가 인식할 수 없는 프로세스에서 점유됨: 명확히 지정해야 하며, 자동으로 재사용할 수 없음
+  assert.match(run.stderr, /포트가 인식할 수 없는 프로세스에 의해 점유됨/);
 
-  // 闸门在动 profile 之前——删一个还在跑的 Chrome 的 profile 本身就是破坏性的
+  // 게이트는 profile 수집 전에 작동합니다 — 실행 중인 Chrome의 profile을 삭제하는 것 자체가 파괴적입니다
   assert(
     run.sentinelSurvived,
-    "中止时不许删 debug profile（哨兵文件必须还在）"
+    "중단 시 debug profile을 삭제하면 안 됩니다(감시 파일이 여전히 있어야 합니다)"
   );
-  assert(run.debugProfileSurvived, "中止时 debug profile 目录必须保留");
+  assert(run.debugProfileSurvived, "중단 시 debug profile 디렉터리가 반드시 유지되어야 합니다");
   assert(
-    !/正在删除 debug profile/.test(run.stdout),
-    `中止路径上不该走到删 profile:\n${run.stdout}`
-  );
-  assert(
-    !/正在以 CDP 模式启动 Chrome/.test(run.stdout),
-    `端口没空出来就不该启动 Chrome:\n${run.stdout}`
+    !/debug profile을 삭제 중입니다/.test(run.stdout),
+    `중단 경로에서 profile을 삭제하면 안 됨:\n${run.stdout}`
   );
   assert(
-    !/已成功以 CDP 模式启动/.test(run.stdout),
-    `绝不许报成功:\n${run.stdout}`
+    !/CDP 모드로 Chrome을 시작 중/.test(run.stdout),
+    `포트가 비어있지 않으면 Chrome을 시작하면 안 됨:\n${run.stdout}`
   );
-  // 旧端点的响应也不该被当成「新实例」打出来
+  assert(
+    !/CDP 모드로 성공적으로 시작함/.test(run.stdout),
+    `절대 성공이라고 보고하면 안 됨:\n${run.stdout}`
+  );
+  // 기존 엔드포인트의 응답도 '새 인스턴스'로 출력되어서는 안 됨
   assert(
     !run.stdout.includes("stale-existing-cdp"),
-    `不该把旧实例的 /json/version 当成结果输出:\n${run.stdout}`
+    `기존 인스턴스의 /json/version을 결과 출력으로 취급해서는 안 됨:\n${run.stdout}`
   );
 }
 
-// 回归点：/json/version 返回 500 时 probeCDP 为 null，但 TCP 端口仍被旧服务占着。
-// “不是健康 CDP”绝不等于“端口空闲”；破坏 profile 之前必须用原始 TCP 探测确认端口已释放。
+// 회귀 테스트: /json/version이 500을 반환할 때 probeCDP는 null이지만, TCP 포트는 여전히 기존 서비스가 점유하고 있음.
+// '정상 CDP가 아님'은 절대 '포트 유휴'와 같지 않음; profile을 손상시키기 전에 반드시 원본 TCP 프로브로 포트 해제 확인 필수.
 function testCdpResetRefusesUnhealthyTcpHolder() {
   const run = runSetupCdp("unhealthyHolder");
   assert.strictEqual(
     run.status,
     1,
-    `旧端口仍监听但 /json/version=500 时必须非零退出:\n${run.stdout}\n${run.stderr}`
+    `기존 포트가 여전히 수신 중이지만 /json/version=500일 때는 반드시 0이 아닌 종료 코드:\n${run.stdout}\n${run.stderr}`
   );
-  assert(run.sentinelSurvived, "不健康监听者仍占端口时不许删除 debug profile");
-  assert(run.debugProfileSurvived, "不健康监听者仍占端口时 debug profile 必须保留");
-  assert(!/正在删除 debug profile/.test(run.stdout), run.stdout);
-  assert(!/正在以 CDP 模式启动 Chrome/.test(run.stdout), run.stdout);
-  assert.match(run.stderr, /端口.*仍被占用|端口.*未释放/);
+  assert(run.sentinelSurvived, "불건강한 리스너가 여전히 포트를 점유 중일 때는 debug profile을 삭제할 수 없습니다");
+  assert(run.debugProfileSurvived, "불건강한 리스너가 여전히 포트를 점유 중일 때 debug profile은 반드시 보존되어야 합니다");
+  assert(!/debug profile을 삭제 중입니다/.test(run.stdout), run.stdout);
+  assert(!/CDP 모드로 Chrome을 시작 중입니다/.test(run.stdout), run.stdout);
+  assert.match(run.stderr, /포트.*여전히 점유 중|포트.*미해제/);
 }
 
-// 反向：端口真的空出来、新实例真的起来了（端口就绑在 spawn 出来的那个进程上，
-// 命令行里带着本次的 --remote-debugging-port），--reset 照样成功——闸门不是把功能关掉。
-// 这一条同时是归属校验的假阳性守卫：lsof/ps 查出来的持有者必须真能匹配上本次启动。
+// 역방향: 포트가 실제로 비워지고, 새 인스턴스가 실제로 시작됨(포트는 spawn된 프로세스에 바인딩되고,
+// 명령줄에 이번 --remote-debugging-port가 포함됨), --reset은 여전히 성공함—게이트는 기능을 비활성화하지 않음.
+// 이 조건은 동시에 소유권 검증의 거짓 양성 방지 장치임: lsof/ps로 조회된 소유자는 반드시 이번 시작과 일치해야 함.
 function testCdpResetSucceedsWhenPortActuallyFrees() {
   const run = runSetupCdp("genuineReset");
   assert.strictEqual(
     run.status,
     0,
-    `旧端点确实消失 + 新端点起来了，--reset 必须成功:\n${run.stdout}\n${run.stderr}`
+    `이전 엔드포인트가 실제로 사라지고 + 새 엔드포인트가 시작됨, --reset은 반드시 성공해야 함:\n${run.stdout}\n${run.stderr}`
   );
   assert(
     !/CDP_OWNER_|CDP_PORT_NOT_OURS|CDP_IDENTITY_UNVERIFIABLE/.test(run.stderr),
-    `真实启动不许被归属/身份校验误杀:\n${run.stderr}`
+    `실제 시작이 소유권/신원 검증으로 인해 종료되면 안 됨:\n${run.stderr}`
   );
-  assert.match(run.stdout, /已释放/);
-  assert.match(run.stdout, /正在删除 debug profile/);
-  assert.match(run.stdout, /已成功以 CDP 模式启动/);
-  // 报出来的必须是新实例的身份，不是重建前那个
+  assert.match(run.stdout, /해제됨/);
+  assert.match(run.stdout, /debug profile 삭제 중/);
+  assert.match(run.stdout, /CDP 모드로 성공적으로 시작됨/);
+  // 보고된 것은 반드시 새 인스턴스의 ID여야 하며, 재구성 전의 ID가 아니어야 함
   assert(run.stdout.includes("fresh-launched-cdp"), run.stdout);
   assert(!run.stdout.includes("stale-existing-cdp"), run.stdout);
 }
 
-// 不带 --reset/--profile 的复用快路径必须一字不变：直接复用现有 CDP、立刻退出 0
+// --reset/--profile 없이 재사용하는 빠른 경로는 반드시 그대로여야 함: 기존 CDP를 직접 재사용하고 즉시 0으로 종료
 function testCdpPlainReuseUnchanged() {
   const run = runSetupCdp("plainReuse");
-  assert.strictEqual(run.status, 0, `复用路径必须成功:\n${run.stdout}\n${run.stderr}`);
-  assert.match(run.stdout, /CDP 已就绪，复用现有 Chrome。/);
+  assert.strictEqual(run.status, 0, `재사용 경로는 반드시 성공해야 합니다:\n${run.stdout}\n${run.stderr}`);
+  assert.match(run.stdout, /CDP 준비 완료, 기존 Chrome을 재사용합니다./);
   assert(run.stdout.includes("stale-existing-cdp"), run.stdout);
-  // 复用就是复用：不许杀进程、不许动 profile、不许启动
-  assert(run.sentinelSurvived, "复用路径不许动 debug profile");
-  assert(!/正在停止/.test(run.stdout), run.stdout);
-  assert(!/正在删除 debug profile/.test(run.stdout), run.stdout);
-  assert(!/正在以 CDP 模式启动 Chrome/.test(run.stdout), run.stdout);
-  // 复用快路径没有「本次启动的实例」可言，归属/身份校验一概不该在这里跑
+  // 재사용은 재사용: 프로세스를 종료하면 안 되고, profile을 건드리면 안 되고, 시작하면 안 됨
+  assert(run.sentinelSurvived, "재사용 경로에서 debug profile을 건드리면 안 됩니다");
+  assert(!/정지 중/.test(run.stdout), run.stdout);
+  assert(!/debug profile 삭제 중/.test(run.stdout), run.stdout);
+  assert(!/CDP 모드로 Chrome 시작 중/.test(run.stdout), run.stdout);
+  // 빠른 재사용 경로에서는 「이번 시작의 인스턴스」가 없으므로 소유권/신원 확인이 여기서 실행되면 안 됨
   assert(
     !/CDP_OWNER_|CDP_PORT_NOT_OURS|CDP_IDENTITY_UNVERIFIABLE/.test(run.stderr),
-    `复用快路径不该跑启动后的归属/身份校验:\n${run.stderr}`
+    `빠른 재사용 경로는 시작 후 소유권/신원 확인을 실행하면 안 됩니다:\n${run.stderr}`
   );
 }
 
-// 端口空出来了，但刚 spawn 的 Chrome 死了、端口被另一个进程接手：identity 变了也不算成功
+// 포트가 비워졌지만 방금 생성된 Chrome이 종료되고 포트가 다른 프로세스에 의해 인수되었을 때: identity가 변경되어도 성공으로 간주하지 않음
 function testCdpRejectsEndpointNotFromThisLaunch() {
   const run = runSetupCdp("orphanEndpoint");
   assert.strictEqual(
     run.status,
     1,
-    `应答的端点不属于本次启动，必须非零退出:\n${run.stdout}\n${run.stderr}`
+    `응답한 엔드포인트가 이번 시작에 속하지 않으므로 0이 아닌 값으로 종료되어야 합니다:\n${run.stdout}\n${run.stderr}`
   );
-  assert.match(run.stderr, /刚启动的 Chrome（pid \d+）已经退出/);
-  assert.match(run.stderr, /这个端点不属于本次启动的实例/);
+  assert.match(run.stderr, /방금 시작된 Chrome\(pid \d+\)이 이미 종료됨/);
+  assert.match(run.stderr, /이 엔드포인트는 이번 시작의 인스턴스에 속하지 않음/);
   assert(
-    !/已成功以 CDP 模式启动/.test(run.stdout),
-    `不许把别人的端点报成启动成功:\n${run.stdout}`
+    !/CDP 모드로 성공적으로 시작됨/.test(run.stdout),
+    `다른 엔드포인트를 시작 성공으로 보고할 수 없습니다:\n${run.stdout}`
   );
   assert(
     !run.stdout.includes("foreign-orphan-cdp"),
-    `不该把外来端点的 /json/version 当成结果输出:\n${run.stdout}`
+    `외부 엔드포인트의 /json/version을 결과 출력으로 해서는 안 됩니다:\n${run.stdout}`
   );
 }
 
-// 回归点：launcher 活着，但端口握在它 detach 出去的另一个进程手里。
-// 「旧端点消失过 + 身份变了 + spawn 的进程还活着」这三条间接证据全成立——推不出「端口归它」。
-// 必须真的把端口和本次启动的实例绑上：LISTEN 持有者要在这棵进程树里，且树里确有一个
-// 带着本次的 --remote-debugging-port 的持有者。否则拿到的就是别人的登录态。
+// 회귀 지점: launcher가 살아 있지만 포트는 detach된 다른 프로세스가 점유하고 있습니다.
+// 「이전 엔드포인트가 사라짐 + 신원이 변함 + spawn된 프로세스가 여전히 실행 중」 이 세 가지 간접 증거가 모두 성립해도 「포트가 이것의 것」이라고 추론할 수 없습니다.
+// 포트를 이번 시작의 인스턴스와 실제로 바인딩해야 합니다: LISTEN 소유자는 이 프로세스 트리 내에 있어야 하고, 트리에는 실제로 이번의 --remote-debugging-port를 가진 소유자가 있어야 합니다.
+// 그렇지 않으면 다른 사람의 로그인 상태를 얻게 됩니다.
 function testCdpRejectsForeignHolderWhileLauncherAlive() {
   const run = runSetupCdp("foreignHeldPort");
 
   assert.strictEqual(
     run.status,
     1,
-    `端口握在别的进程手里（哪怕 launcher 还活着）必须非零退出，实际 ${run.status}:\n${run.stdout}\n${run.stderr}`
+    `포트가 다른 프로세스에 점유되어 있으면(launcher가 살아 있어도) 0이 아닌 값으로 종료해야 합니다. 실제 ${run.status}:\n${run.stdout}\n${run.stderr}`
   );
-  // 查得出归属就点名 NOT_LAUNCHED_INSTANCE；查不出来（本机没有 lsof/ps 一类工具）也只能
-  // UNVERIFIABLE 硬失败——两条都是「证不出来就不放行」，唯独不许 exit 0。
+  // 소유 프로세스를 찾으면 NOT_LAUNCHED_INSTANCE로 명시합니다. 찾을 수 없으면(현재 시스템에 lsof/ps 같은 도구가 없는 경우)
+  // UNVERIFIABLE로 강제 실패 처리합니다. 둘 다 「증명할 수 없으면 진행하지 않음」 원칙이며, exit 0만은 허용되지 않습니다.
   assert.match(
     run.stderr,
     /CDP_OWNER_NOT_LAUNCHED_INSTANCE|CDP_OWNER_UNVERIFIABLE/,
-    `必须点名说清为什么不认这个端点:\n${run.stderr}`
+    `이 엔드포인트를 인정하지 않는 이유를 명확히 표시해야 합니다:\n${run.stderr}`
   );
-  // 这次 launcher 是活着的：不许靠「进程已退出」那条老分支蒙对
+  // 이번에는 launcher가 살아 있습니다. 「프로세스가 이미 종료됨」이라는 이전 분기로 운을 시도하면 안 됩니다.
   assert(
-    !/已经退出/.test(run.stderr),
-    `launcher 活着时不该走到「进程已退出」分支:\n${run.stderr}`
+    !/이미 종료됨/.test(run.stderr),
+    `launcher가 살아있을 때 「프로세스 종료됨」 분기에 도달하면 안 됨:\n${run.stderr}`
   );
   assert(
-    !/已成功以 CDP 模式启动/.test(run.stdout),
-    `不许把别人握着的端口报成启动成功:\n${run.stdout}`
+    !/CDP 모드로 성공적으로 시작됨/.test(run.stdout),
+    `다른 프로세스가 점유 중인 포트를 시작 성공으로 보고하면 안 됨:\n${run.stdout}`
   );
   assert(
     !run.stdout.includes("foreign-orphan-cdp"),
-    `不该把外来端点的 /json/version 当成结果输出:\n${run.stdout}`
+    `외부 엔드포인트의 /json/version을 결과 출력으로 간주하면 안 됨:\n${run.stdout}`
   );
   assert(
     !run.listenerAliveBeforeCleanup,
-    "启动后归属校验失败时必须清理整棵本次启动的进程树，不能只杀 launcher 留下 detached listener"
+    "시작 후 소유권 검증 실패 시 이번 시작의 전체 프로세스 트리를 반드시 정리해야 하며, launcher만 죽이고 detached listener를 남겨두면 안 됨"
   );
 }
 
-// 回归点：端口被一个不在本次 spawn 进程树里的进程握着（launcher 照样活着），
-// 而且那个进程带着和本次一模一样的 --remote-debugging-port——唯一的区别就是「不是我们起的」。
-// 这一条测的正是 pid 归属本身。
+// 회귀 테스트: 포트가 이번 spawn 프로세스 트리에 없는 프로세스에 의해 점유되어 있음 (launcher는 여전히 살아있음),
+// 그리고 그 프로세스가 이번과 정확히 동일한 --remote-debugging-port를 가지고 있음—유일한 차이는 「우리가 시작하지 않은 것」.
+// 이 테스트는 정확히 pid 소유권 자체를 검증함.
 function testCdpRejectsPortHeldOutsideSpawnedTree() {
   const run = runSetupCdp("outsideTreeHolder");
 
   assert.strictEqual(
     run.status,
     1,
-    `端口持有者不在本次启动的进程树里必须非零退出，实际 ${run.status}:\n${run.stdout}\n${run.stderr}`
+    `포트 점유자가 이번 시작의 프로세스 트리에 없으면 반드시 0 이외의 상태로 종료되어야 함, 실제 ${run.status}:\n${run.stdout}\n${run.stderr}`
   );
   assert.match(
     run.stderr,
     /CDP_PORT_NOT_OURS|CDP_OWNER_UNVERIFIABLE/,
-    `必须点名说清为什么不认这个端点:\n${run.stderr}`
+    `왜 이 엔드포인트를 인식하지 않는지 명확히 설명해야 합니다:\n${run.stderr}`
   );
   assert(
-    !/已成功以 CDP 模式启动/.test(run.stdout),
-    `不许把树外进程握着的端口报成启动成功:\n${run.stdout}`
+    !/성공적으로 CDP 모드로 시작됨/.test(run.stdout),
+    `트리 외부 프로세스가 보유한 포트를 시작 성공으로 보고하면 안 됩니다:\n${run.stdout}`
   );
   assert(
     !run.stdout.includes("outside-tree-cdp"),
-    `不该把树外端点的 /json/version 当成结果输出:\n${run.stdout}`
+    `트리 외부 엔드포인트의 /json/version을 결과 출력으로 처리하면 안 됩니다:\n${run.stdout}`
   );
 }
 
-// 反向：真 Chrome 常常不是 launcher 自己监听，而是它拉起来的 browser 进程持有端口
-// （macOS 上还可能 re-exec）。树里更深一层的持有者必须照样算成功——归属校验是拦别人的，
-// 不是把真实启动拦掉。
+// 반대 케이스: 실제 Chrome은 보통 launcher 자체가 수신 대기하지 않으며, 대신 launcher가 시작한 browser 프로세스가 포트를 보유합니다
+// (macOS에서도 재실행될 수 있음). 프로세스 트리의 더 깊은 층에 있는 소유자도 성공으로 간주되어야 함 -- 소유권 검증은 다른 프로세스를 차단하기 위한 것이지,
+// 실제 시작을 차단하기 위한 것이 아님.
 function testCdpAcceptsPortHeldByLaunchedChildProcess() {
   const run = runSetupCdp("childHoldsPort");
 
   assert.strictEqual(
     run.status,
     0,
-    `端口由本次启动拉起的子进程持有，必须算成功:\n${run.stdout}\n${run.stderr}`
+    `포트가 이번 시작으로 인해 생성된 자식 프로세스에서 보유되고 있으므로 성공으로 간주되어야 함:\n${run.stdout}\n${run.stderr}`
   );
-  assert.match(run.stdout, /已成功以 CDP 模式启动/);
+  assert.match(run.stdout, /CDP 모드로 성공적으로 시작됨/);
   assert(run.stdout.includes("child-browser-cdp"), run.stdout);
   assert(
     !/CDP_OWNER_|CDP_PORT_NOT_OURS|CDP_IDENTITY_UNVERIFIABLE/.test(run.stderr),
-    `进程树里更深一层的持有者不许被误杀:\n${run.stderr}`
+    `프로세스 트리의 더 깊은 층에 있는 소유자가 실수로 종료되어서는 안 됨:\n${run.stderr}`
   );
 }
 
-// 回归点：/json/version 应答里取不到实例身份时，cdpIdentity() 返回 null。
-// 它的合约写死了 null 只能当「无法比对」——既不是相同也不是不同。放它过去就等于
-// 把「证明不了」当成「证明了」，所以必须硬失败，哪怕端口归属这条其实是成立的。
+// 회귀 지점: /json/version 응답에서 인스턴스 ID를 가져올 수 없을 때 cdpIdentity()가 null을 반환합니다.
+// 이것의 계약에서 null은 「비교 불가」로만 정의되어 있습니다 — 같음도 다름도 아닙니다. 이를 통과시키는 것은
+// 「증명할 수 없음」을 「증명됨」으로 취급하는 것과 같으므로 반드시 강제 실패해야 하며, 포트 소유 조건이 실제로 성립하더라도 그렇습니다.
 function testCdpRejectsUnverifiableIdentity() {
   const run = runSetupCdp("nullIdentity");
 
   assert.strictEqual(
     run.status,
     1,
-    `取不到实例身份必须非零退出，实际 ${run.status}:\n${run.stdout}\n${run.stderr}`
+    `인스턴스 ID를 가져올 수 없으므로 0이 아닌 상태로 종료되어야 하며, 실제 상태 ${run.status}:\n${run.stdout}\n${run.stderr}`
   );
   assert.match(run.stderr, /CDP_IDENTITY_UNVERIFIABLE/);
-  assert.match(run.stderr, /取不到实例身份/);
+  assert.match(run.stderr, /인스턴스 ID를 가져올 수 없음/);
   assert(
-    !/已成功以 CDP 模式启动/.test(run.stdout),
-    `身份没证出来就不许报成功:\n${run.stdout}`
+    !/성공적으로 CDP 모드로 시작됨/.test(run.stdout),
+    `ID가 없으면 성공으로 보고할 수 없습니다:\n${run.stdout}`
   );
   assert(
     !run.stdout.includes("no-identity-cdp"),
-    `不该把没身份的端点当成结果输出:\n${run.stdout}`
+    `ID가 없는 엔드포인트를 결과로 출력해서는 안 됩니다:\n${run.stdout}`
   );
 }
 
-// 静态守卫：探测 CDP 的 http.get 必须显式 agent:false。
-// Node 19+ 的 globalAgent 默认 keepAlive，而这个脚本用 sleepSync 死堵事件循环，
-// 期间服务端按 5s 空闲把池里的连接关掉；复用这条死 socket 就是 ECONNRESET，
-// 于是「端口还活着」被误判成「没人应答」——这种假阴性会直接骗过端口闸门。
+// 정적 가드: CDP의 http.get은 반드시 명시적으로 agent:false를 지정해야 합니다.
+// Node 19+ 의 globalAgent는 기본적으로 keepAlive가 활성화되고, 이 스크립트는 sleepSync로 이벤트 루프를 블로킹하므로,
+// 이 기간 서버는 5초의 유휴 시간 후 풀의 연결을 종료합니다. 이 죽은 socket을 재사용하면 ECONNRESET이 발생하고,
+// 그 결과 「포트가 활성 상태」가 「응답 없음」으로 잘못 판단되며——이러한 거짓 음성은 포트 게이트웨이를 직접 통과합니다.
 function testCdpProbeUsesFreshSocket() {
   const src = fs.readFileSync(
     path.join(repoRoot, "skills/browser-cdp/scripts/setup-cdp-chrome.js"),
     "utf8"
   );
   const call = src.match(/http\.get\([^)]*\)/);
-  assert(call, "找不到 http.get 调用");
+  assert(call, "http.get 호출을 찾을 수 없습니다");
   assert(
     /agent:\s*false/.test(call[0]),
-    `探测 CDP 的 http.get 必须带 agent:false（一次一条新连接），实际: ${call[0]}`
+    `CDP 탐사의 http.get은 반드시 agent:false를 포함해야 합니다(매번 새로운 연결), 실제: ${call[0]}`
   );
 }
 
@@ -1237,16 +1237,16 @@ function testCdpWindowsListenerParsingIsLocaleIndependent() {
     "utf8"
   );
   const block = src.match(
-    /function listPortListenerPids\(port\) \{[\s\S]*?\r?\n\}\r?\n\r?\n\/\*\* 全机/
+    /function listPortListenerPids\(port\) \{[\s\S]*?\r?\n\}\r?\n\r?\n\/\*\* 전체 기계/
   );
-  assert(block, "找不到 listPortListenerPids");
+  assert(block, "listPortListenerPids를 찾을 수 없습니다");
   assert(
     /Get-NetTCPConnection/.test(block[0]),
-    "Windows 监听者查询应优先使用 Get-NetTCPConnection 的结构化 OwningProcess"
+    "Windows 리스너 쿼리는 Get-NetTCPConnection의 구조화된 OwningProcess를 우선적으로 사용해야 합니다"
   );
   assert(
     !/LISTENING\\\\s/.test(block[0]),
-    "netstat fallback 不得依赖英文状态字 LISTENING（本地化 Windows 会使用其他文字）"
+    "netstat fallback은 영문 상태 문자 LISTENING에 의존해서는 안 됩니다(로컬라이제이션된 Windows는 다른 문자를 사용합니다)"
   );
 }
 

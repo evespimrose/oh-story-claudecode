@@ -246,7 +246,9 @@ PRIMARY_GAP_TERMS = (
 MISSING_STATE_RE = r"(?:缺失|不存在|未找到|找不到|为\s*(?:true|真)|:\s*true)"
 SUBSTITUTE_SOURCE_RE = re.compile(
     r"章节(?:/\*|/第[^\s`，。；;]*)?_?摘要(?:\.md)?|第[^\s`，。；;]*章_摘要(?:\.md)?|"
-    r"拆文报告(?:\.md)?|故事线(?:\.md)?",
+    r"拆文报告(?:\.md)?|故事线(?:\.md)?|"
+    r"장(?:/\*|/제[^\s`，。；;]*)?_?요약(?:\.md)?|제[^\s`，。；;]*장_요약(?:\.md)?|"
+    r"작품분석리포트(?:\.md)?|스토리라인(?:\.md)?",
     re.IGNORECASE,
 )
 SUBSTITUTE_ACTION_RE = re.compile(
@@ -1254,7 +1256,7 @@ def validate_repository(repo_root: Path, manifest: ContractManifest) -> List[Fin
         outline_rule_contract_findings(outline_rule_text, manifest, outline_rule)
     )
 
-    demo_root = repo_root / "demo/拆文库/盘龙"
+    demo_root = repo_root / "demo/작품분석库/반룡"
     for artifact in manifest.primary_benchmark_artifacts:
         artifact_path = demo_root / artifact
         try:
@@ -1266,8 +1268,8 @@ def validate_repository(repo_root: Path, manifest: ContractManifest) -> List[Fin
                 Finding("demo-primary-artifact", "demo deconstruction is missing non-empty {}".format(artifact), artifact_path)
             )
 
-    outline_dir = repo_root / "demo/长篇/让你管账号，你高燃混剪炸全网/大纲"
-    outlines = sorted(outline_dir.glob("细纲_第*.md"))
+    outline_dir = repo_root / "demo/장편/계정관리맡겼더니고열혼합으로전국폭발/개요"
+    outlines = sorted(outline_dir.glob("세纲_제*.md"))
     if len(outlines) != manifest.expected_demo_outline_count:
         findings.append(
             Finding(

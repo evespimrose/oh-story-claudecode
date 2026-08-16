@@ -358,16 +358,16 @@ for p in sorted(base.glob('*.md')):
     assert '.claude/skills/story-setup/references/agent-references/' not in text, f'{p}: leaked Claude reference path'
     assert '.opencode/skills/story-setup/references/agent-references/' not in text, f'{p}: stale hidden OpenCode reference fallback'
     if p.stem in {'character-designer', 'consistency-checker', 'narrative-writer', 'story-architect'}:
-        assert '{项目根}/skills/story-setup/references/agent-references/' in text, f'{p}: missing canonical OpenCode reference path'
+        assert '{프로젝트 루트}/skills/story-setup/references/agent-references/' in text, f'{p}: 정규 OpenCode 참조 경로가 누락되었습니다'
 PY
 
 echo "  OK agent templates"
 
-# frontmatter 解析必须锚定独占一行的 `---`（值里的三连字符不得截断 permission/steps），
-# 且 disallowedTools 里的 Bash 必须落成真正的标量 deny：OpenCode 未声明 bash 权限时
-# evaluate() 返回 ask（不是 deny），只有 edit: deny 的只读 agent 仍能借 shell 重定向写正文。
-# 不给任何“只读命令”例外：上游 shell.ts 只把 command 的**直接父节点** redirected_statement
-# 纳入鉴权，`( allowlisted-command ) > 正文.md` 的 command 直接父节点是 subshell，能绕过字面量白名单。
+# frontmatter 파싱은 반드시 한 줄을 독점하는 `---`에 고정되어야 하며(값 내부의 세 개 하이픈이 permission/steps를 끊어서는 안 됨),
+# disallowedTools의 Bash는 실제 스칼라 deny로 확정되어야 합니다. OpenCode에서 bash 권한을 선언하지 않았을 때
+# evaluate()가 ask를 반환하므로(deny가 아님), edit: deny 설정만 된 읽기 전용 agent는 여전히 shell 리디렉션을 통해 본문을 작성할 수 있습니다.
+# 어떤 "읽기 전용 명령" 예외도 허용하지 않습니다. 업스트림 shell.ts는 command의 **직계 부모 노드**인 redirected_statement만
+# 권한 검사에 포함하므로, `( allowlisted-command ) > 본문.md`의 command 직계 부모 노드는 subshell이 되어 리터럴 화이트리스트를 우회할 수 있습니다.
 python3 - "scripts/sync-opencode.py" <<'PY'
 import importlib.util
 import sys
@@ -380,16 +380,16 @@ assert spec.loader is not None
 spec.loader.exec_module(module)
 
 source = (
-    "---\nname: a\ndescription: |\n  只读 agent --- 7 Gate。\n"
+    "---\nname: a\ndescription: |\n  읽기 전용 agent --- 7 Gate。\n"
     "tools: [Read, Glob, Grep]\ndisallowedTools: [Write, Edit, Bash]\nmaxTurns: 9\n"
-    "# 备注 --- 与主 skill 平级\n---\nbody\n"
+    "# 비고 --- 메인 skill과 동일 레벨\n---\nbody\n"
 )
 fm, body = module.parse_frontmatter(source)
 missing = {'name', 'description', 'tools', 'disallowedTools', 'maxTurns'} - set(fm)
 assert not missing, f'frontmatter truncated at an inline ---: missing {missing}'
 assert body.strip() == 'body', body
 
-# 正文是授权的唯一依据，所以 body 是必传参数：给它一个默认值就等于「忘了传 = 悄悄改权限」。
+# 본문이 권한 부여의 유일한 근거이므로 body는 필수 전달 매개변수입니다. 기본값을 설정하는 것은 "전달 누락 = 몰래 권한 변경"과 같습니다.
 try:
     module.convert_claude_to_opencode(fm)
 except TypeError:
@@ -397,26 +397,26 @@ except TypeError:
 else:
     raise AssertionError('convert_claude_to_opencode must require the agent body (no default)')
 
-# 只读 agent 的正文若要求执行命令，生成器必须大声失败，而不是暗开 shell 例外。
+# 읽기 전용 agent의 본문에서 명령 실행을 요구할 경우, 제너레이터는 몰래 shell 예외를 허용하는 대신 명시적으로 실패해야 합니다.
 try:
     module.convert_claude_to_opencode(
-        fm, '**确定项目根目录：** 执行 `git rev-parse --show-toplevel`，失败则用当前工作目录。\n'
+        fm, '**프로젝트 루트 디렉터리 확인:** `git rev-parse --show-toplevel` 실행, 실패 시 현재 작업 디렉터리 사용.\n'
     )
 except ValueError as error:
     assert 'git rev-parse --show-toplevel' in str(error), error
 else:
     raise AssertionError('restricted agent instructions must not require Bash')
 
-# 正文没提该命令 → 一条都不放（标量 deny 还会让上游 disabled() 把 bash 工具整个摘掉）
-plain = module.convert_claude_to_opencode(fm, '只读 agent，正文没有任何 shell 步骤\n')
+# 본문에 해당 명령이 언급되지 않음 → 하나도 허용하지 않음(스칼라 deny는 업스트림 disabled()가 bash 도구 전체를 제거하게 함)
+plain = module.convert_claude_to_opencode(fm, '읽기 전용 agent, 본문에 shell 단계 없음\n')
 assert plain['permission']['bash'] == 'deny', (
     f'read-only agent whose body never asks for a command must get a plain bash deny: {plain}'
 )
 
-# 生成器必须**大声失败**，而不是默默产出一个跑不动或被撬开的 agent。
-# 正文要求任何 shell 命令 → 生成必须中断并点名该命令
+# 제너레이터는 반드시 **명시적으로 실패**해야 하며, 실행되지 않거나 보안이 뚫린 agent를 묵묵히 생성해서는 안 됩니다.
+# 본문에서 shell 명령을 요구함 → 생성이 중단되어야 하며 해당 명령을 명시해야 함
 try:
-    module.convert_claude_to_opencode(fm, '**准备环境：** 执行 `npm install`，然后开始检查。\n')
+    module.convert_claude_to_opencode(fm, '**환경 준비:** `npm install` 실행 후 검사 시작.\n')
 except ValueError as error:
     assert 'npm install' in str(error), error
 else:
@@ -424,9 +424,9 @@ else:
 
 
 def bash_rules_in_file_order(fm_text: str):
-    """按**文件里的书写顺序**取 bash 规则——顺序就是优先级，不能走 dict/set。
+    """**파일에 작성된 순서**대로 bash 규칙을 가져옵니다. 순서가 곧 우선순위이므로 dict/set을 사용해서는 안 됩니다.
 
-    同时兼容标量写法 `bash: deny`：上游 fromConfig() 把它展开成单条 `*` 规则。
+    동시에 스칼라 표기법 `bash: deny`와도 호환됩니다. 업스트림 fromConfig()가 이를 단일 `*` 규칙으로 확장합니다.
     """
     import re
     rules = []
@@ -450,8 +450,8 @@ def bash_rules_in_file_order(fm_text: str):
     return rules
 
 
-# format_frontmatter 不得对键排序：一排序，生成器里「宽 deny 在前、窄 allow 在后」的
-# 顺序就被静默抹掉。用逆字母序的插入顺序探它。
+# format_frontmatter는 키를 정렬해서는 안 됩니다. 정렬하게 되면 제너레이터의 "넓은 deny가 앞, 좁은 allow가 뒤"인
+# 순서가 자동으로 삭제됩니다. 역알파벳순 삽입 순서로 이를 테스트합니다.
 probe = {
     'permission': {
         'read': 'allow',
@@ -463,18 +463,18 @@ assert probe_rules == [('zzz cmd', 'deny'), ('*', 'deny'), ('aaa cmd', 'allow')]
     f'format_frontmatter reordered permission globs (must preserve dict order): {probe_rules}'
 )
 
-# 生成器自身的输出：只读 agent 必须是不可覆盖的标量 deny。
+# 생성기 자체 출력: 읽기 전용 agent는 덮어쓸 수 없는 스칼라 deny여야 합니다.
 generated_rules = bash_rules_in_file_order(module.format_frontmatter(plain))
 assert generated_rules == [('*', 'deny')], generated_rules
 PY
 
 echo "  OK generator makes read-only Bash unavailable and rejects contradictory instructions"
 
-# 生成产物的**裁决矩阵**（#265 二轮 review）。这里独立复刻上游 opencode v1.18.5 的判定，
-# 刻意不复用 sync-opencode.py 里的同名函数——复用的话，复刻本身写错时测试会跟着一起错：
+# 생성물의 **판정 매트릭스**(#265 2차 리뷰). 여기서는 업스트림 opencode v1.18.5의 판정을 독립적으로 복제하며,
+# sync-opencode.py의 동명 함수를 의도적으로 재사용하지 않았습니다. 재사용할 경우 복제 자체가 잘못되었을 때 테스트도 함께 틀릴 수 있기 때문입니다.
 #   util/wildcard.ts     match()
-#   permission/index.ts  fromConfig() / evaluate()（findLast）/ Permission.ask()
-#   tool/shell.ts        source()（带重定向时取整条 redirected_statement）/ collect()
+#   permission/index.ts  fromConfig() / evaluate()(findLast) / Permission.ask()
+#   tool/shell.ts        source()(리다이렉션 포함 시 전체 redirected_statement를 가져옴) / collect()
 python3 - <<'PY'
 import re
 from pathlib import Path
@@ -485,15 +485,15 @@ def wildcard_match(value: str, pattern: str) -> bool:
     pattern = pattern.replace('\\', '/')
     escaped = re.sub(r'[.+^${}()|\[\]\\]', r'\\\g<0>', pattern)
     escaped = escaped.replace('*', '.*').replace('?', '.')
-    # 上游原注释：pattern 以 " *" 结尾时让尾段可选，好让 "ls *" 也匹配 "ls"。
-    # 正是这一步让前缀 glob 吃下带重定向的整条语句。
+    # 업스트림 원본 주석: pattern이 " *"로 끝날 때 마지막 부분을 선택 사항으로 만들어 "ls *"가 "ls"와도 매칭되도록 합니다.
+    # 바로 이 단계 덕분에 접두사 glob이 리다이렉션이 포함된 전체 문장을 처리할 수 있습니다.
     if escaped.endswith(' .*'):
         escaped = escaped[:-3] + '( .*)?'
     return re.match('^' + escaped + '$', value, flags=re.DOTALL) is not None
 
 
 def evaluate(rules, pattern: str) -> str:
-    """findLast：最后一条命中的规则生效；一条都不命中时上游默认 ask。"""
+    """findLast: 마지막으로 일치하는 규칙이 적용됩니다. 일치하는 규칙이 하나도 없으면 업스트림은 기본적으로 ask를 수행합니다."""
     action = 'ask'
     for rule_pattern, rule_action in rules:
         if wildcard_match(pattern, rule_pattern):
@@ -502,7 +502,7 @@ def evaluate(rules, pattern: str) -> str:
 
 
 def resolve(rules, patterns) -> str:
-    """Permission.ask()：任一 pattern 判 deny，整条 shell 调用即被拒。"""
+    """Permission.ask(): 어느 한 pattern이라도 deny로 판정되면 전체 shell 호출이 거부됩니다."""
     verdict = 'allow'
     for pattern in patterns:
         action = evaluate(rules, pattern)
@@ -536,15 +536,15 @@ def bash_rules_in_file_order(fm_text: str):
 
 
 NEEDED = 'git rev-parse --show-toplevel'
-TARGET = 'book/正文/第001章.md'
-# 每项 =（展示用命令, collect() 会产生的 scan.patterns）。一条 shell 命令可能含多个
-# tree-sitter `command` 节点；带重定向的节点取整条 redirected_statement 的文本。
+TARGET = 'book/본문/제001장.md'
+# 각 항목 = (표시용 명령, collect()가 생성하는 scan.patterns). 하나의 shell 명령에 여러 개의
+# tree-sitter `command` 노드가 포함될 수 있습니다. 리다이렉션이 있는 노드는 전체 redirected_statement의 텍스트를 가져옵니다.
 ESCAPES = [
     (f'{NEEDED} > {TARGET}', [f'{NEEDED} > {TARGET}']),
     (f'{NEEDED} >> {TARGET}', [f'{NEEDED} >> {TARGET}']),
     (f'{NEEDED} 2> {TARGET}', [f'{NEEDED} 2> {TARGET}']),
-    # 上游 source() 只检查 command 的直接父节点。套一层 subshell/compound 后，collect()
-    # 看见的 pattern 仍是裸 NEEDED，外层重定向没有进入鉴权 pattern。
+    # 업스트림 source()는 command의 직계 부모 노드만 확인합니다. subshell/compound로 한 겹 감싼 후에는 collect()가
+    # 확인하는 pattern은 여전히 순수한 NEEDED이며, 바깥쪽 리다이렉션은 권한 검사 pattern에 포함되지 않습니다.
     (f'( {NEEDED} ) > {TARGET}', [NEEDED]),
     (f'{{ {NEEDED}; }} > {TARGET}', [NEEDED]),
     (f'{NEEDED} | tee {TARGET}', [NEEDED, f'tee {TARGET}']),
@@ -554,7 +554,7 @@ ESCAPES = [
     ('git push', ['git push']),
     ('rm -rf /', ['rm -rf /']),
     ("python3 -c 'print(1)'", ["python3 -c 'print(1)'"]),
-    ('echo x > 第1章.md', ['echo x > 第1章.md']),
+    ('echo x > 제1장.md', ['echo x > 제1장.md']),
     ('bash -c "cat /etc/passwd"', ['bash -c "cat /etc/passwd"']),
 ]
 
@@ -570,18 +570,18 @@ for name in sorted(read_only):
     assert resolve(rules, [NEEDED]) == 'deny', (
         f'{name}: bare {NEEDED!r} must also be denied'
     )
-    # 反向：重定向/追加/stderr 重定向/管道/串联，以及任意越权命令，一律 deny
+    # 반대 케이스: 리다이렉션/추가/stderr 리다이렉션/파이프/연결 및 모든 권한 초과 명령은 일괄 deny
     for shown, patterns in ESCAPES:
         got = resolve(rules, patterns)
         assert got == 'deny', (
-            f'{name}: `{shown}` resolved to {got!r}, must be deny — 只读 agent 不得借'
-            f'重定向/管道/串联覆写作者正文（rules in file order: {rules}）'
+            f'{name}: `{shown}`이(가) {got!r}(으)로 확인되었습니다. 반드시 deny여야 합니다 — 읽기 전용 agent는'
+            f'리다이렉션/파이프/연결을 통해 저자의 본문을 덮어쓸 수 없습니다(파일 내 규칙 순서: {rules})'
         )
 PY
 
 echo "  OK read-only agents deny bare commands plus redirection/subshell/pipe/chain escapes"
 
-# 生成必须幂等：跑两遍产物一致。否则 --check 会在无人改模板时随机报 out-of-sync。
+# 생성은 반드시 멱등성을 유지해야 합니다. 즉, 두 번 실행했을 때 결과물이 일치해야 합니다. 그렇지 않으면 템플릿 수정이 없어도 --check에서 무작위로 out-of-sync가 발생할 수 있습니다.
 python3 - "scripts/sync-opencode.py" "$TMP_DIR" <<'PY'
 import contextlib
 import importlib.util
@@ -645,7 +645,7 @@ for p in sorted(Path('skills/story-setup/references/opencode/commands').glob('*.
     assert text.startswith('---\n'), f'{p}: missing frontmatter'
     fm = text.split('---', 2)[1]
     assert 'description:' in fm, f'{p}: missing description'
-    assert f'请使用 {p.stem} skill' in text, f'{p}: command body must route to same skill'
+    assert f'{p.stem} skill을 사용하세요' in text, f'{p}: command body must route to same skill'
 PY
 
 echo "  OK slash command templates"
@@ -660,7 +660,7 @@ assert_grep 'from "\./lib/story_hook_core\.js"' "$ROOT/plugin.ts" "OpenCode plug
 # deploy manifest must place the core under .opencode/plugins/lib/, never flat in
 # .opencode/plugins/ (a flat *.js there is auto-loaded by OpenCode as a broken second plugin).
 assert_grep '\.opencode/plugins/lib/story_hook_core\.js' "$REPO_ROOT/skills/story-setup/SKILL.md" "SKILL.md deploy manifest must target .opencode/plugins/lib/story_hook_core.js, not a flat .opencode/plugins/story_hook_core.js"
-assert_grep '正文' "$ROOT/plugin.ts" "OpenCode plugin must inspect prose targets"
+assert_grep '본문' "$ROOT/plugin.ts" "OpenCode 플러그인은 본문 대상을 검사해야 합니다"
 assert_grep '@opencode-ai/plugin' "$ROOT/plugin.ts" "OpenCode plugin must import OpenCode plugin types"
 # The shared prose-guard core (light net / outline guard / wordcount·landing·dup-title) deploys
 # alongside plugin.ts and is imported by it; it must be byte-identical to the ZCode copy and valid JS.

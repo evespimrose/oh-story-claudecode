@@ -150,7 +150,7 @@ if agent_name not in (None, "story-explorer"):
     raise SystemExit(f"resolved story-explorer returned wrong name/id: {agent_name!r}")
 if agent.get("mode") != "subagent":
     raise SystemExit(f"story-explorer mode should be subagent, got {agent.get('mode')!r}")
-if "小说" not in json.dumps(agent, ensure_ascii=False) and "story" not in json.dumps(agent).lower():
+if "소설" not in json.dumps(agent, ensure_ascii=False) and "story" not in json.dumps(agent).lower():
     raise SystemExit("story-explorer prompt/description did not load story content")
 
 print(f"    OK {len(expected_commands)} commands, {len(expected_agents)} agents, story-hooks plugin")

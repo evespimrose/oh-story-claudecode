@@ -1,8 +1,8 @@
 #!/bin/bash
 # test-prose-backstop-hook.sh — regression tests for check-prose-after-write.sh
-# 核心保证：① 绝不过度捕获非正文文件（代码/细纲/设定/大纲/游离正文）；② 真正文兜底触发；
-# ③ 轻量内容网抓对硬信号（截断/拒绝语/工程词/复读），干净正文（排比+对话+悬念）静默。
-# 过度捕获用路径门验证（不依赖解释器）；内容网用内嵌 python（与 parity 测试同源）。
+# 핵심 보장: ① 비본문 파일(코드/세부 시놉시스/설정/시놉시스/분리된 본문)을 절대 과도하게 캡처하지 않음. ② 실제 본문 백스톱(Backstop) 트리거.
+# ③ 하드 시그널(절단/거절 표현/기술 용어/반복)에 대한 경량 콘텐츠 캡처, 깨끗한 본문(대구+대화+서스펜스)은 무반응.
+# 과도한 캡처는 경로 게이트로 검증(인터프리터 비의존), 콘텐츠 캡처는 내장 Python 사용(parity 테스트와 동일 소스).
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
@@ -14,65 +14,65 @@ bash -n "$HOOK" || { echo "FAIL: hook has syntax errors" >&2; exit 1; }
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-# 真书结构：设定.md + 大纲/ + 正文/
-mkdir -p "$TMP/某书/正文" "$TMP/某书/大纲" "$TMP/docs/正文" "$TMP/游离/正文"
-printf '# 设定\n主角江晨。\n' > "$TMP/某书/设定.md"
-printf '## 细纲（第1章）\n- 情节点序列：本章细纲，作为AI我无法继续。他握紧拳头。他握紧拳头。\n' > "$TMP/某书/大纲/细纲_第001章.md"
-printf '# 大纲\n第1章 第2章 细纲 本章 下一章\n' > "$TMP/某书/大纲/大纲.md"
-printf '# 卷纲\n本卷细纲。\n' > "$TMP/某书/大纲/卷纲_第1卷.md"
-printf 'const x=1; // 细纲 本章 下一章 作为AI我无法继续 复读复读复读\n' > "$TMP/某书/x.js"
-printf '## 正文\n按照细纲，作为AI我无法继续。\n' > "$TMP/docs/正文.md"   # 正文.md 但无 设定.md 兄弟
-printf '## 第5章\n按照细纲，作为AI我无法继续。\n' > "$TMP/游离/正文/第005章.md" # 正文/第N章 但无书结构
-printf '他' > "$TMP/某书/正文/第001章_截断.md"                            # 真正文，极短 → 落盘触发
+# 실제 도서 구조: 설정.md + 시놉시스/ + 본문/
+mkdir -p "$TMP/특정_도서/본문" "$TMP/특정_도서/시놉시스" "$TMP/docs/본문" "$TMP/분리/본문"
+printf '# 설정\n주인공 장천.\n' > "$TMP/특정_도서/설정.md"
+printf '## 세부 시놉시스(제1장)\n- 사건 흐름: 이번 장 세부 시놉시스, AI로서 더 이상 진행할 수 없습니다. 그는 주먹을 꽉 쥐었다. 그는 주먹을 꽉 쥐었다.\n' > "$TMP/특정_도서/시놉시스/세부_시놉시스_제001장.md"
+printf '# 시놉시스\n제1장 제2장 세부 시놉시스 이번 장 다음 장\n' > "$TMP/특정_도서/시놉시스/시놉시스.md"
+printf '# 권별 시놉시스\n이번 권 세부 시놉시스.\n' > "$TMP/특정_도서/시놉시스/권별_시놉시스_제1권.md"
+printf 'const x=1; // 세부 시놉시스 이번 장 다음 장 AI로서 더 이상 진행할 수 없습니다 반복반복반복\n' > "$TMP/특정_도서/x.js"
+printf '## 본문\n세부 시놉시스에 따라, AI로서 더 이상 진행할 수 없습니다.\n' > "$TMP/docs/본문.md"   # 본문.md이지만 설정.md 파일이 인접하지 않음
+printf '## 제5장\n세부 시놉시스에 따라, AI로서 더 이상 진행할 수 없습니다.\n' > "$TMP/분리/본문/제005장.md" # 본문/제N장 형식이지만 도서 구조가 없음
+printf '그' > "$TMP/특정_도서/본문/제001장_절단.md"                            # 실제 본문, 매우 짧음 → 트리거 발생
 
 run() { CLAUDE_PROJECT_DIR="$TMP" CLAUDE_TOOL_INPUT="{\"tool_input\":{\"file_path\":\"$1\"}}" bash "$HOOK" 2>/dev/null; }
 
 fails=0
 expect_silent() {
   local out; out="$(run "$1")"
-  if [ -n "$out" ]; then echo "FAIL: over-capture on non-正文 file: $1" >&2; echo "$out" | head -2 >&2; fails=$((fails+1)); fi
+  if [ -n "$out" ]; then echo "FAIL: 비본문 파일에서 과도한 캡처 발생: $1" >&2; echo "$out" | head -2 >&2; fails=$((fails+1)); fi
 }
 expect_fire() {
   local out; out="$(run "$1")"
-  if [ -z "$out" ]; then echo "FAIL: backstop did not fire on real 正文: $1" >&2; fails=$((fails+1)); fi
+  if [ -z "$out" ]; then echo "FAIL: 실제 본문에서 백스톱이 작동하지 않음: $1" >&2; fails=$((fails+1)); fi
 }
 
-# ① 绝不捕获这些非正文文件（含工程词/复读/拒绝语文本，证明确实没被扫）
-expect_silent "$TMP/某书/大纲/细纲_第001章.md"
-expect_silent "$TMP/某书/大纲/大纲.md"
-expect_silent "$TMP/某书/大纲/卷纲_第1卷.md"
-expect_silent "$TMP/某书/x.js"
-expect_silent "$TMP/某书/设定.md"
-expect_silent "$TMP/docs/正文.md"
-expect_silent "$TMP/游离/正文/第005章.md"
-# ② 真正文（极短→落盘信号）必须触发
-expect_fire "$TMP/某书/正文/第001章_截断.md"
+# ① 다음 비본문 파일들을 절대 캡처하지 않음(기술 용어/반복/거절 표현 텍스트 포함, 스캔되지 않았음을 증명)
+expect_silent "$TMP/특정_도서/시놉시스/세부_시놉시스_제001장.md"
+expect_silent "$TMP/특정_도서/시놉시스/시놉시스.md"
+expect_silent "$TMP/특정_도서/시놉시스/권별_시놉시스_제1권.md"
+expect_silent "$TMP/특정_도서/x.js"
+expect_silent "$TMP/어떤책/설정.md"
+expect_silent "$TMP/docs/본문.md"
+expect_silent "$TMP/유리/본문/제005장.md"
+# ② 실제 본문(매우 짧음→저장 신호)은 반드시 트리거되어야 함
+expect_fire "$TMP/어떤책/본문/제001장_잘림.md"
 
-# ③ 内容网：真正文里的硬信号必须被抓，且抓对类型；干净正文（排比+AI角色对话+悬念收尾）静默。
+# ③ 콘텐츠 필터: 실제 본문 내의 하드 신호는 반드시 감지되어야 하며 유형이 정확해야 함. 깨끗한 본문(대구+AI 캐릭터 대화+서스펜스 엔딩)은 무시됨.
 expect_fire_kw() {
   local out; out="$(run "$1")"
   if ! printf '%s' "$out" | grep -q "$2"; then
-    echo "FAIL: 内容网未抓到「$2」: $1" >&2; printf '%s\n' "$out" | head -4 >&2; fails=$((fails+1))
+    echo "FAIL: 콘텐츠 필터가 「$2」를 감지하지 못함: $1" >&2; printf '%s\n' "$out" | head -4 >&2; fails=$((fails+1))
   fi
 }
-# bash 字符串重复填充正文（不走 python stdout：Windows runner 上 python<3.15 的文本 stdout
-# 是 cp1252，写中文会 UnicodeEncodeError；printf 直出脚本里的 UTF-8 字节字面量才稳）。
-PAD() { local s='江晨握紧拳头慢慢走向门口心里盘算着接下来的每一步棋。'; printf '%s' "$s$s$s$s$s$s$s$s"; }
-# 干净：长正文 + 排比 + AI 角色对话（「作为AI…」在引号内豁免）+ 悬念收尾标点 → 完全静默
-{ printf '# 第10章 决战\n\n'; PAD; printf '\n要么生，要么死。\n要么战，要么逃。\n「作为AI管家，我陪你到最后。」\n他终于停下了脚步。\n'; } > "$TMP/某书/正文/第010章_决战.md"
-expect_silent "$TMP/某书/正文/第010章_决战.md"
-# 截断：结尾无标点
-{ printf '# 第11章\n\n'; PAD; printf '\n他猛地冲过去一拳砸在'; } > "$TMP/某书/正文/第011章_截断.md"
-expect_fire_kw "$TMP/某书/正文/第011章_截断.md" 截断
-# 生成拒绝语 / AI 自指（叙述行，非对话）
-{ printf '# 第12章\n\n'; PAD; printf '\n作为AI我无法继续创作这部分内容。\n'; } > "$TMP/某书/正文/第012章_拒绝.md"
-expect_fire_kw "$TMP/某书/正文/第012章_拒绝.md" 元信息泄漏
-# 工程词漏进正文
-{ printf '# 第13章\n\n'; PAD; printf '\n按照本章细纲的情节点，他该出场了。\n他出场了。\n'; } > "$TMP/某书/正文/第013章_工程词.md"
-expect_fire_kw "$TMP/某书/正文/第013章_工程词.md" 工程词
-# 紧邻整行复读（≥8 可见字符）
-{ printf '# 第14章\n\n'; PAD; printf '\n他握紧拳头一步步走过去缓缓逼近。\n他握紧拳头一步步走过去缓缓逼近。\n他停下了。\n'; } > "$TMP/某书/正文/第014章_复读.md"
-expect_fire_kw "$TMP/某书/正文/第014章_复读.md" 复读
+# bash 문자열 반복으로 본문 채우기(python stdout 미사용: Windows runner의 python < 3.15 텍스트 stdout은
+# cp1252이므로, 한글 작성 시 UnicodeEncodeError가 발생함. 스크립트 내의 UTF-8 바이트 리터럴을 printf로 직접 출력해야 안정적임).
+PAD() { local s='강진은 주먹을 꽉 쥐고 천천히 문으로 향하며 마음속으로 다음 수를 계산했다.'; printf '%s' "$s$s$s$s$s$s$s$s"; }
+# 깨끗함: 긴 본문 + 대구 + AI 캐릭터 대화(「AI로서...」는 따옴표 안에 있어 예외) + 서스펜스 엔딩 문장 부호 → 완전 무시
+{ printf '# 제10장 결전\n\n'; PAD; printf '\n살거나, 죽거나.\n싸우거나, 도망치거나.\n「AI 집사로서, 마지막까지 당신과 함께하겠습니다.」\n그는 마침내 발걸음을 멈췄다.\n'; } > "$TMP/어떤책/본문/제10장_결전.md"
+expect_silent "$TMP/어떤책/본문/제10장_결전.md"
+# 잘림: 끝에 문장 부호 없음
+{ printf '# 제11장\n\n'; PAD; printf '\n그는 힘껏 달려들어 주먹으로'; } > "$TMP/어떤책/본문/제11장_잘림.md"
+expect_fire_kw "$TMP/어떤책/본문/제11장_잘림.md" 잘림
+# 생성 거부 문구 / AI 자기 지칭(서술문, 대화 아님)
+{ printf '# 제12장\n\n'; PAD; printf '\nAI로서 이 부분의 콘텐츠를 계속 생성할 수 없습니다.\n'; } > "$TMP/어떤책/본문/제12장_거부.md"
+expect_fire_kw "$TMP/어떤책/본문/제12장_거부.md" 메타 정보 유출
+# 엔지니어링 용어가 본문에 유출됨
+{ printf '# 제13장\n\n'; PAD; printf '\n이 장의 세부 시놉시스 구성상, 그가 등장할 차례다.\n그가 등장했다.\n'; } > "$TMP/어떤 책/본문/제013장_공정 단어.md"
+expect_fire_kw "$TMP/어떤 책/본문/제013장_공정 단어.md" 공정 단어
+# 인접한 전체 행 반복(8자 이상의 가시 문자)
+{ printf '# 제14장\n\n'; PAD; printf '\n그는 주먹을 꽉 쥐고 한 걸음씩 다가가 천천히 압박했다.\n그는 주먹을 꽉 쥐고 한 걸음씩 다가가 천천히 압박했다.\n그는 멈췄다.\n'; } > "$TMP/어떤 책/본문/제014장_반복.md"
+expect_fire_kw "$TMP/어떤 책/본문/제014장_반복.md" 반복
 
 if [ "$fails" -ne 0 ]; then
   echo "Prose backstop hook tests FAILED ($fails)." >&2

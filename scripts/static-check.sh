@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-# `set -e` 下裸赋值会继承命令替换的退出码：git 失败（非仓库/无 git）时脚本会直接中断，
-# 下面的诊断分支永远走不到。用 `|| true` 兜住，把判定交给 -z 检查。
+# `set -e` 환경에서 일반 변수 할당은 명령어 치환의 종료 코드를 상속합니다. git 명령이 실패하면(저장소가 아니거나 git이 없는 경우) 스크립트가 즉시 중단됩니다.
+# 이 경우 아래의 진단 분기에 도달할 수 없으므로, `|| true`로 오류를 방지하고 판정은 `-z` 검사에 맡깁니다.
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -z "$REPO_ROOT" ]; then
   echo "Error: not in a git repository" >&2

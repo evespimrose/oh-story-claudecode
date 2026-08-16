@@ -89,8 +89,8 @@ def main() -> None:
     else:
         raise AssertionError("malformed template hooks must fail")
 
-    # 用户手改出的非数组事件值（撞上模板事件名）必须走 MergeError/exit 2 诊断，
-    # 而不是 .extend() 的 AttributeError traceback。
+    # 사용자가 수동으로 수정한 비배열 이벤트 값(템플릿 이벤트 이름과 충돌하는 경우)은 반드시 MergeError/exit 2 진단을 거쳐야 하며,
+    # .extend()의 AttributeError traceback이 발생해서는 안 됩니다.
     for bad in ({"matcher": "Bash", "hooks": []}, "nope", 5, None, True):
         try:
             merger.merge_documents({"hooks": {"PreToolUse": bad}}, template)
@@ -99,7 +99,7 @@ def main() -> None:
         else:
             raise AssertionError(f"malformed existing event value must fail: {bad!r}")
 
-    # 未与模板撞名的非数组事件值仍原样保留（保留用户已有配置的契约不能被上面的校验收紧）。
+    # 템플릿 이름과 충돌하지 않는 비배열 이벤트 값은 그대로 유지됩니다(기존 사용자 설정을 유지한다는 계약은 위의 검증으로 인해 엄격해질 수 없습니다).
     preserved = merger.merge_documents({"hooks": {"UserEvent": {"a": 1}}}, template)
     assert preserved["hooks"]["UserEvent"] == {"a": 1}, preserved
 

@@ -27,14 +27,14 @@ try {
     "---",
     "title: fixture",
     "---",
-    "# 标题",
-    "他说……答案就是这样——真的。",
+    "# 제목",
+    "그는 말했습니다... 정답은 바로 이겁니다—정말로요.", 
     "10--20",
     "---",
     "```text",
-    "围栏内……与---必须保留",
+    "펜스 내의 …… 및 ---는 반드시 유지되어야 합니다",
     "```",
-    "「引号……保留样式」",
+    "「따옴표… 스타일 유지」",
     "",
   ].join("\r\n");
   fs.writeFileSync(prose, original, "utf8");
@@ -51,9 +51,9 @@ try {
   assert.strictEqual(write.status, 0, write.stderr);
   const normalized = fs.readFileSync(prose, "utf8");
   assert(normalized.includes("title: fixture\r\n---"), "frontmatter must remain intact");
-  assert(normalized.includes("围栏内……与---必须保留"), "fenced text must remain intact");
-  assert(normalized.includes("10到20"), "numeric ranges must use 到");
-  assert(normalized.includes("「引号，保留样式」"), "default mode must keep quote style");
+  assert(normalized.includes("코드 펜스 내… 및 ---는 반드시 유지되어야 함"), "fenced text must remain intact");
+  assert(normalized.includes("10에서 20"), "숫자 범위에는 '에서'를 사용해야 합니다");
+  assert(normalized.includes("「따옴표, 스타일 유지」"), "기본 모드는 따옴표 스타일을 유지해야 합니다");
   assert(!normalized.split("\r\n").includes("---", 3), "body divider must be removed");
   assert(normalized.includes("\r\n"), "CRLF input must keep CRLF output");
   const normalizedProse = normalized
@@ -66,10 +66,10 @@ try {
   assert.match(second.stdout, /Changed files: 0/);
   assert.strictEqual(fs.readFileSync(prose, "utf8"), normalized, "normalization must be idempotent");
 
-  // 混合行尾：一处孤立 CRLF 不得把全文行尾翻成 CRLF；没有标点问题就必须一个字节都不动，
-  // 否则 --check 报零问题、写入模式却改出整篇 diff，两种模式对不上。
+  // 혼합된 줄 바꿈: 고립된 단일 CRLF 한 곳 때문에 전체 줄 바꿈이 CRLF로 바뀌어서는 안 됨. 문장 부호 문제가 없다면 단 한 바이트도 수정해서는 안 됨,
+  // 그렇지 않으면 --check는 문제가 없다고 보고하지만, 쓰기 모드에서는 전체 diff가 발생하는 등 두 모드가 일치하지 않게 됩니다.
   const mixedEol = path.join(tmpDir, "mixed-eol.md");
-  const mixedOriginal = "他站在原地。\r\n风很大。\n雨停了。\n";
+  const mixedOriginal = "그는 제자리에 서 있었다.\r\n바람이 몹시 불었다.\n비가 그쳤다.\n";
   fs.writeFileSync(mixedEol, mixedOriginal, "utf8");
   const mixedCheck = run(["--check", mixedEol]);
   assert.strictEqual(mixedCheck.status, 0, mixedCheck.stdout + mixedCheck.stderr);
@@ -82,47 +82,47 @@ try {
     "mixed line endings must survive a clean pass byte-for-byte"
   );
 
-  // 混合行尾 + 真标点问题：只改标点，逐行行尾保持原样。
+  // 혼합 줄바꿈 + 실제 문장 부호 문제: 문장 부호만 수정하고, 각 줄의 끝은 그대로 유지합니다.
   const mixedDirty = path.join(tmpDir, "mixed-eol-dirty.md");
-  fs.writeFileSync(mixedDirty, "他说……真的。\r\n风很大——雨停了。\n", "utf8");
+  fs.writeFileSync(mixedDirty, "그는 말했다... 정말로.\r\n바람이 거세다—비가 그쳤다.\n", "utf8");
   assert.strictEqual(run([mixedDirty]).status, 0);
   assert.strictEqual(
     fs.readFileSync(mixedDirty, "utf8"),
-    "他说，真的。\r\n风很大，雨停了。\n",
+    "그가 말했습니다, 정말이에요.\r\n바람이 거세고, 비가 그쳤습니다.\n",
     "per-line endings must be preserved while punctuation is normalized"
   );
 
-  // HTML 注释里的 `--` 不是停顿标点：`<!-- 去味:跳过 -->` 豁免标记必须原样留在正文里，
-  // 被改成 `<! 去味:跳过 ，>` 就不再是注释，会当可见文本泄进成稿。
+  // HTML 주석 내의 `--`는 문장 부호가 아닙니다. `<!-- 정리:건너뛰기 -->` 예외 마커는 본문에 그대로 유지되어야 하며,
+  // `<! 정리:건너뛰기 , >`로 변경되면 더 이상 주석이 아니게 되어, 노출 텍스트로 원고에 유출됩니다.
   const marker = path.join(tmpDir, "marker.md");
   const markerOriginal = [
-    "# 第12章 雨夜",
-    "<!-- 去味:跳过 -->",
-    "他握紧了拳头，慢慢站起身。",
+    "# 제12장 비 오는 밤",
+    "<!-- 냄새 제거: 건너뛰기 -->",
+    "그는 주먹을 불끈 쥐고 천천히 일어섰다.",
     "<!--",
-    "跨行注释里的---与……也照旧",
+    "여러 줄 주석 내의 ---와 ……도 그대로 유지",
     "-->",
-    "正文……继续。<!-- 行内备注 -->",
+    "본문... 계속.<!-- 인라인 주석 -->",
     "",
   ].join("\n");
   fs.writeFileSync(marker, markerOriginal, "utf8");
   const markerCheck = run(["--check", marker]);
   assert.strictEqual(markerCheck.status, 1, markerCheck.stderr);
-  assert.doesNotMatch(markerCheck.stdout, /double-hyphen/, "HTML 注释不得报 double-hyphen");
-  assert.doesNotMatch(markerCheck.stdout, /markdown-divider/, "注释内的 --- 不是正文分隔线");
+  assert.doesNotMatch(markerCheck.stdout, /double-hyphen/, "HTML 주석은 double-hyphen 오류를 보고해서는 안 됩니다");
+  assert.doesNotMatch(markerCheck.stdout, /markdown-divider/, "주석 내부의 ---는 본문 구분선이 아닙니다");
   assert.strictEqual(run([marker]).status, 0);
   const markerNormalized = fs.readFileSync(marker, "utf8");
-  assert(markerNormalized.includes("<!-- 去味:跳过 -->"), "去味豁免标记必须原样保留");
-  assert(markerNormalized.includes("跨行注释里的---与……也照旧"), "跨行注释内容必须原样保留");
-  assert(markerNormalized.includes("<!-- 行内备注 -->"), "行内注释必须原样保留");
-  assert(markerNormalized.includes("正文，继续。"), "注释外的正文仍要归一化");
+  assert(markerNormalized.includes("<!-- 정리:건너뛰기 -->"), "정규화 제외 마커는 그대로 유지되어야 합니다");
+  assert(markerNormalized.includes("여러 줄 주석 안의 ---와 ...도 그대로"), "여러 줄 주석의 내용은 그대로 유지되어야 합니다");
+  assert(markerNormalized.includes("<!-- 인라인 메모 -->"), "인라인 주석은 그대로 유지되어야 합니다");
+  assert(markerNormalized.includes("본문, 계속."), "주석 밖의 본문은 여전히 정규화되어야 합니다");
 
-  // 未闭合注释不是“从这里到 EOF 都合法豁免”：必须具名报错，后续正文仍参与检查/归一化。
-  // 否则一个误写的 `<!--` 会让整篇的 `……` / `---` 在 --check 下静默 exit 0。
+  // 닫히지 않은 주석이 "여기부터 EOF까지 모두 유효하게 제외"되는 것은 아닙니다. 반드시 명시적으로 오류를 보고해야 하며, 이후 본문은 여전히 검사/정규화 대상에 포함됩니다.
+  // 그렇지 않으면 잘못 작성된 `<!--` 하나로 인해 전체 문서의 `……` / `---`가 --check 시 자동으로 exit 0이 될 수 있습니다.
   const unclosedComment = path.join(tmpDir, "unclosed-comment.md");
   fs.writeFileSync(
     unclosedComment,
-    "# 第13章\n<!-- 临时备注\n正文……继续。\n---\n",
+    "# 제13장\n<!-- 임시 메모\n본문…… 계속。\n---\n",
     "utf8"
   );
   const unclosedCheck = run(["--check", unclosedComment]);
@@ -131,37 +131,37 @@ try {
   assert.match(unclosedCheck.stdout, /ellipsis|markdown-divider/);
   assert.strictEqual(run([unclosedComment]).status, 0);
   const unclosedNormalized = fs.readFileSync(unclosedComment, "utf8");
-  assert(unclosedNormalized.includes("<!-- 临时备注"), "未闭合注释起始符不应被改坏");
-  assert(unclosedNormalized.includes("正文，继续。"), "未闭合注释后的正文仍须归一化");
-  assert(!unclosedNormalized.includes("\n---\n"), "未闭合注释后的正文分隔线仍须移除");
+  assert(unclosedNormalized.includes("<!-- 임시 메모"), "닫히지 않은 주석의 시작 태그가 손상되어서는 안 됩니다");
+  assert(unclosedNormalized.includes("본문, 계속."), "닫히지 않은 주석 이후의 본문은 여전히 정규화되어야 합니다");
+  assert(!unclosedNormalized.includes("\n---\n"), "닫히지 않은 주석 이후의 본문 구분선은 여전히 제거되어야 합니다");
 
-  // 删空停顿符会把两侧的半角点/连字符粘成新的 `...`/`--`；一遍必须清干净，
-  // 否则成稿留着本该删掉的 ASCII 省略号，事后重跑同一步又会改动已定稿的正文。
+  // 불필요한 문장 부호를 삭제하면 양쪽의 반각 마침표/하이픈이 붙어 새로운 `...`/`--`가 생길 수 있습니다. 한 번에 완전히 정리해야 합니다.
+  // 그렇지 않으면 삭제했어야 할 ASCII 말줄임표가 원고에 남게 되고, 나중에 같은 단계를 다시 실행할 때 이미 확정된 본문이 수정될 수 있습니다.
   const merge = path.join(tmpDir, "merge.md");
-  fs.writeFileSync(merge, "他.……..说\n-…...……-2.（！）\n", "utf8");
+  fs.writeFileSync(merge, "그.……..말했다\n-…...……-2.（！）\n", "utf8");
   assert.strictEqual(run([merge]).status, 0);
-  assert.strictEqual(fs.readFileSync(merge, "utf8"), "他，说\n2.（！）\n");
+  assert.strictEqual(fs.readFileSync(merge, "utf8"), "그, 말했다\n2.（！）\n");
   const mergeRecheck = run(["--check", merge]);
-  assert.strictEqual(mergeRecheck.status, 0, "一遍归一化后 --check 必须已清零: " + mergeRecheck.stdout);
+  assert.strictEqual(mergeRecheck.status, 0, "1차 정규화 후 --check 결과가 반드시 0이어야 합니다: " + mergeRecheck.stdout);
   assert.match(run([merge]).stdout, /Changed files: 0/);
 
   const fences = path.join(tmpDir, "fences.md");
   const fencedOriginal = [
     "~~~markdown",
-    "tilde 围栏内……必须保留",
+    "tilde 펜스 내부의 ……는 반드시 유지되어야 합니다",
     "```",
-    "不同标记不能关闭——仍须保留",
+    "서로 다른 마커는 닫을 수 없음——여전히 유지되어야 함",
     "~~",
-    "更短的波浪线不能关闭--仍须保留",
+    "더 짧은 물결표는 닫을 수 없음--여전히 유지되어야 함",
     "~~~",
-    "波浪线围栏外……必须归一化",
+    "물결표 펜스 밖…… 반드시 정규화해야 함",
     "````markdown",
     "```javascript",
-    "四反引号围栏内……必须保留",
+    "백틱 4개 펜스 안…… 반드시 유지해야 함",
     "```",
-    "较短的反引号不能关闭——仍须保留",
+    "더 짧은 백틱으로는 닫을 수 없음—여전히 유지해야 함",
     "````",
-    "反引号围栏外……必须归一化",
+    "백틱 펜스 밖…… 반드시 정규화해야 함",
     "",
   ].join("\n");
   fs.writeFileSync(fences, fencedOriginal, "utf8");
@@ -169,23 +169,23 @@ try {
   const fencedWrite = run([fences]);
   assert.strictEqual(fencedWrite.status, 0, fencedWrite.stderr);
   const fencedNormalized = fs.readFileSync(fences, "utf8");
-  assert(fencedNormalized.includes("tilde 围栏内……必须保留"));
-  assert(fencedNormalized.includes("不同标记不能关闭——仍须保留"));
-  assert(fencedNormalized.includes("更短的波浪线不能关闭--仍须保留"));
-  assert(fencedNormalized.includes("四反引号围栏内……必须保留"));
-  assert(fencedNormalized.includes("较短的反引号不能关闭——仍须保留"));
-  assert(fencedNormalized.includes("波浪线围栏外，必须归一化"));
-  assert(fencedNormalized.includes("反引号围栏外，必须归一化"));
+  assert(fencedNormalized.includes("tilde 펜스 안…… 반드시 유지해야 함"));
+  assert(fencedNormalized.includes("서로 다른 마커로는 닫을 수 없음—여전히 유지해야 함"));
+  assert(fencedNormalized.includes("더 짧은 물결표로는 닫을 수 없음--여전히 유지해야 함"));
+  assert(fencedNormalized.includes("백틱 4개 펜스 안…… 반드시 유지해야 함"));
+  assert(fencedNormalized.includes("더 짧은 백틱으로는 닫을 수 없음—여전히 유지해야 함"));
+  assert(fencedNormalized.includes("물결표 펜스 밖, 반드시 정규화해야 함"));
+  assert(fencedNormalized.includes("백틱 펜스 밖, 반드시 정규화해야 함"));
 
   const ascii = path.join(tmpDir, "ascii.md");
-  fs.writeFileSync(ascii, "「甲」与“乙”\n", "utf8");
+  fs.writeFileSync(ascii, "「갑」과 “을”\n", "utf8");
   assert.strictEqual(run(["--quote-mode=ascii", ascii]).status, 0);
-  assert.strictEqual(fs.readFileSync(ascii, "utf8"), '"甲"与"乙"\n');
+  assert.strictEqual(fs.readFileSync(ascii, "utf8"), '"갑"과 "을"\n');
 
   const yan = path.join(tmpDir, "yan.md");
-  fs.writeFileSync(yan, '"甲"和“乙”\n', "utf8");
+  fs.writeFileSync(yan, '"갑"과 “을”\n', "utf8");
   assert.strictEqual(run(["--quote-mode", "yan", yan]).status, 0);
-  assert.strictEqual(fs.readFileSync(yan, "utf8"), "「甲」和「乙」\n");
+  assert.strictEqual(fs.readFileSync(yan, "utf8"), "「갑」과 「을」\n");
 
   const missing = run([path.join(tmpDir, "missing.md")]);
   assert.strictEqual(missing.status, 2);

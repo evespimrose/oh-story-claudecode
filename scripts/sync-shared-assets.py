@@ -32,8 +32,8 @@ class ManifestError(ValueError):
     pass
 
 
-# 递归枚举 skills/*/scripts/ 时要跳过的非运行时目录：开发机上的构建缓存
-# （__pycache__、node_modules）不是需要登记的重复脚本。
+# skills/*/scripts/를 재귀적으로 탐색할 때 제외할 비런타임 디렉터리: 개발 환경의 빌드 캐시
+# (__pycache__, node_modules)는 등록 대상인 중복 스크립트가 아닙니다.
 IGNORED_SCRIPT_DIRS = frozenset({".git", "__pycache__", "node_modules", ".venv"})
 
 
@@ -175,8 +175,8 @@ def unmanaged_duplicate_scripts(root: Path, groups: list[Group]) -> list[tuple[s
     scripts_by_name: dict[str, list[Path]] = defaultdict(list)
     skills_dir = root / "skills"
     if skills_dir.is_dir():
-        # 必须递归：共享 helper 常放在 skills/<skill>/scripts/lib/ 这类子目录，
-        # 单层 glob 会让这些更深的重复副本绕过守卫、各自漂移后直接发给用户。
+        # 반드시 재귀적이어야 함: 공유 helper는 주로 skills/<skill>/scripts/lib/와 같은 하위 디렉터리에 위치하며,
+        # 단일 계층 glob을 사용하면 더 깊은 곳의 중복 복사본들이 검사를 우회하여, 각자 버전이 어긋난(drift) 상태로 사용자에게 직접 배포될 수 있습니다.
         for scripts_dir in sorted(skills_dir.glob("*/scripts")):
             if not scripts_dir.is_dir():
                 continue

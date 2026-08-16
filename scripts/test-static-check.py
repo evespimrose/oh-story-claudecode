@@ -84,7 +84,7 @@ def test_structural_failures_are_not_hidden_by_prose() -> None:
         )
         write(
             root / "skills/broken/references/guide.md",
-            "# Guide\n\n## Real section\n\n详见 SKILL.md Phase 2。\n",
+            "# Guide\n\n## Real section\n\n자세한 내용은 SKILL.md Phase 2를 참조하세요.\n",
         )
         write(root / "skills/broken/references/orphan.md", "# Orphan\n")
 
@@ -185,7 +185,7 @@ def test_cjk_joined_globs_are_not_misread_as_emphasis_paths() -> None:
         write(
             root / "skills/demo/SKILL.md",
             "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n"
-            "批量读取 references/*.md与references/*.json，再汇总结果。\n",
+            "references/*.md 및 references/*.json을 일괄적으로 읽어 결과를 집계합니다.\n",
         )
         write(root / "skills/demo/references/example.md", "# Example\n")
         write(root / "skills/demo/references/example.json", "{}\n")
@@ -202,7 +202,7 @@ def test_cjk_joined_globs_validate_every_named_path() -> None:
         write(
             root / "skills/demo/SKILL.md",
             "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n"
-            "批量读取 references/*.md与assets/missing/*.json，再汇总结果。\n",
+            "references/*.md 및 assets/missing/*.json을 일괄적으로 읽어 결과를 집계합니다.\n",
         )
         write(root / "skills/demo/references/example.md", "# Example\n")
 
@@ -219,8 +219,8 @@ def test_fullwidth_paren_agent_refs_are_validated() -> None:
         write(
             root / "skills/demo/SKILL.md",
             "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n"
-            "**Agent 1: helper**（subagent_type: helper）\n\n"
-            "**Agent 2: phantom**（subagent_type: phantom）\n",
+            "**Agent 1: helper** (subagent_type: helper)\n\n"
+            "**Agent 2: phantom** (subagent_type: phantom)\n",
         )
 
         result = run(root)
@@ -294,10 +294,10 @@ def test_external_urls_are_not_cross_skill_paths() -> None:
             "See [remote docs](https://example.test/repo/skills/story-setup/SKILL.md), "
             "[uppercase HTTPS](HTTPS://example.test/repo/skills/story-setup/SKILL.md), "
             "and [FTP](FTP://example.test/repo/skills/story-setup/SKILL.md).\n\n"
-            "源码见 https://example.test/repo/skills/story-setup/references/agent-references/craft.md\n\n"
-            "参考 <https://example.test/docs/references/guide.md> 的说明。\n\n"
-            "命令 `curl https://example.test/docs/references/guide.md`，"
-            "文档 `https://example.test/docs/guide.md`。\n",
+            "소스 코드는 https://example.test/repo/skills/story-setup/references/agent-references/craft.md를 참조하세요.\n\n"
+            "<https://example.test/docs/references/guide.md>의 설명을 참조하세요.\n\n"
+            "명령어 `curl https://example.test/docs/references/guide.md`, "
+            "문서 `https://example.test/docs/guide.md`.\n",
         )
         write(
             root / "skills/demo/scripts/runner.js",
@@ -316,21 +316,21 @@ def test_unlinked_section_covers_cjk_without_spaces() -> None:
         build_agent_catalog(root)
         write(
             root / "skills/demo/SKILL.md",
-            "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n## 阶段二流程\n\n"
+            "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n## 2단계 프로세스\n\n"
             "Read [the guide](references/guide.md).\n",
         )
         write(
             root / "skills/demo/references/guide.md",
-            "# Guide\n\n详见SKILL.md的阶段二流程。\n\n"
-            "榜单清单与 URL 见 SKILL.md「起点采集目标」表。\n",
+            "# Guide\n\n자세한 내용은 SKILL.md의 2단계 프로세스를 참조하세요.\n\n"
+            "랭킹 목록 및 URL은 SKILL.md의 '기점 수집 대상' 표를 참조하세요.\n",
         )
 
         result = run(root)
         assert result.returncode == 1, result.stdout + result.stderr
         assert "[unlinked-skill-section]" in result.stdout, result.stdout
-        assert "详见SKILL.md的阶段二流程" in result.stdout, result.stdout
-        # 括号里原样引用标题不是模糊猜测，不在本规则范围内
-        assert "起点采集目标" not in result.stdout, result.stdout
+        assert "자세한 내용은 SKILL.md의 2단계 프로세스를 참조하세요" in result.stdout, result.stdout
+        # 괄호 안의 제목을 그대로 인용하는 것은 모호한 추측이 아니므로 본 규칙의 범위에 해당하지 않음
+        assert "기점 수집 대상" not in result.stdout, result.stdout
         assert result.stdout.count("[unlinked-skill-section]") == 1, result.stdout
 
 
@@ -346,7 +346,7 @@ def test_templates_and_web_assets_are_scanned_for_cross_skill_paths() -> None:
         )
         write(
             root / "skills/demo/references/CLAUDE.md.tmpl",
-            "# 项目约定\n\n必读：story-setup/references/agent-references/craft.md。\n",
+            "# 프로젝트 규칙\n\n필독: story-setup/references/agent-references/craft.md.\n",
         )
         write(
             root / "skills/demo/references/opencode.json.patch",
@@ -379,12 +379,12 @@ def test_emphasized_paths_are_still_existence_checked() -> None:
         write(
             root / "skills/demo/SKILL.md",
             "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n"
-            "参见 **references/definitely-missing.md** 获取细节。\n\n"
-            "题材卡在 references/cards/*.md 与 references/data/*.json 里，按需加载。\n\n"
+            "자세한 내용은 **references/definitely-missing.md**를 참조하세요.\n\n"
+            "소재 카드는 references/cards/*.md 및 references/data/*.json에 있으며, 필요에 따라 로드됩니다.\n\n"
             "Read [the guide](references/guide.md).\n",
         )
         write(root / "skills/demo/references/guide.md", "# Guide\n")
-        write(root / "skills/demo/references/cards/都市.md", "# 都市\n")
+        write(root / "skills/demo/references/cards/도시.md", "# 도시\n")
         write(root / "skills/demo/references/data/rules.json", "{}\n")
 
         result = run(root)
@@ -393,7 +393,7 @@ def test_emphasized_paths_are_still_existence_checked() -> None:
             "[broken-inline-path] skills/demo/SKILL.md:7" in result.stdout
         ), result.stdout
         assert "references/definitely-missing.md" in result.stdout, result.stdout
-        # 真通配符仍按父目录校验，不能因为剥强调符而被截断成断链
+        # 실제 와일드카드는 여전히 상위 디렉토리에 따라 검증되며, 강조 기호 제거로 인해 링크가 끊어지면 안 됨
         assert result.stdout.count("[broken-inline-path]") == 1, result.stdout
         assert "[broken-inline-path] skills/demo/SKILL.md:9" not in result.stdout, result.stdout
 
@@ -405,7 +405,7 @@ def test_wildcard_mentions_do_not_hide_dead_references() -> None:
         write(
             root / "skills/demo/SKILL.md",
             "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n"
-            "只读取本 Skill 的 `demo/references/*`，不要跨 skill。\n\n"
+            "해당 Skill의 `demo/references/*`만 읽고, 다른 Skill을 참조하지 마세요.\n\n"
             "Read [the guide](references/guide.md).\n",
         )
         write(root / "skills/demo/references/guide.md", "# Guide\n")
@@ -428,7 +428,7 @@ def test_brace_enumerations_name_each_file() -> None:
         write(
             root / "skills/demo/SKILL.md",
             "---\nname: demo\ndescription: Demo\n---\n# Demo\n\n"
-            "平台 rubric：`references/rubrics/{fanqie,qidian,zhihu}.md`\n",
+            "플랫폼 rubric: `references/rubrics/{fanqie,qidian,zhihu}.md`\n",
         )
         write(root / "skills/demo/references/rubrics/fanqie.md", "# fanqie\n")
         write(root / "skills/demo/references/rubrics/qidian.md", "# qidian\n")
@@ -436,7 +436,7 @@ def test_brace_enumerations_name_each_file() -> None:
 
         result = run(root)
         assert result.returncode == 1, result.stdout + result.stderr
-        # 点名枚举展开成逐个路径：缺失成员是断链，命中成员算已引用，未点名的仍是死引用
+        # 지정된 열거형을 개별 경로로 확장: 누락된 멤버는 끊어진 링크, 매칭된 멤버는 참조됨으로 간주, 지정되지 않은 멤버는 여전히 데드 레퍼런스임
         assert "references/rubrics/zhihu.md" in result.stdout, result.stdout
         assert "[broken-inline-path]" in result.stdout, result.stdout
         assert (
@@ -467,7 +467,7 @@ def test_launcher_reports_missing_git_repository() -> None:
             text=True,
             encoding="utf-8",
         )
-        # `set -e` 曾让裸赋值直接中断脚本：退出码 128 且无任何提示
+        # `set -e`로 인해 단순 할당 시 스크립트가 즉시 중단된 적이 있음: 종료 코드 128 및 아무런 메시지 없음
         assert proc.returncode == 1, f"exit={proc.returncode}\n{proc.stdout}{proc.stderr}"
         assert "not in a git repository" in proc.stderr, proc.stdout + proc.stderr
 

@@ -51,7 +51,7 @@ python3 scripts/test-codex-hook-merge.py
 
 echo "  OK JSON/Python syntax"
 
-# Windows encoding safety (issue #164 class): the hook carries Chinese 正文/细纲 over
+# Windows 인코딩 안전성(이슈 #164 관련): hook이 중국어 본문/개요를 전달함
 # stdin/stdout, so it must use UTF-8 bytes, not Windows' ANSI code page text streams.
 HOOK_PY="$CODEX_DIR/hooks/story_codex_hook.py"
 # Walk the AST instead of grepping lines. A line-based read_text(/encoding= pair fails both ways:
@@ -99,10 +99,10 @@ PY
 echo "  OK Windows encoding safety (UTF-8 stdio + file reads)"
 
 # Prose backstop parity surface: Codex has no PostToolUse, so the light prose net runs at Stop
-# (sweeping git-changed 正文) and continuity runs at SessionStart. These must stay present.
+# (git으로 변경된 본문 스캔) 및 SessionStart에서 연속성 실행. 이 항목들은 유지되어야 함.
 assert_grep 'def prose_net_findings' "$HOOK_PY" "Codex hook must carry the light prose net (parity with claude/opencode)"
 assert_grep 'def find_changed_prose_files' "$HOOK_PY" "Codex Stop sweep must discover git-changed prose"
-assert_grep 'def continuity_findings' "$HOOK_PY" "Codex hook must carry the continuity backstop (追踪 staleness + dup-title)"
+assert_grep 'def continuity_findings' "$HOOK_PY" "Codex hook은 연속성 백스탑(staleness 추적 + 중복 제목)을 포함해야 함"
 
 echo "  OK prose backstop parity surface (Stop net + SessionStart continuity)"
 
@@ -125,7 +125,7 @@ echo "  OK .agents/skills discovery symlink ($skill_count skills)"
 python3 scripts/generate-codex-agents.py --dest "$TMP_DIR/agents" >/dev/null
 diff -qr "$TMP_DIR/agents" "$CODEX_DIR/agents" >/dev/null \
   || fail "generated Codex agents are stale; run scripts/generate-codex-agents.py"
-if grep -RInE '当前 Claude 部署|(^|[^[:alnum:]_])/story(-[a-z0-9-]+)?' "$CODEX_DIR/agents"; then
+if grep -RInE '현재 Claude 배포|(^|[^[:alnum:]_])/story(-[a-z0-9-]+)?' "$CODEX_DIR/agents"; then
   fail "generated Codex agents must use Codex platform wording and \$story* invocations"
 fi
 
@@ -328,7 +328,7 @@ for path in sorted(Path('skills/story-setup/references/codex/agents').glob('*.to
     instructions = data['developer_instructions']
     assert path.name == f'{name}.toml', f'{path}: filename/name mismatch'
     assert '.codex/skills/story-setup/references/agent-references/' in instructions
-    for stale in ('.claude/skills/', '.opencode/skills/', '{项目根}/skills/story-setup/references/agent-references/'):
+    for stale in ('.claude/skills/', '.opencode/skills/', '{프로젝트 루트}/skills/story-setup/references/agent-references/'):
         assert stale not in instructions, f'{path}: stale cross-CLI reference fallback {stale}'
     assert 'agent_type' in instructions, f'{path}: missing Codex agent_type guidance'
     assert 'subagent_type' not in instructions, f'{path}: leaked Claude subagent_type wording'
@@ -354,10 +354,10 @@ fi
 # and (b) no-op when the hook file is absent instead of running "//.codex/..." (root="/"). And
 # the Python hook must self-locate from __file__ so a Git Bash MSYS root still resolves on Windows.
 #
-# 每份注册的 event token 还必须与三个消费方的白名单逐一对齐：run-story-hook.sh 的 case、
-# run-story-hook.cmd 的 if /I 链、story_codex_hook.py main() 的分派。少一处就是一个永久哑火的
-# hook（launcher case 落到 *) exit 2，stdout/stderr 全空），而 command↔commandWindows 的一致性
-# 断言只证明两边抄的是同一个错字。白名单从三个消费方解析出来比较，不在这里再抄第五份。
+# 등록된 각 event token은 세 소비측의 화이트리스트와 하나씩 대조되어야 함: run-story-hook.sh의 case,
+# run-story-hook.cmd의 if /I 체인, story_codex_hook.py main()의 디스패치. 하나라도 누락되면 영구적으로 작동하지 않는
+# hook(launcher case가 *)로 떨어져 exit 2 발생, stdout/stderr 모두 비어 있음)이 되며, command↔commandWindows의 일관성
+# 단언(assertion)은 양쪽이 동일한 오타를 복사했음을 증명할 뿐임. 화이트리스트는 세 소비측에서 파싱하여 비교하며, 여기에 다섯 번째 복사본을 만들지 않음.
 python3 - "$CODEX_DIR/hooks/hooks.json" "$CODEX_DIR/hooks/story_codex_hook.py" \
   "$CODEX_DIR/hooks/run-story-hook.sh" "$CODEX_DIR/hooks/run-story-hook.cmd" <<'PY'
 import json, re, sys
@@ -378,7 +378,7 @@ for h in all_hooks:
     assert f"'{posix_event}'" in w, f"command/commandWindows event mismatch: {posix_event} vs {w}"
     registered.append(posix_event)
 
-# 同一个 handler 被注册两次 = 复制粘贴整块后忘了改 event token，另一个事件因此没有注册。
+# 동일한 handler가 두 번 등록됨 = 블록 전체를 복사하여 붙여넣은 후 event token 수정을 잊어버려, 다른 이벤트가 등록되지 않음.
 dupes = sorted({e for e in registered if registered.count(e) > 1})
 assert not dupes, f"hooks.json registers the same event token more than once: {dupes}"
 
@@ -386,8 +386,8 @@ launcher_sh = Path(sys.argv[3]).read_text(encoding="utf-8")
 launcher_cmd = Path(sys.argv[4]).read_text(encoding="utf-8")
 hook_py = Path(sys.argv[2]).read_text(encoding="utf-8")
 
-# 只在 case "$EVENT" in ... esac 这一段里收 arm，且把每个 arm 的 a|b|c 全部展开：
-# 别的 case 块（比如探测 PYBIN）不会污染白名单，名单被改写成一行一个 arm 也照样解析。
+# case "$EVENT" in ... esac 섹션 내에서만 arm을 수집하고, 각 arm의 a|b|c를 모두 확장함:
+# 다른 case 블록(예: PYBIN 탐지)은 화이트리스트를 오염시키지 않으며, 리스트가 한 줄에 하나의 arm으로 재작성되어도 정상적으로 파싱됨.
 case_block = re.search(r'case[ \t]+"\$EVENT"[ \t]+in(.*?)esac', launcher_sh, re.S)
 assert case_block, 'run-story-hook.sh must gate "$EVENT" with a case allowlist'
 sh_tokens = set()
@@ -417,11 +417,11 @@ import sys
 from pathlib import Path
 for path in sorted(Path(sys.argv[1]).glob("*.toml")):
     text = path.read_text(encoding="utf-8")
-    if "1. `{项目根}/" not in text:
+    if "1. `{프로젝트 루트}/" not in text:
         continue  # this agent has no numbered reference list
-    assert text.count("1. `{项目根}/.codex/skills/story-setup/references/agent-references/") == 1, \
+    assert text.count("1. `{프로젝트 루트}/.codex/skills/story-setup/references/agent-references/") == 1, \
         f"{path.name}: numbered reference list must contain the canonical Codex path once"
-    for stale in (".claude/skills/", ".opencode/skills/", "{项目根}/skills/story-setup/references/agent-references/"):
+    for stale in (".claude/skills/", ".opencode/skills/", "{프로젝트 루트}/skills/story-setup/references/agent-references/"):
         assert stale not in text, f"{path.name}: stale cross-CLI reference fallback {stale}"
 PY
 

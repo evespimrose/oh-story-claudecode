@@ -29,13 +29,13 @@ ATX_HEADING_RE = re.compile(
     r"^[ ]{0,3}(#{1,6})[ \t]+(.*?)(?:[ \t]+#+[ \t]*)?$"
 )
 FENCE_OPEN_RE = re.compile(r"^[ ]{0,3}(`{3,}|~{3,})")
-# 编号标签的统一收尾条件，替代原来枚举 `:：.、)]—–-` 的终止符白名单：
-#   * `(?!\.?[0-9])` 禁止标签被回溯截断，`Step 1.5甲` 不会退化成 `Step 1`；
-#   * `(?!\w)` 与 STEP_LABEL_RE 原有的 `\b` 语义一致（数字后的 `\b` 就是它）。
-# 白名单会让 `### Step 6（校对）` 只对引用绑定器可见、对重编号器不可见，
-# fix --write 于是绕开该标题重排兄弟标题，写出重复/乱序编号还自称 PASS。
+# 번호 레이블의 통합 종료 조건으로, 기존의 `:：.、)]—–-` 열거형 종료 문자 허용 목록을 대체합니다.
+#   * `(?!\.?[0-9])` 레이블이 역추적되어 잘리는 것을 방지합니다. `Step 1.5A`가 `Step 1`로 축소되지 않습니다.
+#   * `(?!\w)` STEP_LABEL_RE의 기존 `\b` 의미 체계와 일치합니다(숫자 뒤의 `\b`가 바로 이것입니다).
+# 허용 목록을 사용하면 `### Step 6(교정)`이 참조 바인더(reference binder)에게만 보이고 번호 재설정기(renumberer)에게는 보이지 않게 됩니다.
+# 이로 인해 fix --write가 해당 제목을 건너뛰고 형제 제목들의 번호를 재배열하여, 중복되거나 순서가 어긋난 번호를 생성하면서도 PASS라고 표시하게 됩니다.
 LABEL_END = r"(?!\.?[0-9])(?!\w)"
-# 长得像 Step 标题但标签无法解析时用它兜底报错，任何未预料的分隔符都 fail closed。
+# Step 제목처럼 보이지만 레이블을 해석할 수 없을 때 최후의 수단으로 오류를 발생시키며, 예기치 않은 구분자는 모두 fail closed 처리합니다.
 LOOSE_STEP_HEADING_RE = re.compile(r"^Step[ \t]+[0-9]")
 STEP_HEADING_RE = re.compile(
     r"^Step(?P<space>[ \t]+)(?P<label>[0-9]+(?:\.[0-9]+)*)" + LABEL_END
@@ -650,9 +650,9 @@ def check_label_policy(document: Document, root: Path) -> list[Issue]:
 def unparsable_step_heading_issues(document: Document) -> list[Issue]:
     """Fail closed on headings that start like a Step but carry no usable label.
 
-    这类标题只对引用绑定器（STEP_LABEL_RE）可见、对重编号器（STEP_HEADING_RE）
-    不可见时，fix --write 会跳过它并重排兄弟标题，写出重复或乱序的编号，
-    而事后自检仍然报告 PASS。宁可拦住写入，也不静默漏过。
+    이러한 종류의 제목이 참조 바인더(STEP_LABEL_RE)에게만 보이고 번호 재설정기(STEP_HEADING_RE)에게는
+    보이지 않을 경우, fix --write는 이를 건너뛰고 형제 제목의 번호를 재설정하여 중복되거나 순서가 잘못된 번호를 작성합니다.
+    그 후 자체 검사에서는 여전히 PASS를 보고합니다. 쓰기를 차단하는 것이 자동으로 누락되는 것보다 낫습니다.
     """
 
     parsed_lines = {step.line_index for step in document.steps}
@@ -859,16 +859,16 @@ def transactional_write(changes: dict[Path, str]) -> None:
             replaced.append(path)
 
     except BaseException as exc:
-        # 必须是 BaseException：Ctrl-C 抛出的 KeyboardInterrupt 不是 Exception，
-        # 而下面的 finally 无条件删掉所有备份，只捕获 Exception 会让提交循环中途
-        # 被打断的那次改写永久半落盘且无从恢复。与 sync-opencode.py 的提交循环一致。
+        # 반드시 BaseException이어야 합니다. Ctrl-C로 발생하는 KeyboardInterrupt는 Exception이 아니며,
+        # 아래의 finally 블록에서 모든 백업을 무조건 삭제하므로, Exception만 캡처하면 커밋 루프 도중에
+        # 중단된 수정 사항이 영구적으로 불완전하게 저장되어 복구할 수 없게 됩니다. sync-opencode.py의 커밋 루프와 동일한 방식입니다.
         rollback_errors: list[str] = []
         for path in reversed(replaced):
             try:
                 os.replace(backups[path], path)
             except BaseException as rollback_exc:  # pragma: no cover - catastrophic I/O
-                # 单个文件回滚失败（或第二次 Ctrl-C）不得中断剩余文件的还原，
-                # 否则同样会留下半提交的工作树。
+                # 개별 파일의 롤백 실패(또는 두 번째 Ctrl-C)가 남은 파일의 복원을 중단해서는 안 되며,
+                # 그렇지 않으면 마찬가지로 불완전하게 커밋된 작업 트리가 남게 됩니다.
                 rollback_errors.append(f"{path}: {rollback_exc}")
         if rollback_errors:
             details = "; ".join(rollback_errors)

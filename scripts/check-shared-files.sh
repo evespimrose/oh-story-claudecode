@@ -1,7 +1,7 @@
 #!/bin/bash
-# check-shared-files.sh — 检查跨 skill 同名文件内容一致性
-# 扫描所有 skill 的 references/ 与 scripts/ 目录，找出同名文件并比较内容
-# 兼容 bash 3+（macOS）
+# check-shared-files.sh — skill 간 동일 이름 파일의 내용 일관성 검사
+# 모든 skill의 references/ 및 scripts/ 디렉토리를 스캔하여 동일한 이름의 파일을 찾아 내용을 비교함
+# bash 3+ 호환(macOS)
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
@@ -21,7 +21,7 @@ fi
 # - material-decomposition.md: long/short analyze use different decomposition pipelines
 # - quality-checklist.md: story-short-analyze's copy points to material-decomposition.md
 #   (absent in story-short-write); the two copies are intentionally skill-specific
-# - 4 genre files: story-short-analyze prepends a "## 用作拆文标尺时" analyst-lens
+# - 4 genre 파일: story-short-analyze가 "## 분절 척도로 사용할 때" analyst-lens를 앞에 추가함
 #   header (consumed as a reference standard for source-story evaluation, not a writer
 #   playbook). Writer skills don't get the header. Wholesale-ignored here because their
 #   non-analyst copies have not all been confirmed byte-identical.
@@ -35,7 +35,7 @@ genre-writing-techniques.md \
 AGENTS.md.tmpl hooks.json"
 
 # Analyst-divergent (basename): the story-short-analyze copy intentionally prepends the
-# "## 用作拆文标尺时" analyst-lens header, so it is dropped from the comparison set; all
+# "## 분절 척도로 사용할 때" analyst-lens 헤더이므로 비교 대상에서 제외됩니다. 모든
 # OTHER copies (writer skills + agent-references) must still stay byte-identical. Stricter
 # than a wholesale ignore — it still guards writer↔writer drift.
 ANALYST_DIVERGENT_NAMES="character-basics.md character-design-methods.md character-relations.md genre-writing-formulas.md"
@@ -45,10 +45,10 @@ ANALYST_DIVERGENT_NAMES="character-basics.md character-design-methods.md charact
 # references/genre-prose-cards/ card of the same basename (story-long-write + its story-setup
 # deployment mirror). Drop the genre-styles copy from the comparison; the prose-card copies
 # must still stay byte-identical. Stricter than a wholesale ignore.
-GENRE_STYLE_DIVERGENT_NAMES="双男主.md"
+GENRE_STYLE_DIVERGENT_NAMES="두 남주인공.md"
 
 # Longform-divergent (basename): story-long-write's copy carries a long-form-only
-# section (长篇单元情绪引擎) that references reader-contract-and-progression.md, which
+# reader-contract-and-progression.md를 참조하는 섹션(장편 단위 감정 엔진)으로, 이는
 # exists only under story-long-write; syncing it to the short-write / agent-references
 # copies would create a dangling reference. Drop the story-long-write copy from the
 # comparison; the short-write and agent-references copies must still stay byte-identical.

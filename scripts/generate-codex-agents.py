@@ -82,7 +82,7 @@ def adapt_body_for_codex(body: str, name: str) -> str:
         ".claude/skills/story-setup/references/agent-references/",
         ".codex/skills/story-setup/references/agent-references/",
     )
-    adapted = adapted.replace("当前 Claude 部署", "当前 Codex 部署")
+    adapted = adapted.replace("현재 Claude 배포", "현재 Codex 배포")
     adapted = re.sub(
         r"(?<![A-Za-z0-9_])/(story(?:-[a-z0-9]+)*)",
         lambda match: "$" + match.group(1),

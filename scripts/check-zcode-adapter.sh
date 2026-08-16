@@ -99,10 +99,10 @@ import json
 from pathlib import Path
 
 supported = {'SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PermissionRequest', 'PostToolUse', 'PostToolUseFailure', 'Stop'}
-# 事件 → 允许的 handler。只按集合校验 handler 名（"名字在白名单里就行"）等于放过
-# "SessionStart 挂 post-tool-prose-check" 这类整块复制粘贴后忘改 args[1] 的错：
-# story_zcode_hook.js 只看 process.argv[2] 分派，从不比对 hook_event_name，运行时表现是
-# 会话起点静默不注入上下文 / 写后检查拿到错 payload 后什么都不报。必须逐事件锁死。
+# 이벤트 → 허용된 handler. 집합으로만 handler 이름을 검증("이름이 화이트리스트에 있으면 통과")하는 것은 검증을 통과시키는 것과 같음
+# "SessionStart에 post-tool-prose-check 연결"처럼 통째로 복사해서 붙여넣은 후 args[1] 수정을 잊어버리는 오류:
+# story_zcode_hook.js는 process.argv[2]만 보고 분기하며 hook_event_name을 비교하지 않음. 런타임 동작은
+# 세션 시작 시 컨텍스트가 주입되지 않거나 / 작성 후 검사에서 잘못된 payload를 받아도 아무것도 보고하지 않음. 반드시 이벤트별로 고정해야 함.
 EVENT_HANDLERS = {
     'SessionStart': {'session-start'},
     'PreToolUse': {'pre-tool-prose-guard', 'pre-tool-commit-advisory'},
@@ -116,29 +116,29 @@ assert set(config['events']) == set(plugin)
 assert set(plugin) <= supported
 
 def flatten(events):
-    # 必须把事件名一起带出来：丢掉 event key 就没法把 handler 绑回它该服务的事件。
+    # 반드시 이벤트명을 함께 가져와야 함: event key를 누락하면 handler를 해당 서비스 이벤트에 다시 바인딩할 수 없음.
     return [(event, hook) for event, groups in events.items() for group in groups for hook in group['hooks']]
 
 plugin_hooks = flatten(plugin)
 workspace_hooks = flatten(config['events'])
 assert len(plugin_hooks) == len(workspace_hooks) == 4
 expected_routes = {(event, handler) for event, handlers in EVENT_HANDLERS.items() for handler in handlers}
-# 两份注册各自独立对表：只改 hooks.json 不改 config.json.patch（或反之）的漂移同样要红，
-# 二者是手工分开维护的，且 check-shared-files.sh 刻意把 hooks.json 排除在字节 parity 之外。
+# 두 등록 정보는 각각 독립적으로 대조됨: hooks.json만 수정하고 config.json.patch를 수정하지 않거나(또는 그 반대) 발생하는 드리프트(drift)도 똑같이 실패(Red) 처리해야 함.
+# 두 파일은 수동으로 별도 관리되며, check-shared-files.sh는 의도적으로 hooks.json을 바이트 단위 패리티(parity) 체크에서 제외함.
 for source, pairs in (('hooks.json', plugin_hooks), ('config.json.patch', workspace_hooks)):
     for event, hook in pairs:
         assert set(hook) <= {'type', 'command', 'args', 'timeoutMs'}
         assert hook['type'] == 'process' and hook['command'] == 'node'
         assert hook['args'][1] in EVENT_HANDLERS[event], (
-            f'{source}: {event} 路由到了错误的 handler', hook['args'][1], sorted(EVENT_HANDLERS[event]))
+            f'{source}: {event}가 잘못된 handler로 라우팅됨', hook['args'][1], sorted(EVENT_HANDLERS[event]))
     routes = {(event, hook['args'][1]) for event, hook in pairs}
     assert routes == expected_routes, (
-        f'{source}: event→handler 注册漂移', sorted(expected_routes - routes), sorted(routes - expected_routes))
+        f'{source}: event→handler 등록 드리프트', sorted(expected_routes - routes), sorted(routes - expected_routes))
 post_groups = plugin['PostToolUse']
 assert len(post_groups) == 1 and post_groups[0]['matcher'] == 'Bash|Write|Edit|ApplyPatch'
-# 路由测试（防"直调 runner 绕过 matcher"的假绿）：pre-tool-prose-guard 的 matcher 在 plugin
-# 与 workspace config 两份里必须一致，且能路由 test-zcode-hooks 会喂给它的每种工具——含
-# ApplyPatch（写正文的 apply-patch 目标必须真被 matcher 送进 handler，而不只是 runner 直调可拦）。
+# 라우팅 테스트("runner 직접 호출로 matcher 우회"로 인한 가짜 통과 방지): pre-tool-prose-guard의 matcher는 plugin
+# 및 workspace config 양쪽에서 일치해야 하며, test-zcode-hooks가 제공하는 모든 도구를 라우팅할 수 있어야 함 — 다음 포함:
+# ApplyPatch(본문을 작성하는 apply-patch 대상은 runner 직접 호출로 차단되는 것이 아니라, 실제로 matcher에 의해 handler로 전달되어야 함).
 import re
 def prose_guard_matcher(events):
     for group in events['PreToolUse']:
@@ -164,12 +164,12 @@ fi
 [ ! -e "$ROOT/rules" ] || fail "ZCode has no .zcode/rules discovery surface"
 
 assert_grep '\$story-long-write|\$story-setup' "$ROOT/AGENTS.md.tmpl" 'ZCode AGENTS template must document $skill invocation'
-assert_grep 'project custom agents unavailable.*solo|不执行项目.*custom agents' "$ROOT/AGENTS.md.tmpl" "ZCode AGENTS template must document solo fallback"
+assert_grep 'project custom agents unavailable.*solo|프로젝트.*custom agents를 실행하지 않음' "$ROOT/AGENTS.md.tmpl" "ZCode AGENTS template must document solo fallback"
 assert_grep 'target_cli = zcode|target_cli.*zcode' skills/story-setup/SKILL.md "story-setup must document zcode target_cli"
 assert_grep 'references/zcode/config\.json\.patch' skills/story-setup/SKILL.md "story-setup manifest missing ZCode config patch"
-# 组合安装验证代理（CI 无 ZCode 运行时）：插件 manifest 与 workspace config 注册同一批 hooks，
-# 部署算法必须记录二者互斥（装插件则跳过 config hooks 合并），否则 PreToolUse/PostToolUse 双触发。
-assert_grep 'hooks 互斥' skills/story-setup/SKILL.md "story-setup must document the plugin/workspace hooks mutex (skip config hooks merge when plugin installed, avoid double-firing)"
+# 조합 설치 검증 프록시(CI에는 ZCode 런타임 없음): 플러그인 manifest와 workspace config가 동일한 hooks 세트를 등록함.
+# 배포 알고리즘은 두 항목의 상호 배타성을 기록해야 하며(플러그인 설치 시 config hooks 병합 건너뜀), 그렇지 않으면 PreToolUse/PostToolUse가 중복 실행됨.
+assert_grep 'hooks 상호 배타적' skills/story-setup/SKILL.md "story-setup must document the plugin/workspace hooks mutex (skip config hooks merge when plugin installed, avoid double-firing)"
 assert_grep '\.zcode/skills/story-setup/references/agent-references' skills/story-setup/SKILL.md "story-setup missing ZCode reference path"
 
 for skill in story-long-write story-short-write story-long-analyze story-import story-deslop story-review; do

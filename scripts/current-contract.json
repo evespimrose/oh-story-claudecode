@@ -5,41 +5,41 @@
   "topic_decision_phase": 5,
   "progress_schema_version": 2,
   "primary_benchmark_artifacts": [
-    "剧情/情绪模块.md",
-    "剧情/节奏.md"
+    "플롯/감정모듈.md",
+    "플롯/리듬.md"
   ],
   "required_outline_sections": [
     {
-      "rule": "阶段位置",
-      "demo": "阶段位置"
+      "rule": "단계 위치",
+      "demo": "단계 위치"
     },
     {
-      "rule": "结构公式",
-      "demo": "本章结构公式"
+      "rule": "구조 공식",
+      "demo": "이번 장 구조 공식"
     },
     {
-      "rule": "禁止提前释放",
-      "demo": "本章禁止提前释放"
+      "rule": "사전 노출 금지",
+      "demo": "이번 장 사전 노출 금지"
     },
     {
-      "rule": "内容概括",
-      "demo": "内容概括（五段式）"
+      "rule": "내용 요약",
+      "demo": "내용 요약 (오단식)"
     },
     {
-      "rule": "情节安排",
-      "demo": "情节安排（多线）"
+      "rule": "플롯 편성",
+      "demo": "플롯 편성 (다선)"
     },
     {
-      "rule": "人物关系和出场顺序",
-      "demo": "人物关系和出场顺序"
+      "rule": "인물 관계와 등장 순서",
+      "demo": "인물 관계와 등장 순서"
     },
     {
-      "rule": "情节细化",
-      "demo": "情节细化"
+      "rule": "플롯 세분화",
+      "demo": "플롯 세분화"
     },
     {
-      "rule": "结尾设定和钩子",
-      "demo": "结尾设定和钩子"
+      "rule": "결말 설정과 훅",
+      "demo": "결말 설정과 훅"
     }
   ],
   "expected_demo_outline_count": 20

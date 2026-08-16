@@ -16,22 +16,22 @@ ATX_HEADING_RE = re.compile(r"^[ ]{0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+[ \t]*)?$")
 OPEN_FENCE_RE = re.compile(r"^[ ]{0,3}(`{3,}|~{3,})(.*)$")
 LINK_RE = re.compile(r"!?\[[^\]\n]*\]\(([^)\n]+)\)")
 INLINE_CODE_RE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
-# 只还原“强调符完整包住一条 skill 内路径”的形态。开始/结束 marker 必须同宽，
-# 且两边不能粘着 ASCII 路径字符；这样 CJK 连写的 references/*.md与references/*.json
-# 不会把两个 glob 星号跨片段配成一对强调符。
+# 오직 "강조 기호가 하나의 skill 내 경로를 완전히 감싸는" 형태만 복원합니다. 시작/종료 marker는 반드시 같은 너비여야 하고,
+# 양쪽에 ASCII 경로 문자가 붙을 수 없습니다. 그래야 CJK 연속 텍스트의 references/*.md와 references/*.json
+# 이 두 개의 glob 별표를 강조 기호 한 쌍으로 잘못 조합하지 않습니다.
 EMPHASIS_PATH_RE = re.compile(
     r"(?<![A-Za-z0-9_./-])(?P<marker>\*{1,2})"
     r"(?P<path>(?:[a-z0-9_-]+/)?(?:references|scripts|assets)/[^\s*]+)"
     r"(?P=marker)(?![A-Za-z0-9_./-])"
 )
 SKILL_PATH_PREFIX = r"(?:[a-z0-9_-]+/)?(?:references|scripts|assets)/"
-# 中文说明常把多个路径写成 `references/*.md与assets/*.json`。重复体必须在“连接词 +
-# 下一个路径前缀”前停住，否则首个 match 会把整串吞掉，normalize_path_token 再于第一个
-# `*` 截成 references/，后面的缺失路径永远没有独立参与校验。
+# 중문 설명에서는 여러 경로를 `references/*.md와assets/*.json`처럼 씁니다. 반복 부분은 "연결 단어 +
+# 다음 경로 접두사" 앞에서 멈춰야 하며, 그렇지 않으면 첫 번째 match가 전체 문자열을 가져가고, normalize_path_token이 첫 번째
+# `*` 는 references/ 로 잘려서, 뒤의 누락된 경로는 독립적인 검증에 참여하지 않습니다.
 SKILL_PATH_RE = re.compile(
     r"(?<![A-Za-z0-9_-])(?P<path>"
     + SKILL_PATH_PREFIX
-    + r"(?:(?!(?:与|和|及|、)"
+    + r"(?:(?!(?:with|and|or|、)"
     + SKILL_PATH_PREFIX
     + r")[^\s`\"')\]><「（，。；：、])+)"
 )
@@ -42,19 +42,19 @@ INLINE_MD_PATH_RE = re.compile(
 AGENT_REF_RES = (
     re.compile(r"subagent_type\s*:\s*\"([a-z][a-z0-9_-]*)\""),
     re.compile(r"subagent_type\s*=\s*\"([a-z][a-z0-9_-]*)\""),
-    # 括号形态同时接受全角/半角括号与冒号（正文标注常写「（subagent_type: x）」），
-    # 引号可选。保留括号收尾锚点：兼容性说明里大量出现裸 `subagent_type` 词条，
-    # 不带括号/引号锚点的裸形态会把这些非引用语境误抓成 agent 引用。
+    # 괄호 형태는 전각/반각 괄호와 콜론을 동시에 허용합니다 (본문 주석에서는 보통 「（subagent_type: x）」 형태로 작성됨).
+    # 인용부호는 선택사항입니다. 괄호 닫음 앵커포인트를 유지합니다: 호환성 설명에서 `subagent_type` 항목이 많이 나타나므로,
+    # 괄호/인용부호가 없는 맨 형태는 이러한 비인용 문맥을 agent 참조로 잘못 포착합니다.
     re.compile(r"[（(]subagent_type\s*[:：]\s*\"?([a-z][a-z0-9_-]*)\"?\s*[)）]"),
 )
-# 「见 SKILL.md + 章节名」是无法被链接校验的文本猜测：SKILL.md 改标题后引用会静默失效。
-# 分隔符两侧统一用 \s*——中文正文里「详见SKILL.md的阶段二流程」不带空格，恰是最常见的写法，
-# 只认 `\s+` 会让这类写法整体绕过本规则。
-# 章节名首字符排除括号/引号/竖线/井号：`见 SKILL.md「输出目录结构」`、`见 SKILL.md（…）`、
-# 表格里的 `见 SKILL.md）|` 是原样引用标题或句子收尾，不属于本规则要清理的模糊猜测。
+# 「SKILL.md + 섹션 이름 참조」는 링크 검증이 불가능한 텍스트 추측입니다: SKILL.md의 제목이 변경된 후 참조는 자동으로 실패합니다.
+# 구분자 양쪽에 \s* 통일 적용——중문 본문의 「SKILL.md의 단계2 프로세스를 자세히 보기」는 공백이 없으며, 이것이 바로 가장 일반적인 작성 방식입니다.
+# `\s+`만 인식하면 이러한 작성 방식이 본 규칙을 완전히 우회하게 됩니다.
+# 섹션명 첫 문자에서 괄호/인용부호/파이프/해시 제외: `SKILL.md「출력 디렉터리 구조」 참조`、`SKILL.md（…） 참조`、
+# 테이블의 `SKILL.md）|` 참조는 제목이나 문장 끝을 원래대로 인용한 것이므로 본 규칙에서 정리할 모호한 추측에 해당하지 않습니다.
 UNLINKED_SECTION_RE = re.compile(
-    r"(?:见|参考|参见|详见)\s*SKILL\.md\s*"
-    r"[^\s，。；;、（）()「」『』【】《》〈〉\[\]{}<>#|\"'“”‘’]"
+    r"(?:见|참조|참조|상세 참조)\s*SKILL\.md\s*"
+    r"[^\s，。；;、（）()「」『』【】《》〈〉\[\]{}<>#|\"'""'']"
     r"[^，。；;\n]*"
 )
 EXTERNAL_SCHEMES = ("http://", "https://", "ftp://", "mailto:", "data:", "tel:")
@@ -63,16 +63,16 @@ DEPLOYED_RUNTIME_PREFIXES = (".claude/", ".codex/", ".opencode/")
 # skills may reference its launcher; every other cross-skill file path remains
 # forbidden so domain workflows stay self-contained.
 FOUNDATION_SKILL_REFERENCES = frozenset({"browser-cdp"})
-# 变更日志按定义记录历史状态：其内联路径是「当时」的引用（含已删/已移动/跨 skill 的旧文件），
-# 不是当前运行时依赖，不作跨 skill / 死链校验（与 check-current-skill-contracts.py 的跳过一致）。
+# 변경 로그는 정의에 따라 과거 상태를 기록합니다. 인라인 경로는 당시의 참조입니다(삭제됨/이동됨/다른 skill의 구 파일 포함).
+# 현재 런타임 의존성이 아니므로 skill 간 검증이나 데드 링크 검증을 수행하지 않습니다(check-current-skill-contracts.py의 스킵 규칙과 동일).
 CHANGELOG_DOCS = frozenset({"UPGRADING.md", "CHANGELOG.md"})
 EXTERNAL_URL_RE = re.compile(
     r"(?i)\b(?:https?|ftp)://[^\s<>\"'`]+"
 )
-# 花括号枚举（含逗号）是「逐个点名」，可以展开成具体路径；`{题材}` 这种单占位符不是枚举。
+# 중괄호 열거형(쉼표 포함)은 "개별 명시"이며, 구체적 경로로 전개할 수 있습니다. `{제재}` 같은 단일 자리 표시자는 열거형이 아닙니다.
 BRACE_LIST_RE = re.compile(r"\{([^{}/]*,[^{}/]*)\}")
-# 跨 skill 扫描覆盖全部文本资产。模板（*.md.tmpl / *.json.patch）与前端资产同样会被
-# story-setup 部署进作者项目，漏扫等于把「skill 自包含」这条红线在部署面上放空。
+# skill 간 검사는 모든 텍스트 자산을 다룹니다. 템플릿(*.md.tmpl / *.json.patch)과 프론트엔드 자산은 story-setup으로 작가 프로젝트에 배포되므로
+# 검사 누락은 배포 단계에서 "skill 자체 포함"이라는 레드라인을 무효화하는 것과 같습니다.
 SKILL_TEXT_SUFFIXES = {
     ".cmd",
     ".css",
@@ -171,11 +171,11 @@ def strip_inline_markup(line: str) -> str:
 
 
 def path_alternatives(raw: str) -> list[str]:
-    """把点名枚举 `{a,b,c}` 展开成逐条路径。
+    """점명 열거 `{a,b,c}`를 개별 경로로 전개합니다.
 
-    `{story_codex_hook.py,run-story-hook.sh,run-story-hook.cmd}` 是作者逐个点名的文件，
-    等价于分别写三条引用：展开后每条都参与存在性与可达性校验。`{题材}` 这类单占位符
-    不是枚举（没有点名任何文件），保持原样交给 normalize_path_token 当通配处理。
+    `{story_codex_hook.py,run-story-hook.sh,run-story-hook.cmd}`는 저자가 하나하나 점명한 파일이며,
+    세 개의 참조를 각각 작성하는 것과 동등합니다. 전개 후 각각이 존재성 및 도달성 검증에 참여합니다. `{주제}`과 같은 단일 자리표시자는
+    열거가 아니며(어떤 파일도 점명하지 않음), normalize_path_token에 와일드카드 처리로 그대로 전달됩니다.
     """
 
     match = BRACE_LIST_RE.search(raw)
@@ -246,11 +246,11 @@ def parse_document(path: Path) -> Document:
                 SourceRef(line=line_number, raw=strip_link_title(match.group(1)), kind="link")
             )
 
-        # 外部 URL 命名远程资源，不是仓库内 skill 路径（与 cross_skill_path_issues 同一约定）：
-        # 两条扫描通道都必须先剥掉，否则 URL 尾段（.../references/x.md）会被当成本地路径误报。
-        # 正文里的加粗/斜体包裹也要还原：`**references/x.md**` 的 `*` 会被字符类吃进 token，
-        # 让它被误判成通配符并截断到父目录，从而跳过存在性校验。行内代码内不作强调还原——
-        # 反引号里的 `*` 是字面通配符。
+        # 외부 URL로 명명된 원격 리소스이며, 저장소 내 skill 경로가 아닙니다 (cross_skill_path_issues와 동일한 규칙):
+        # 두 스캔 채널 모두 먼저 제거해야 합니다. 그렇지 않으면 URL 끝 부분 (.../references/x.md)이 로컬 경로로 오인되어 거짓 양성이 발생합니다.
+        # 본문의 굵게/기울임 래퍼도 복원해야 합니다: `**references/x.md**`의 `*`이 문자 클래스에 의해 token으로 포함되어
+        # 와일드카드로 오인되어 상위 디렉토리로 잘려서 존재 여부 검증을 건너뜁니다. 인라인 코드 내에서는 강조 복원을 하지 않습니다 —
+        # 백틱 안의 `*`은 리터럴 와일드카드입니다.
         prose_without_code = EMPHASIS_PATH_RE.sub(
             r"\g<path>", EXTERNAL_URL_RE.sub("", LINK_RE.sub("", INLINE_CODE_RE.sub("", line)))
         )
@@ -304,7 +304,7 @@ def resolve_ref(
     root: Path,
     documents: dict[Path, Document],
 ) -> tuple[Path | None, str, bool, bool]:
-    """返回（目标, 锚点, 是否本地引用, 是否通配引用）。"""
+    """(목표, 앵커, 로컬 참조 여부, 와일드카드 참조 여부)를 반환합니다."""
 
     raw = ref.raw.strip()
     if not raw or is_external_ref(raw):
@@ -470,7 +470,7 @@ def validate_skill(
     resolved_by_document: dict[Path, set[Path]] = {path.resolve(): set() for path in markdown_paths}
 
     for document in list(documents.values()):
-        # 变更日志的历史内联路径不作死链/跨 skill 校验（仍可作为其它文件的链接目标）
+        # 변경로그의 히스토리 인라인 경로는 데드 링크/크로스 skill 검사를 수행하지 않습니다(다른 파일의 링크 대상으로는 여전히 사용 가능).
         if document.path.name in CHANGELOG_DOCS:
             continue
         seen_refs: set[tuple[int, str, str]] = set()
@@ -527,9 +527,9 @@ def validate_skill(
                     )
                 )
                 continue
-            # 通配引用只声明范围（`references/*` 说的是「本 skill 的参考目录」），并没有点名
-            # 任何文件；把它解析出的目录当作可达起点会把整棵子树标成「已被引用」，
-            # dead-reference 检查对该 skill 就永久失效。点名枚举已在 path_alternatives 展开。
+            # 와일드카드 참조는 범위만 선언합니다(`references/*`는 "본 skill의 참고 디렉토리"를 의미하며), 특정 파일을 지정하지 않습니다.
+            # 파싱된 디렉토리를 도달 가능한 시작점으로 처리하면 전체 서브트리가 "참조됨"으로 표시되고,
+            # 해당 skill에 대해 dead-reference 검사가 영구적으로 비활성화됩니다. 파일 이름 지정은 이미 path_alternatives에서 전개되었습니다.
             if not (dynamic and target.is_dir()):
                 resolved_by_document.setdefault(document.path.resolve(), set()).add(target)
             if fragment:
@@ -575,7 +575,7 @@ def validate_skill(
         queue: list[Path] = []
 
         def is_reference_content(candidate: Path) -> bool:
-            # .gitkeep 是占位符；__pycache__ 是 .gitignore 的构建产物，都不是参考内容。
+# .gitkeep은 플레이스홀더이고 __pycache__는 .gitignore의 빌드 산물이므로 둘 다 참고 내용이 아닙니다.
             return candidate.name != ".gitkeep" and "__pycache__" not in candidate.parts
 
         def add_target(target: Path) -> None:

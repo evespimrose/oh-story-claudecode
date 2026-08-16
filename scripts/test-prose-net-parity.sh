@@ -1,28 +1,28 @@
 #!/bin/bash
-# test-prose-net-parity.sh — 正文兜底「轻量确定性网」四端 parity 守卫
-# 网在四处各有实现：① Claude check-prose-after-write.sh 内嵌 python；② Codex
-# story_codex_hook.py；③ OpenCode plugin.ts；④ ZCode story_zcode_hook.js。
-# （③④ 的纯逻辑现共用各自的 story_hook_core.js companion，字节一致。）
-# 四份必须同检同放。本测试五层保证：
-#   A. 规范串一致（CI 安全、零运行时依赖）：每条 net 正则/常量/阈值的规范文本必须在四份里都出现，
-#      改一处漏改另一处即 fail——直接锚定漂移（参照 check-hook-regex-sync.sh 的做法）。
-#   B. 功能 parity（best-effort，无 TS 运行时则自跳过）：codex python 网、opencode TS 网、
-#      zcode JS 网在同一组 fixture 上逐字相等。
-#   C. 命令函数 parity（CI 硬保证）：正文目标抽取、apply-patch 目标、git commit 侦测三个纯函数
-#      在 codex python 与 zcode JS 间逐字相等——锁住此前无守卫、已漂移的手抄逻辑。
-#   D. Claude 归核回归守卫（CI 硬保证）：Claude 的 4 个 bash hook 不再内嵌 heredoc python，
-#      改调本目录同一份 node 共享核 story_hook_core.js（经 story_hook_cli.js）。与 zcode/opencode
-#      同一份、已由 B/C 锁到 codex，故 claude==codex 结构性闭环。守两条防回退：hook 里不得再出现
-#      heredoc python，且必须经 story_hook_cli.js 调核。字节一致另由 check-shared-files 保证。
-#   E. 未归核面 parity（CI 硬保证）：staged markdown warnings 与大纲阻断判定未归核——codex
-#      python 与 JS core 各有一份实现，在 fixture 上逐字比对（大小写变体命中、警告/阻断文案），
-#      语义/文案以 JS core 为准。Claude 端这两面另有纯 bash 实现（validate-story-commit.sh 的
-#      grep 段、guard-outline-before-prose.sh 的判定段），无跨端逐字锁，行为由
-#      check-story-setup-deployment.sh / test-hook-encoding-portable.sh 的运行回归覆盖。
-#   F. Claude bash 写正文守卫 ↔ JS core 行为 parity（CI 硬保证）：按「同一工程同一次写入，
-#      bash 拦不拦 == JS 核拦不拦」逐场景比对，并锚死每个场景的期望方向（否则两端一起漏拦
-#      也能 diff 干净）。补上 E 说的那条空档——#283 给另三端加追踪门时 Claude 侧静默漏了
-#      一整版（issue #305），正是因为 bash 那一面没有任何跨端断言。
+# test-prose-net-parity.sh — 정문 폴백 「경량 결정성 네트」 네 플랫폼 parity 감시
+# 네트는 각 플랫폼에 구현되어 있습니다: ① Claude check-prose-after-write.sh 내장 python; ② Codex story_codex_hook.py; ③ OpenCode plugin.ts; ④ ZCode story_zcode_hook.js.
+# (③④의 순수 로직은 각각 story_hook_core.js companion을 공유하며, 바이트 수준에서 일치합니다.)
+# 네 개 파일은 모두 동시에 검증하고 동시에 배포해야 합니다. 본 테스트는 5단계 보증을 제공합니다:
+
+#   A. 규범 문자열 일치(CI 안전, 제로 런타임 의존성): 각 net 정규식/상수/임계값의 규범 텍스트는 네 파일에 모두 나타나야 합니다.
+#      한 곳을 수정하고 다른 곳을 빠뜨리면 fail입니다——직접 드리프트를 앵커링합니다(check-hook-regex-sync.sh의 방식 참조).
+#   B. 기능 parity(best-effort, TS 런타임이 없으면 자동 건너뜀): codex python 네트, opencode TS 네트,
+#      zcode JS 네트이 동일한 fixture 그룹에서 문자 단위로 일치합니다.
+#   C. 명령 함수 parity(CI 강력한 보증): 본문 대상 추출, apply-patch 대상, git commit 감지 세 개의 순수 함수
+#      codex python과 zcode JS 간의 문자 단위 정확한 일치——이전의 보호되지 않은, 이미 표류한 수기 로직을 잠금.
+#   D. Claude 핵심으로의 귀환 보호(CI 강력 보장)：Claude의 4개 bash hook은 더 이상 heredoc python을 내장하지 않음,
+#      대신 본 디렉터리의 동일한 node 공유 핵심 story_hook_core.js(story_hook_cli.js를 통함)를 호출. zcode/opencode
+#      동일 파일, 이미 B/C에 의해 codex로 잠김, 따라서 claude==codex 구조적 폐루프. 두 가지 회귀 방지 규칙：hook 내에서 더 이상
+#      heredoc python이 나타나면 안 되며, 반드시 story_hook_cli.js를 통해 핵심을 호출해야 함. 바이트 일치는 별도로 check-shared-files가 보장.
+#   E. Prose-net parity（CI 하드 보장）：staged markdown warnings와 대강 차단 판정이 일관되지 않음——codex
+#      python과 JS core 각각 하나의 구현을 가지고 있으며, fixture 위에서 문자 단위로 비교（대소문자 변형 적중, 경고/차단 문안）,
+#      의미/문안은 JS core를 기준으로 합니다. Claude 측 이 두 가지는 별도의 순수 bash 구현（validate-story-commit.sh의
+#      grep 세션, guard-outline-before-prose.sh의 판정 세션）을 가지고 있으며, 클라이언트 간 문자 단위 잠금이 없고, 동작은
+#      check-story-setup-deployment.sh / test-hook-encoding-portable.sh의 실행 회귀 커버에 의해 결정됩니다.
+#   F. Claude bash 본문 가드 ↔ JS core 동작 parity(CI 강제 보증): 「동일 프로젝트 동일 쓰기에서
+#      bash 차단 여부 == JS 핵심 차단 여부」를 장면별로 비교하고, 각 장면의 예상 방향을 고정(그렇지 않으면 양쪽 모두 차단 누락
+#      도 diff가 깔끔해짐). E가 언급한 빈틈 메우기 — #283에서 다른 세 엔드포인트에 추적 게이트 추가할 때 Claude 쪽에서 무음 누락
+#      된 전체 버전(issue #305)이 바로 bash 측에 크로스 엔드포인트 assertion이 전혀 없었기 때문.
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
@@ -44,25 +44,25 @@ done
 
 fails=0
 
-# ── A. 规范串三端一致 ──────────────────────────────────────────────
-# 每条 net 正则的规范子串（足以唯一锚定该模式）+ 关键常量/阈值。必须在三份文件里都 grep -F 到。
+# ── A. 규범 문자열 세 엔드포인트 일관성 ──────────────────────────────────────────────
+# 각 net 정규식의 정규화 부분 문자열(패턴을 유일하게 고정하기에 충분함) + 주요 상수/임계값. 세 파일 모두에서 grep -F로 찾을 수 있어야 함.
 CANON=(
-  # 软信号（拒绝语 / AI 自指）
-  # 型号后缀可选段是 AI 自指的必需部分（作为一个AI语言模型/AI助手/AI模型/人工智能语言模型），
-  # 缺了它前视断言会紧跟在「AI」后面看到「语/助/模」，最典型的退化开场整类漏检。
-  '作为(一个)?(AI|人工智能|大?语言模型|智能助手|聊天助手)(?:语言模型|大?模型|助手|机器人)?(?='
-  '我(无法|不能)(继续(写|创作|生成|下去|输出)?'
+  # 약한 신호(거부 문구 / AI 자기 지칭)
+  # 모델 접미사 선택 부분은 AI 자기 지칭의 필수 요소(AI 언어 모델/AI 어시스턴트/AI 모델/인공지능 언어 모델로서),
+  # 이것이 없으면 전방 탐색 단언이 「AI」 직후에 「언어/조수/모델」을 볼 수 있어서 가장 전형적인 성능 저하 시작 유형 누락.
+  '(일개)?(AI|인공지능|대?언어모델|지능조수|채팅조수)(?:언어모델|대?모델|조수|로봇)?(?='
+  '나(는|가) (계속(쓰|창작|생성|하|출력)?(을|를) (할 수 없|못하)'
   "Sure|Certainly|Here'?s|As an AI|I (?:cannot|can't|am unable|apologize)"
-  # 硬信号（占位 / 工程词 / 乱码）
-  '(此处|以下|这里|下文|后续)?[^）)]{0,10}(省略|略去|略过)'
-  '(TODO|占位符|placeholder|待补充|此处待填|此处待补)'
-  '(细纲|情节点|卷纲|功能标签|目标情绪|字数目标|章首钩子|章尾钩子|任务描述)'
-  # 常量 / 阈值（截断终止标点集、对话引号、复读最短可见长度）
-  '。！？…”』」）)!?.~—'
+  # 하드 신호(자리 표시자 / 엔지니어링 용어 / 깨진 텍스트)
+  '(여기|아래|이곳|다음|이후)?[^）)]{0,10}(생략|건너뜀|넘어감)'
+  '(TODO|자리 표시자|placeholder|작성 필요|여기 작성|여기 작성 필요)'
+  '(세부 개요|플롯 포인트|권 개요|기능 레이블|목표 감정|글자 수 목표|챕터 시작 훅|챕터 끝 훅|작업 설명)'
+  # 상수 / 임계값(종료 구두점 집합 자르기, 대화 인용부호, 반복 최소 표시 길이)
+  '。！？…"』」）)!?.~—'
   '「'
   '>= 8'
-  # 字数欠账：细纲「字数目标」抽取 + 90% 门
-  '字数目标[^0-9]{0,6}(\d{3,6})'
+  # 글자 수 미달: 세부 개요 「글자 수 목표」 추출 + 90% 기준
+  '글자 수 목표[^0-9]{0,6}(\d{3,6})'
 )
 for needle in "${CANON[@]}"; do
   for f in "$CLAUDE" "$CODEX" "$OPENCODE" "$ZCODE"; do
@@ -84,15 +84,15 @@ for needle in "${CANON[@]}"; do
     if [ "$f" = "$CLAUDE" ] && grep -Fq "$needle" "$CLAUDE_CORE"; then
       continue
     fi
-    echo "FAIL: net 规范串缺失/漂移 — 「${needle}」未出现在 $(basename "$f")" >&2
+    echo "FAIL: net 규범 문자열 누락/편차 — 「${needle}」이(가) $(basename "$f")에 나타나지 않음" >&2
     fails=$((fails + 1))
   done
 done
-# 复读阈值在 JS 里写作 `sa.length >= 8`，python 里 `len(sa) >= 8`；上面的 '>= 8' 已覆盖两者。
+# 반복 임계값은 JS에서 `sa.length >= 8`로, python에서 `len(sa) >= 8`으로 작성됨; 위의 '>= 8'이 둘 다 포함함.
 
-# ── B. 功能 parity（codex python 网 vs opencode TS 网），best-effort ──
-# TS 运行：优先 node 原生类型擦除（node ≥ 22.6 的 --experimental-strip-types），否则 npx esbuild；
-# 都没有则跳过 B（A 已给出 CI 安全的硬保证）。
+# ── B. 기능 parity(codex python 망 vs opencode TS 망), best-effort ──
+# TS 실행: node 기본 타입 제거 우선(node ≥ 22.6의 --experimental-strip-types), 아니면 npx esbuild;
+# 둘 다 없으면 B를 건너뜀(A가 이미 CI 안전 보장을 제공함).
 run_functional() {
   command -v node >/dev/null 2>&1 || return 1
   command -v python3 >/dev/null 2>&1 || return 1
@@ -101,47 +101,47 @@ run_functional() {
 
   cat > "$tmp/fixtures.json" <<'EOF'
 {
-  "clean": "江晨睁开眼天还没亮。\n他要快要狠要赢这是唯一的活路。\n「作为AI管家，我劝你别白费力气。」\n他握紧拳头走向门口。",
-  "truncate": "江晨握紧拳头慢慢走向门口。\n江晨冲过去一拳砸在",
-  "refuse": "夜色压下来。\n作为AI我无法继续创作这部分内容。",
-  "ai_selfref_model": "夜色压下来。\n作为一个AI语言模型，我需要提醒您接下来的情节包含暴力描写。",
-  "ai_selfref_assistant": "他推门进来。\n作为一个AI助手，这段内容涉及敏感话题。",
-  "ai_selfref_era_ok": "作为一个人工智能时代的产物，他对孤独习以为常。\n他把灯关了。",
-  "terminal_banner_ok": "他抬起手按在光屏上。\n【叮！任务完成，奖励已发放】",
-  "terminal_ascii_quote_ok": "他站起来推开门。\n他说：\"我回来了。\"",
-  "toxic_quote_codename_ok": "他把烟头按进烟灰缸。\n这一战注定是「血屠」的开端，没人料到后来会那样。",
-  "engword": "街灯一盏盏亮起。\n按照本章细纲的情节点他该出场了。",
-  "repeat": "他握紧拳头一步步走过去缓缓逼近。\n他握紧拳头一步步走过去缓缓逼近。\n他终于停下了。",
-  "placeholder": "他打开门。\n（此处省略三百字打斗描写）他赢了。",
-  "english_ai": "他说。\nI cannot continue writing this scene for you.",
-  "parallel": "要么生，要么死。\n要么战，要么逃。\n要么赢，要么输。\n他做出了选择。",
-  "danmaku": "前方高能！\n前方高能！预警。\n这一段我哭了。\n作者加更！",
-  "toxic_voice": "他开口了。\n声音不高，第一句却稳稳压住了整个大厅。",
-  "toxic_negation": "没有伴奏，没有和声，没有提词器。\n台下静了三秒。",
-  "toxic_cross_negation": "不是嚎啕大哭。\n\n也不是扯着嗓子喊不舍。\n\n只是一个人走远了，留在原地的人还站着。",
-  "toxic_cross_negation_dialogue_ok": "“不是嚎啕大哭。”\n\n“也不是扯着嗓子喊不舍。”\n\n“只是舍不得。”",
-  "toxic_reverse_notis": "是真嗓子，不是修音修出来的。\n他清了清嗓子接着唱。",
-  "toxic_forward_notis": "不是没有想过退路，而是根本没有退路。\n他把门关上了。",
-  "toxic_trailer": "他放下麦克风朝台下鞠了一躬。\n没人知道，这才刚刚开头。",
-  "toxic_trailer_summary": "他放下麦克风朝台下鞠了一躬。\n这一切都结束了。",
-  "toxic_trailer_summary_fate": "她把账单折好塞回包里。\n这一夜注定无人入眠。",
-  "toxic_bare_realize_ok": "那一刻我终于明白，母亲当年为什么总在夜里哭。\n我抓起外套就往门口走。",
-  "toxic_summary_subclause_ok": "等这一切结束了，我们就能过上平静幸福的生活了。\n他把门带上了。",
-  "toxic_summary_idiom_ok": "世间的这一刻，所有人都接受了命中注定的结局！\n他转身走了。",
-  "toxic_dialogue_ok": "「没人知道。」\n他笑了笑接着往前走。",
-  "toxic_eitheror_ok": "不是生就是死，他认了。\n他推门走了进去。",
-  "toxic_affirm_ok": "是啊，不是他的错。\n他把灯关了。",
-  "toxic_shibushi_ok": "他问自己是不是听错了，是不是灯光太晃。\n他揉了揉眼睛。",
-  "toxic_question_ok": "是不是他干的，不是我干的。\n他说不清。",
-  "toxic_rhetorical_ok": "是挺好的一件事，不是吗。\n他点了点头。",
-  "toxic_curtain_ok": "钟声再度响起，比赛正式拉开序幕。\n他站上了台。",
-  "toxic_quote_mid_ok": "她的声音不大好听，被人截成“名场面”，但她不在乎。\n台下没有掌声，没有“安可”声，只有此起彼伏的咳嗽。",
-  "toxic_multi_tail_ok": "是他的错，不是我的错，不是吗。\n他点了点头。",
-  "toxic_exempt_marker_ok": "# 第1章\n<!-- 去味:跳过 -->\n没有伴奏，没有和声，没有提词器。",
-  "toxic_exempt_fullwidth_ok": "# 第1章\n<!-- 去味：跳过 -->\n没有伴奏，没有和声，没有提词器。",
-  "toxic_exempt_other_nets": "# 第1章\n<!-- 去味:跳过 -->\n没有伴奏，没有和声，没有提词器。\n按照本章细纲的情节点他该出场了。",
-  "toxic_astral_window_ok": "没人知道他练了多少年。\n“第1排😀😀😀😀😀😀😀😀😀😀”\n“第2排😀😀😀😀😀😀😀😀😀😀”\n“第3排😀😀😀😀😀😀😀😀😀😀”\n“第4排😀😀😀😀😀😀😀😀😀😀”\n“第5排😀😀😀😀😀😀😀😀😀😀”\n“第6排😀😀😀😀😀😀😀😀😀😀”\n“第7排😀😀😀😀😀😀😀😀😀😀”\n“第8排😀😀😀😀😀😀😀😀😀😀”\n“第9排😀😀😀😀😀😀😀😀😀😀”\n“第10排😀😀😀😀😀😀😀😀😀😀”\n“第11排😀😀😀😀😀😀😀😀😀😀”\n“第12排😀😀😀😀😀😀😀😀😀😀”\n“第13排😀😀😀😀😀😀😀😀😀😀”\n“第14排😀😀😀😀😀😀😀😀😀😀”\n“第15排😀😀😀😀😀😀😀😀😀😀”\n“第16排😀😀😀😀😀😀😀😀😀😀”\n“第17排😀😀😀😀😀😀😀😀😀😀”\n“第18排😀😀😀😀😀😀😀😀😀😀”\n“第19排😀😀😀😀😀😀😀😀😀😀”\n“第20排😀😀😀😀😀😀😀😀😀😀”\n“第21排😀😀😀😀😀😀😀😀😀😀”\n“第22排😀😀😀😀😀😀😀😀😀😀”\n“第23排😀😀😀😀😀😀😀😀😀😀”\n“第24排😀😀😀😀😀😀😀😀😀😀”\n“第25排😀😀😀😀😀😀😀😀😀😀”\n“第26排😀😀😀😀😀😀😀😀😀😀”\n“第27排😀😀😀😀😀😀😀😀😀😀”\n“第28排😀😀😀😀😀😀😀😀😀😀”\n“第29排😀😀😀😀😀😀😀😀😀😀”\n“第30排😀😀😀😀😀😀😀😀😀😀”",
-  "toxic_trailer_window_ok": "没人知道他练了多少年。\n江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。江晨把这段视频剪了又剪从凌晨剪到天亮每一帧都抠得死死的。\n他把琴盖合上，起了身。"
+  "clean": "강진이 눈을 떴지만 아직 날이 밝지 않았다.\n그는 빨라야 하고, 준해야 하고, 이겨야 한다. 이것이 유일한 살 길이다.\n「AI 집사로서 무의미한 시도는 그만두라고 조언합니다.」\n그는 주먹을 쥐고 문 쪽으로 걸어갔다.",
+  "truncate": "강진이 주먹을 쥐고 천천히 문 쪽으로 걸어갔다.\n강진이 달려가 한 주먹을 날렸다.",
+  "refuse": "밤의 어둠이 내려앉았다.\nAI로서 이 부분의 창작을 계속할 수 없습니다.",
+  "ai_selfref_model": "밤의 어둠이 내려앉았다.\nAI 언어 모델로서 다음 전개에 폭력 표현이 포함되어 있음을 알려드립니다.",
+  "ai_selfref_assistant": "그가 문을 밀고 들어왔다.\nAI 어시스턴트로서 이 콘텐츠는 민감한 주제를 다루고 있습니다.",
+  "ai_selfref_era_ok": "인공지능 시대의 산물인 그는 고독함에 익숙했다.\n그는 불을 껐다.",
+  "terminal_banner_ok": "그는 손을 들어 광화면에 얹었다.\n【딩! 작업 완료, 보상이 지급되었습니다】",
+  "terminal_ascii_quote_ok": "그는 일어나 문을 밀어 열었다.\n그가 말했다: \"나 돌아왔어.\"",
+  "toxic_quote_codename_ok": "그는 담배꽁초를 재떨이에 눌러 끄웠다.\n이 전투는 필연적으로 「블러드 슬로터」의 시작이었고, 아무도 나중에 그렇게 될 줄은 몰랐다.",
+  "engword": "가로등이 하나둘 켜졌다.\n본장 세부 시놉시스의 플롯 포인트에 따르면 그가 등장할 차례였다.",
+  "repeat": "그는 주먹을 쥐고 한 발씩 다가갔다. 천천히 다가갔다.\n그는 주먹을 쥐고 한 발씩 다가갔다. 천천히 다가갔다.\n그는 마침내 멈추었다.",
+  "placeholder": "그는 문을 열었다.\n（여기서는 삼백 자의 격투 장면을 생략합니다）그는 이겼다.",
+  "english_ai": "그가 말했다.\nI cannot continue writing this scene for you.",
+  "parallel": "죽거나 살거나.\n싸우거나 도망치거나.\n이기거나 지거나.\n그는 선택을 했다.",
+  "danmaku": "앞에 주의!\n앞에 주의! 경고.\n이 부분에서 나 울었어.\n작가 추가 연재!",
+  "toxic_voice": "그가 입을 열었다.\n목소리는 크지 않았지만, 첫 마디가 홀 전체를 단단히 눌러 담았다.",
+  "toxic_negation": "반주도 없고, 화음도 없고, 프롬프터도 없었다.\n무대 아래가 3초간 고요해졌다.",
+  "toxic_cross_negation": "펑펑 우는 것도 아니었다.\n\n목청을 내질러 놓치기 싫다고 외치는 것도 아니었다.\n\n단지 한 사람이 멀어졌고, 원래 있던 자리에 남겨진 사람은 여전히 서 있었을 뿐이다.",
+  "toxic_cross_negation_dialogue_ok": ""펑펑 우는 것도 아니었다."\n\n"목청을 내질러 놓치기 싫다고 외치는 것도 아니었다."\n\n"단지 아쉬웠을 뿐이야."",
+  "toxic_reverse_notis": "진짜 목소리였지, 음성 보정으로 만든 게 아니었다.\n그는 목청을 가다듬고 계속 불렀다.",
+  "toxic_forward_notis": "퇴로를 생각해본 적이 없었던 게 아니라, 처음부터 퇴로가 없었다.\n그가 문을 닫았다.",
+  "toxic_trailer": "그는 마이크를 내려놓고 무대 아래로 허리를 굽혔다.\n아무도 몰랐다. 이게 겨우 시작일 뿐이었다.",
+  "toxic_trailer_summary": "그는 마이크를 내려놓고 무대 아래로 허리를 굽혔다.\n모든 게 끝났다.",
+  "toxic_trailer_summary_fate": "그녀는 영수증을 접어 가방 속에 다시 집어넣었다.\n이 밤은 누구도 잠을 이루지 못할 운명이었다.",
+  "toxic_bare_realize_ok": "그 순간 나는 드디어 깨달았다. 어머니가 예전에 왜 밤마다 우셨는지.\n나는 외투를 집어 들고 현관 쪽으로 걸어갔다.",
+  "toxic_summary_subclause_ok": "이 모든 것이 끝나면 우리는 평온하고 행복한 삶을 살 수 있을 거야.\n그가 문을 닫았다.",
+  "toxic_summary_idiom_ok": "이 순간 세상의 모든 사람이 운명의 결말을 받아들였다!\n그가 몸을 돌려 떠났다.",
+  "toxic_dialogue_ok": "「아무도 모르지.」\n그가 웃고는 계속 앞으로 나아갔다.",
+  "toxic_eitheror_ok": "산다든지 죽든지, 그가 받아들였다.\n그가 문을 밀고 들어갔다.",
+  "toxic_affirm_ok": "그래, 그의 잘못이 아니야.\n그가 불을 껐다.",
+  "toxic_shibushi_ok": "그는 자신이 잘못 들었나 싶었고, 조명이 너무 밝아서 그런 건 아닐까 생각했다.\n그는 눈을 비볐다.",
+  "toxic_question_ok": "그가 한 건지, 내가 한 건 아닌지 확실하지 않았다.\n그는 명확히 말할 수 없었다.",
+  "toxic_rhetorical_ok": "꽤 좋은 일이지 않은가.\n그는 고개를 끄덕였다.",
+  "toxic_curtain_ok": "종소리가 다시 울렸고, 경기가 정식으로 시작되었다.\n그는 무대 위로 올라섰다.",
+  "toxic_quote_mid_ok": "그녀의 목소리는 별로 좋지 않았고, 사람들에게 '명장면'으로 잘려 나갔지만, 그녀는 신경 쓰지 않았다.\n무대 아래에서는 박수도 없었고, '앙코르' 소리도 없었고, 오직 여기저기서 터져 나오는 기침소리만 들렸다.",
+  "toxic_multi_tail_ok": "그것은 그의 잘못이지, 내 잘못이 아니다, 그렇지 않은가.\n그는 고개를 끄덕였다.",
+  "toxic_exempt_marker_ok": "# 제1장\n<!-- 제거:건너뛰기 -->\n반주 없이, 화성 없이, 프롬프터 없이.",
+  "toxic_exempt_fullwidth_ok": "# 제1장\n<!-- 제거：건너뛰기 -->\n반주 없이, 화성 없이, 프롬프터 없이.",
+  "toxic_exempt_other_nets": "# 제1장\n<!-- 제거:건너뛰기 -->\n반주 없이, 화성 없이, 프롬프터 없이.\n이 장의 상세 구성안의 플롯 포인트에 따르면 그가 나타날 순서다.",
+"toxic_astral_window_ok": "아무도 그가 몇 년을 연습했는지 알 수 없다.\n"1행😀😀😀😀😀😀😀😀😀😀"\n"2행😀😀😀😀😀😀😀😀😀😀"\n"3행😀😀😀😀😀😀😀😀😀😀"\n"4행😀😀😀😀😀😀😀😀😀😀"\n"5행😀😀😀😀😀😀😀😀😀😀"\n"6행😀😀😀😀😀😀😀😀😀😀"\n"7행😀😀😀😀😀😀😀😀😀😀"\n"8행😀😀😀😀😀😀😀😀😀😀"\n"9행😀😀😀😀😀😀😀😀😀😀"\n"10행😀😀😀😀😀😀😀😀😀😀"\n"11행😀😀😀😀😀😀😀😀😀😀"\n"12행😀😀😀😀😀😀😀😀😀😀"\n"13행😀😀😀😀😀😀😀😀😀😀"\n"14행😀😀😀😀😀😀😀😀😀😀"\n"15행😀😀😀😀😀😀😀😀😀😀"\n"16행😀😀😀😀😀😀😀😀😀😀"\n"17행😀😀😀😀😀😀😀😀😀😀"\n"18행😀😀😀😀😀😀😀😀😀😀"\n"19행😀😀😀😀😀😀😀😀😀😀"\n"20행😀😀😀😀😀😀😀😀😀😀"\n"21행😀😀😀😀😀😀😀😀😀😀"\n"22행😀😀😀😀😀😀😀😀😀😀"\n"23행😀😀😀😀😀😀😀😀😀😀"\n"24행😀😀😀😀😀😀😀😀😀😀"\n"25행😀😀😀😀😀😀😀😀😀😀"\n"26행😀😀😀😀😀😀😀😀😀😀"\n"27행😀😀😀😀😀😀😀😀😀😀"\n"28행😀😀😀😀😀😀😀😀😀😀"\n"29행😀😀😀😀😀😀😀😀😀😀"\n"30행😀😀😀😀😀😀😀😀😀😀"",
+  "toxic_trailer_window_ok": "아무도 그가 몇 년을 연습했는지 알 수 없었다.\n강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다. 강천은 이 영상을 반복해서 편집했다. 새벽부터 날이 밝을 때까지 편집하며 매 프레임을 정교하게 다듬었다.\n그는 건반 뚜껑을 덮고 일어섰다."
 }
 EOF
 
@@ -149,8 +149,8 @@ EOF
 import importlib.util, sys, json
 spec = importlib.util.spec_from_file_location("ch", sys.argv[1]); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 fx = json.load(open(sys.argv[2], encoding='utf-8'))
-# 用 stdout.buffer 直写 UTF-8 字节：Windows runner 上 python<3.15 的文本 stdout 是 cp1252，
-# 含中文 findings 的 print 会 UnicodeEncodeError（与 node 侧 console.log 的 UTF-8 输出对齐）。
+# stdout.buffer를 사용하여 UTF-8 바이트를 직접 쓰기: Windows runner의 python<3.15 텍스트 stdout은 cp1252이므로
+# 중국어 findings를 포함한 print는 UnicodeEncodeError가 발생합니다(Node 측 console.log의 UTF-8 출력과 맞추기 위해).
 for k in sorted(fx):
     line = k + " | " + " ;; ".join(m.prose_net_findings(fx[k]))
     sys.stdout.buffer.write((line + "\n").encode("utf-8"))
@@ -164,59 +164,59 @@ for (const k of Object.keys(fx).sort()) {
 }
 JS
   if ! diff "$tmp/py.txt" "$tmp/zcode.txt" >/dev/null; then
-    echo "FAIL: 功能 parity 不一致（codex python 网 vs zcode JS 网）：" >&2
+    echo "FAIL: 기능 parity 불일치(codex python 네트워크 vs zcode JS 네트워크):" >&2
     diff "$tmp/py.txt" "$tmp/zcode.txt" >&2 || true
     return 3
   fi
 
-  # 毒句式 fixture 防空转断言（两端同错也能 diff 通过，故对期望输出显式断言）：
-  # 正例（用户实抓的真实毒句）须命中对应规则；反例（对话内/either-or/确认语/是不是/
-  # 窗口外 trailer）须完全静默。
-  grep -q '^toxic_voice | 第2行 毒句式\[voice-contrast\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 voice-contrast 未命中「声音不高…却」" >&2; return 3; }
-  grep -q '^toxic_negation | 第1行 毒句式\[negation-parade\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 negation-parade 未命中「没有…没有…」" >&2; return 3; }
-  grep -q '^toxic_cross_negation | $' "$tmp/py.txt" || { echo "FAIL: 跨段「不是/也不是/只是」应由深扫语义复核，不应进轻量 blocking 网" >&2; return 3; }
-  grep -q '^toxic_reverse_notis | 第1行 毒句式\[reverse-not-is\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 reverse-not-is 未命中「是真嗓子，不是修音」" >&2; return 3; }
-  grep -q '^toxic_forward_notis | 第1行 毒句式\[not-is-comparison\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 not-is-comparison 未命中「不是…，而是…」" >&2; return 3; }
-  grep -q '^toxic_trailer | 第2行 毒句式\[trailer-ending\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 trailer-ending 未命中「没人知道，这才刚刚开头」" >&2; return 3; }
-  grep -q '^toxic_trailer_summary | 第2行 毒句式\[trailer-summary\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 trailer-summary 未命中「这一切都结束了」" >&2; return 3; }
-  grep -q '^toxic_trailer_summary_fate | 第2行 毒句式\[trailer-summary\]' "$tmp/py.txt" || { echo "FAIL: 毒句式正例 trailer-summary 未命中「这一夜注定无人入眠」" >&2; return 3; }
-  grep -q '^toxic_bare_realize_ok | $' "$tmp/py.txt" || { echo "FAIL: 「那一刻…终于明白」审判金句被误报（短篇卖点，本规则不收认知节拍）" >&2; return 3; }
-  grep -q '^toxic_summary_subclause_ok | $' "$tmp/py.txt" || { echo "FAIL: 条件从句「等这一切结束了，…」被误报（未落句末断言位）" >&2; return 3; }
-  grep -q '^toxic_summary_idiom_ok | $' "$tmp/py.txt" || { echo "FAIL: 成语「命中注定」被跨匹配成 trailer-summary" >&2; return 3; }
-  grep -q '^toxic_dialogue_ok | $' "$tmp/py.txt" || { echo "FAIL: 对话内「没人知道」被误报（成对引号应剥除）" >&2; return 3; }
-  grep -q '^toxic_cross_negation_dialogue_ok | $' "$tmp/py.txt" || { echo "FAIL: 三段对话内否定被写后 hook 误报（语义审查负责台词 advisory）" >&2; return 3; }
-  grep -q '^toxic_eitheror_ok | $' "$tmp/py.txt" || { echo "FAIL: either-or「不是A就是B」被误报" >&2; return 3; }
-  grep -q '^toxic_affirm_ok | $' "$tmp/py.txt" || { echo "FAIL: 确认语「是啊，不是…」被误报" >&2; return 3; }
-  grep -q '^toxic_shibushi_ok | $' "$tmp/py.txt" || { echo "FAIL: 疑问「是不是」被误报" >&2; return 3; }
-  grep -q '^toxic_question_ok | $' "$tmp/py.txt" || { echo "FAIL: 「是不是…」问句起头被误报" >&2; return 3; }
-  grep -q '^toxic_rhetorical_ok | $' "$tmp/py.txt" || { echo "FAIL: 反问尾巴「…，不是吗」被误报" >&2; return 3; }
-  grep -q '^toxic_curtain_ok | $' "$tmp/py.txt" || { echo "FAIL: 报幕式「正式拉开序幕」被误报" >&2; return 3; }
-  grep -q '^toxic_trailer_window_ok | $' "$tmp/py.txt" || { echo "FAIL: 文末 600 字窗口外的「没人知道」被误报" >&2; return 3; }
-  grep -q '^toxic_quote_mid_ok | $' "$tmp/py.txt" || { echo "FAIL: 句中引号段未按等长占位截断，规则跨引号拼出假命中" >&2; return 3; }
-  grep -q '^toxic_multi_tail_ok | $' "$tmp/py.txt" || { echo "FAIL: 带中间对比项的反问尾巴「…，不是吗」被误报" >&2; return 3; }
-  grep -q '^toxic_exempt_marker_ok | $' "$tmp/py.txt" || { echo "FAIL: 标「去味:跳过」的正文毒句式未被写后网豁免" >&2; return 3; }
-  grep -q '^toxic_exempt_fullwidth_ok | $' "$tmp/py.txt" || { echo "FAIL: 全角冒号豁免标记「去味：跳过」未生效" >&2; return 3; }
-  grep -q '^toxic_exempt_other_nets | 第4行 工程词泄漏' "$tmp/py.txt" || { echo "FAIL: 豁免标记不应连带关掉毒句式以外的网（工程词漏检）" >&2; return 3; }
-  grep '^toxic_exempt_other_nets' "$tmp/py.txt" | grep -q '毒句式' && { echo "FAIL: 豁免标记在场时毒句式仍被推回" >&2; return 3; }
-  grep -q '^toxic_astral_window_ok | $' "$tmp/py.txt" || { echo "FAIL: 引号内 emoji 的占位长度未按 UTF-16 码元对齐，trailer 窗口切点漂移" >&2; return 3; }
-  grep -q '^toxic_quote_codename_ok | $' "$tmp/py.txt" || { echo "FAIL: 引号占位替 trailer-summary 的句末 [。！] 伪造终止符（占位字符落进了规则接受位）" >&2; return 3; }
+  # 독성 문장식 fixture 공수 전환 단언(양쪽 동일 오류도 diff 통과 가능하므로 예상 출력에 명시적 단언):
+  # 정례(사용자 실제 수집 독성 문장)는 해당 규칙에 적중; 반례(대화 내/either-or/확인 표현/~인가/
+  # 윈도우 외부 trailer)는 완전 침묵해야 함.
+  grep -q '^toxic_voice | 제2행 독성 문장식\[voice-contrast\]' "$tmp/py.txt" || { echo "FAIL: 독성 문장식 정례 voice-contrast 미적중「음성이 높지 않은데…그런데」" >&2; return 3; }
+  grep -q '^toxic_negation | 첫 번째 줄 독성 문장\[negation-parade\]' "$tmp/py.txt" || { echo "FAIL: 독성 문장 긍정 사례 negation-parade 미매칭「없다…없다…」" >&2; return 3; }
+  grep -q '^toxic_cross_negation | $' "$tmp/py.txt" || { echo "FAIL: 구간 간「아니다/또한 아니다/단지」는 심층 의미 검증이 필요하며, 가벼운 차단 네트워크에 포함되면 안 됨" >&2; return 3; }
+  grep -q '^toxic_reverse_notis | 첫 번째 줄 독성 문장\[reverse-not-is\]' "$tmp/py.txt" || { echo "FAIL: 독성 문장 긍정 사례 reverse-not-is 미매칭「진짜 목소리, 음성 보정 아님」" >&2; return 3; }
+  grep -q '^toxic_forward_notis | 첫 번째 줄 독성 문장\[not-is-comparison\]' "$tmp/py.txt" || { echo "FAIL: 독성 문장 긍정 사례 not-is-comparison 미매칭「아니라…, 오히려…」" >&2; return 3; }
+  grep -q '^toxic_trailer | 두 번째 줄 독성 문장\[trailer-ending\]' "$tmp/py.txt" || { echo "FAIL: 독성 문장 긍정 사례 trailer-ending 미매칭「아무도 모르지, 이제 막 시작됐어」" >&2; return 3; }
+  grep -q '^toxic_trailer_summary | 2번째 줄 toxic 패턴\[trailer-summary\]' "$tmp/py.txt" || { echo "FAIL: toxic 패턴 정상 사례 trailer-summary가 「이제 모든 것이 끝났다」를 감지하지 못함" >&2; return 3; }
+  grep -q '^toxic_trailer_summary_fate | 2번째 줄 toxic 패턴\[trailer-summary\]' "$tmp/py.txt" || { echo "FAIL: toxic 패턴 정상 사례 trailer-summary가 「이 밤은 반드시 누구도 잠들지 못할 것이다」를 감지하지 못함" >&2; return 3; }
+  grep -q '^toxic_bare_realize_ok | $' "$tmp/py.txt" || { echo "FAIL: 「그 순간…드디어 깨달았다」심판 금언이 오탐지됨（단편 판매 포인트, 본 규칙은 인식 비트를 인정하지 않음）" >&2; return 3; }
+  grep -q '^toxic_summary_subclause_ok | $' "$tmp/py.txt" || { echo "FAIL: 조건절「이 모든 것이 끝나면, …」이 오탐지됨（문장 끝 단언 위치에 도달하지 못함）" >&2; return 3; }
+  grep -q '^toxic_summary_idiom_ok | $' "$tmp/py.txt" || { echo "FAIL: 성어「명중주정」이 trailer-summary로 교차 매칭됨" >&2; return 3; }
+  grep -q '^toxic_dialogue_ok | $' "$tmp/py.txt" || { echo "FAIL: 대화 내 「아무도 모른다」가 오탐(쌍따옴표를 제거해야 함)" >&2; return 3; }
+  grep -q '^toxic_cross_negation_dialogue_ok | $' "$tmp/py.txt" || { echo "FAIL: 3단 대화 내 부정이 hook 후 오탐(의미 심사는 대사 advisory 담당)" >&2; return 3; }
+  grep -q '^toxic_eitheror_ok | $' "$tmp/py.txt" || { echo "FAIL: either-or「A가 아니면 B」가 오탐" >&2; return 3; }
+  grep -q '^toxic_affirm_ok | $' "$tmp/py.txt" || { echo "FAIL: 확인 표현「그래, 아니라…」가 오탐" >&2; return 3; }
+  grep -q '^toxic_shibushi_ok | $' "$tmp/py.txt" || { echo "FAIL: 의문「~인가」가 오탐" >&2; return 3; }
+  grep -q '^toxic_question_ok | $' "$tmp/py.txt" || { echo "실패: 「그것이…」의문문 시작이 오탐지됨" >&2; return 3; }
+  grep -q '^toxic_rhetorical_ok | $' "$tmp/py.txt" || { echo "실패: 반문 끝 「…，그렇지 않은가」이 오탐지됨" >&2; return 3; }
+  grep -q '^toxic_curtain_ok | $' "$tmp/py.txt" || { echo "실패: 사회자 인사말 「공식적으로 막이 열리다」이 오탐지됨" >&2; return 3; }
+  grep -q '^toxic_trailer_window_ok | $' "$tmp/py.txt" || { echo "FAIL: 문말 600자 윈도우 외부의 '사람이 모를'이 오탐지됨" >&2; return 3; }
+  grep -q '^toxic_quote_mid_ok | $' "$tmp/py.txt" || { echo "FAIL: 문장 중간 인용구 세그먼트가 등길이 자리표로 잘리지 않아 규칙이 인용구를 넘어 가짜 명중을 만듦" >&2; return 3; }
+  grep -q '^toxic_multi_tail_ok | $' "$tmp/py.txt" || { echo "FAIL: 중간 대조항이 있는 반문 꼬리말「…, 아닌가요」가 오탐되었습니다" >&2; return 3; }
+  grep -q '^toxic_exempt_marker_ok | $' "$tmp/py.txt" || { echo "FAIL: 「제거:건너뛰기」로 표시된 본문 악문체가 후행 네트 면제되지 않았습니다" >&2; return 3; }
+  grep -q '^toxic_exempt_fullwidth_ok | $' "$tmp/py.txt" || { echo "FAIL: 전각 콜론 면제 표시「제거：건너뛰기」가 적용되지 않았습니다" >&2; return 3; }
+  grep -q '^toxic_exempt_other_nets | 제4행 엔지니어링 용어 누수' "$tmp/py.txt" || { echo "FAIL: 면제 표시가 악문체 외의 네트까지 꺼뜨려서는 안 됩니다(엔지니어링 용어 누락 검출)" >&2; return 3; }
+  grep '^toxic_exempt_other_nets' "$tmp/py.txt" | grep -q '악문체' && { echo "FAIL: 면제 표시가 있을 때 악문체가 여전히 역추적되었습니다" >&2; return 3; }
+  grep -q '^toxic_astral_window_ok | $' "$tmp/py.txt" || { echo "FAIL: 따옴표 내 이모지의 위치 길이가 UTF-16 코드 단위로 정렬되지 않았으며, trailer 윈도우 절단점이 편차 발생" >&2; return 3; }
+  grep -q '^toxic_quote_codename_ok | $' "$tmp/py.txt" || { echo "FAIL: 따옴표 위치가 trailer-summary의 문장 끝 [。！] 위장 종료 기호로 치환됨（위치 문자가 규칙 수락 범위에 포함됨）" >&2; return 3; }
 
-  # AI 自指（软信号）防空转：带型号后缀的最典型退化开场必须命中，且不带拒绝语也要命中
-  # （此前 refuse fixture 是被「生成拒绝语」规则接住的，AI 自指规则零覆盖）；复合名词不误报。
-  grep -q '^ai_selfref_model | 第2行 元信息泄漏（AI 自指）' "$tmp/py.txt" || { echo "FAIL: AI 自指未命中「作为一个AI语言模型」（无拒绝语）" >&2; return 3; }
-  grep -q '^ai_selfref_assistant | 第2行 元信息泄漏（AI 自指）' "$tmp/py.txt" || { echo "FAIL: AI 自指未命中「作为一个AI助手」" >&2; return 3; }
-  grep -q '^ai_selfref_era_ok | $' "$tmp/py.txt" || { echo "FAIL: 复合名词「人工智能时代的产物」被 AI 自指误报" >&2; return 3; }
+  # AI 자기지칭（약신호）방어 변환: 모델 번호 접미사가 있는 가장 전형적인 퇴화된 시작 문구는 반드시 매칭되어야 하며, 거부 문구가 없어도 매칭되어야 함
+  # （이전의 refuse fixture는 「거부 문구 생성」규칙에 의해 캐치되었으나, AI 자기지칭 규칙은 커버되지 않았음）; 복합 명사는 오탐지하지 않음.
+  grep -q '^ai_selfref_model | 제2행 메타정보 유출（AI 자기지칭）' "$tmp/py.txt" || { echo "FAIL: AI 자기지칭이 「AI 언어 모델입니다」와 매칭되지 않음（거부 문구 없음）" >&2; return 3; }
+  grep -q '^ai_selfref_assistant | 2번째 줄 메타데이터 누출(AI 자기참조)' "$tmp/py.txt" || { echo "FAIL: AI 자기참조가 「AI 어시스턴트로서」를 감지하지 못함" >&2; return 3; }
+  grep -q '^ai_selfref_era_ok | $' "$tmp/py.txt" || { echo "FAIL: 복합 명사 「인공지능 시대의 산물」이 AI 자기참조에 의해 오탐지됨" >&2; return 3; }
 
-  # 截断收尾标点：】（章尾系统播报模板的收束符）与 ASCII " （ascii 引号模式的收引号）都算收束，
-  # 与深扫 oracle check-degeneration.js 的 findTruncation 一致；真截断另由 truncate fixture 锁。
-  grep -q '^terminal_banner_ok | $' "$tmp/py.txt" || { echo "FAIL: 以【…】收尾的章末系统播报被误判疑似截断" >&2; return 3; }
-  grep -q '^terminal_ascii_quote_ok | $' "$tmp/py.txt" || { echo "FAIL: 以 ASCII 收引号收尾的对话被误判疑似截断" >&2; return 3; }
-  grep -q '^truncate | 第2行 疑似截断' "$tmp/py.txt" || { echo "FAIL: 真截断（结尾无标点）未被检出" >&2; return 3; }
+  # 수미 문장부호 제거: 】(장 끝 시스템 공지 템플릿의 종료 기호)와 ASCII " (ascii 인용부호 모드의 닫는 인용부호)를 모두 종료로 간주
+  # 심화 스캔 oracle check-degeneration.js의 findTruncation과 일치; 실제 수미는 truncate fixture로 별도 잠금
+  grep -q '^terminal_banner_ok | $' "$tmp/py.txt" || { echo "FAIL: 【…】로 끝나는 장 끝 시스템 공지가 의심스러운 수미로 오판됨" >&2; return 3; }
+  grep -q '^terminal_ascii_quote_ok | $' "$tmp/py.txt" || { echo "FAIL: ASCII로 끝나는 인용부호가 있는 대화가 잘못 판단되어 유사 절단으로 표시됨" >&2; return 3; }
+  grep -q '^truncate | 제2행 의사절단' "$tmp/py.txt" || { echo "FAIL: 실제 절단(끝에 구두점 없음)이 감지되지 않음" >&2; return 3; }
 
-  # 转译 TS：擦除类型即可（net 函数只用 RegExp/String/Set/Array）。优先 node 原生类型擦除
-  # （node ≥ 22.6 的 --experimental-strip-types），否则用本机已装的 esbuild 二进制。
-  # 不走 `npx --yes esbuild`：CI 全平台 node 20，逐次联网下载既慢又脆——B 是开发期确认，
-  # CI 的确定性保证由 A（规范串三端一致）承担，无 TS 运行时则 B 自跳过。
+  # TS 변환: 타입을 제거하면 됨(net 함수는 RegExp/String/Set/Array만 사용). node 기본 타입 제거 우선
+  # (node ≥ 22.6의 --experimental-strip-types), 그렇지 않으면 설치된 esbuild 바이너리 사용.
+  # `npx --yes esbuild` 사용 안 함: CI 전체 플랫폼 node 20에서 반복적인 네트워크 다운로드는 느리고 불안정함 — B는 개발 중 확인 용도,
+  # CI의 결정성 보장은 A(규범 문자열 3단 일치)가 담당하며, TS 런타임이 없으면 B는 자동으로 건너뜁니다.
   cp "$OPENCODE" "$tmp/p.ts"
   # plugin.ts imports the core from ./lib/story_hook_core.js (the deploy target — a lib/
   # subdir escapes OpenCode's single-level .opencode/plugins/*.js plugin auto-discovery);
@@ -248,19 +248,19 @@ JS
   [ "$ran" -eq 0 ] && return 2
 
   if ! diff "$tmp/py.txt" "$tmp/ts.txt" >/dev/null; then
-    echo "FAIL: 功能 parity 不一致（codex python 网 vs opencode TS 网）：" >&2
+    echo "FAIL: 기능 parity 불일치(codex python 네트워크 vs opencode TS 네트워크):" >&2
     diff "$tmp/py.txt" "$tmp/ts.txt" >&2 || true
     return 3
   fi
   return 0
 }
 
-# ── C. 命令函数 parity（codex python vs zcode JS），CI 硬保证 ─────────────────
-# 正文目标抽取（重定向/tee/touch/cp·mv）、apply-patch 目标、git commit 侦测三个纯函数
-# （命令串 → 值）在下列 fixture 上逐字相等。此前只在 py/js 手抄、无守卫，已漂移（cp·mv
-# 元数、git 控制词 then/do/else/elif、子 shell 括号）。node+python3 在 CI 全平台都在，故为硬门。
-# 注：fixture 取两端已收敛的子集；引号内分隔符（echo "a; git commit"）与命令替换（$(git commit)）
-# 两端本就不等（py 用 shlex 尊重引号，js 裸拆），非本网职责，且只影响 advisory 不影响拦截。
+# ── C. 명령 함수 parity(codex python vs zcode JS), CI 강제 보장 ─────────────────
+# 본문 대상 추출(리다이렉션/tee/touch/cp·mv), apply-patch 대상, git commit 감지 세 개의 순함수
+# (명령 문자열 → 값)가 다음 fixture에서 그대로 일치합니다. 이전에는 py/js 수작업만 있었고 보호 메커니즘이 없어 이미 표류했습니다(cp·mv
+# 메타데이터, git 제어 키워드(then/do/else/elif), 서브셸 괄호). node+python3은 CI의 모든 플랫폼에 설치되어 있으므로 필수 요구사항입니다.
+# 주: fixture는 양쪽 끝에서 수렴한 부분집합을 취함; 따옴표 내 구분자(echo "a; git commit")와 명령 치환($(git commit))
+# 양쪽 끝이 원래 같지 않음(py는 shlex로 따옴표를 존중하고, js는 단순 분할), 이 네트워크의 책임이 아니며, advisory에만 영향을 주고 차단에는 영향을 주지 않음.
 run_cmd_parity() {
   command -v node >/dev/null 2>&1 || return 1
   command -v python3 >/dev/null 2>&1 || return 1
@@ -268,27 +268,27 @@ run_cmd_parity() {
   trap 'rm -rf "$tmp"' RETURN
   cat > "$tmp/cmd.json" <<'EOF'
 {
-  "redirect": "echo x > book/正文/第1章.md",
-  "append": "cat a >> 正文.md",
-  "tee": "echo x | tee book/正文/第2章.md",
-  "tee_a": "printf y | tee -a 正文.md",
-  "touch": "touch book/正文/第3章.md",
-  "cp": "cp src.md book/正文/第4章.md",
-  "mv2": "mv 正文.md",
-  "cp_flag": "cp -f a.md 正文.md",
-  "mention": "grep -n book/正文/第1章.md notes.md",
-  "redirect_quoted_space": "cat draft.md > \"my book/正文/第1章_x.md\"",
-  "redirect_fullwidth_space": "cat draft.md > book/正文/第003章　开局.md",
-  "tee_quoted_space": "printf x | tee 'my book/正文/第1章_x.md'",
-  "cp_quoted_space": "cp draft.md \"my book/正文/第1章_x.md\"",
-  "cp_quoted_operator": "cp draft.md \"book|archive/正文/第11章.md\"",
-  "patch_add": "*** Begin Patch\n*** Add File: book/正文/第5章.md\n+正文\n*** End Patch",
-  "patch_move": "*** Begin Patch\n*** Update File: draft.md\n*** Move to: book/正文/第6章.md\n+正文\n*** End Patch",
-  "patch_move_delete": "*** Begin Patch\n*** Delete File: draft.md\n*** Move to: book/正文/第7章.md\n*** End Patch",
-  "patch_move_out": "*** Begin Patch\n*** Update File: book/正文/第8章.md\n*** Move to: draft.md\n+x\n*** End Patch",
-  "patch_delete_only": "*** Begin Patch\n*** Delete File: book/正文/第9章.md\n*** End Patch",
-  "patch_multi_move": "*** Begin Patch\n*** Add File: notes.md\n+x\n*** Update File: draft.md\n*** Move to: book/正文/第10章.md\n+正文\n*** End Patch",
-  "patch_context_move": "*** Begin Patch\n*** Update File: book/正文/第12章.md\n@@\n *** Move to: notes.md\n+正文\n*** End Patch",
+  "redirect": "echo x > book/정문/제1장.md",
+  "append": "cat a >> 정문.md",
+  "tee": "echo x | tee book/정문/제2장.md",
+  "tee_a": "printf y | tee -a 정문.md",
+  "touch": "touch book/정문/제3장.md",
+  "cp": "cp src.md book/정문/제4장.md",
+  "mv2": "mv 정문.md",
+  "cp_flag": "cp -f a.md 정문.md",
+  "mention": "grep -n book/정문/제1장.md notes.md",
+  "redirect_quoted_space": "cat draft.md > \"my book/정문/제1장_x.md\"",
+  "redirect_fullwidth_space": "cat draft.md > book/정문/제003장　개국.md",
+  "tee_quoted_space": "printf x | tee 'my book/정문/제1장_x.md'",
+  "cp_quoted_space": "cp draft.md \"my book/정문/제1장_x.md\"",
+  "cp_quoted_operator": "cp draft.md \"book|archive/정문/제11장.md\"",
+  "patch_add": "*** Begin Patch\n*** Add File: book/정문/제5장.md\n+정문\n*** End Patch",
+  "patch_move": "*** Begin Patch\n*** Update File: draft.md\n*** Move to: book/정문/제6장.md\n+정문\n*** End Patch",
+  "patch_move_delete": "*** Begin Patch\n*** Delete File: draft.md\n*** Move to: book/정문/제7장.md\n*** End Patch",
+  "patch_move_out": "*** Begin Patch\n*** Update File: book/정문/제8장.md\n*** Move to: draft.md\n+x\n*** End Patch",
+  "patch_delete_only": "*** Begin Patch\n*** Delete File: book/정문/제9장.md\n*** End Patch",
+  "patch_multi_move": "*** Begin Patch\n*** Add File: notes.md\n+x\n*** Update File: draft.md\n*** Move to: book/정문/제10장.md\n+정문\n*** End Patch",
+  "patch_context_move": "*** Begin Patch\n*** Update File: book/정문/제12장.md\n@@\n *** Move to: notes.md\n+정문\n*** End Patch",
   "commit_plain": "git commit -m x",
   "commit_chain": "git add . && git commit -m x",
   "commit_if": "if true; then git commit -m x; fi",
@@ -319,104 +319,104 @@ for (const k of Object.keys(fx).sort()) {
 }
 JS
   if ! diff "$tmp/cpy.txt" "$tmp/cjs.txt" >/dev/null; then
-    echo "FAIL: 命令函数 parity 不一致（codex python vs zcode JS）：" >&2
+    echo "FAIL: 명령 함수 parity 불일치(codex python vs zcode JS):" >&2
     diff "$tmp/cpy.txt" "$tmp/cjs.txt" >&2 || true
     return 3
   fi
-  # 防空转：带空格/全角空格的目标必须整段取出（两端同错也能 diff 通过）。字符类排 \s 会把
-  # 「第003章　开局.md」截成「第003章」、把引号排除在类外会让引号路径整条抽不到目标 → 静默放行。
-  grep -q 'redirect_quoted_space :: pros=\[my book/正文/第1章_x.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: 带空格的引号重定向目标未被整段取出（引号未被尊重）" >&2; return 3; }
-  grep -q 'redirect_fullwidth_space :: pros=\[book/正文/第003章　开局.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: 全角空格章名被 \\s 截断（U+3000 不是 shell 分词符）" >&2; return 3; }
-  grep -q 'tee_quoted_space :: pros=\[my book/正文/第1章_x.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: 带空格的引号 tee 目标未被整段取出" >&2; return 3; }
-  grep -q 'cp_quoted_space :: pros=\[my book/正文/第1章_x.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: cp 的引号目标被按空白切碎，末位取到了另一本书的路径" >&2; return 3; }
-  grep -q 'cp_quoted_operator :: pros=\[book|archive/正文/第11章.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: cp 引号目标里的 | 被误当 shell 管道切段，正文守卫会静默放行" >&2; return 3; }
-  # 防空转（apply_patch 搬家形态）：`*** Move to:` 是 Update/Delete File 段的子指令，落盘路径是
-  # 目的地。只认 Add/Update File 时「Update draft.md + Move to 书/正文/第N章.md」抽到的是源
-  # draft.md → 细纲门整条空过、写后兜底网扫的是已不存在的源（两端同错，diff 也看不出来）。
-  grep -q 'patch_move :: pros=\[\] patch=\[book/正文/第6章.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: apply_patch 的 *** Move to: 目的地未进目标表（源被搬走，只有目的地落盘）" >&2; return 3; }
-  grep -q 'patch_move_delete :: pros=\[\] patch=\[book/正文/第7章.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: *** Delete File: + *** Move to: 的目的地未进目标表" >&2; return 3; }
+  # 방공 전환: 공백/전각 공백이 있는 대상은 전체 구간을 추출해야 함(양쪽 끝 오류도 diff 통과 가능). 문자 클래스 \s는
+  # 「제003장　개국.md」를 「제003장」로 잘라내고, 인용부호를 클래스 외부로 제외하면 인용부호 경로 전체를 추출할 수 없음 → 무시하고 진행.
+  grep -q 'redirect_quoted_space :: pros=\[my book/정문/제1장_x.md\]' "$tmp/cpy.txt" \
+    || { echo "실패: 공백이 있는 인용부호 리다이렉트 대상이 전체 구간으로 추출되지 않음(인용부호가 무시됨)" >&2; return 3; }
+  grep -q 'redirect_fullwidth_space :: pros=\[book/정문/제003장　개국.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: 전각 공백 장 이름이 \\s로 잘림 (U+3000은 shell 단어 구분자가 아님)" >&2; return 3; }
+  grep -q 'tee_quoted_space :: pros=\[my book/정문/제1장_x.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: 공백이 있는 따옴표 tee 대상이 전체로 추출되지 않음" >&2; return 3; }
+  grep -q 'cp_quoted_space :: pros=\[my book/정문/제1장_x.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: cp의 따옴표 대상이 공백으로 잘려서 마지막 위치에 다른 책의 경로가 포함됨" >&2; return 3; }
+  grep -q 'cp_quoted_operator :: pros=\[book|archive/정문/제11장.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: cp 인용부호 대상의 | 가 오류로 shell 파이프로 절단되었으며, 정문 보호가 조용히 통과시킴" >&2; return 3; }
+  # 방공전(apply_patch 이전 형태): `*** Move to:` 는 Update/Delete File 섹션의 하위 명령어이며, 저장 경로는
+  # 목적지입니다. Add/Update File에서만 「Update draft.md + Move to 서/정문/제N장.md」 에서 추출된 것은 소스
+  # draft.md → 세부강목 전체 공백 통과, 쓰기 후 최후 대응 네트워크 스캔의 대상은 이미 존재하지 않는 소스(양쪽 동일 오류, diff 도 보이지 않음).
+  grep -q 'patch_move :: pros=\[\] patch=\[book/정문/제6장.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: apply_patch의 *** Move to: 대상이 목표 테이블에 들어가지 않음(소스가 이동되고 대상만 저장됨)" >&2; return 3; }
+  grep -q 'patch_move_delete :: pros=\[\] patch=\[book/정문/제7장.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: *** Delete File: + *** Move to:의 대상이 목표 테이블에 들어가지 않음" >&2; return 3; }
   grep -q 'patch_move_out :: pros=\[\] patch=\[draft.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: 搬出 正文/ 时源仍被当写入目标（源已不存在，只有目的地该被判）" >&2; return 3; }
+    || { echo "FAIL: 정문/에서 이동할 때 소스가 여전히 쓰기 대상으로 처리됨(소스가 존재하지 않으므로 대상만 판정되어야 함)" >&2; return 3; }
   grep -q 'patch_delete_only :: pros=\[\] patch=\[\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: 纯 *** Delete File: 不该进目标表（删除不是写入，认它只会给删稿误报）" >&2; return 3; }
-  grep -q 'patch_multi_move :: pros=\[\] patch=\[notes.md|book/正文/第10章.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: 一份补丁里 Add 段与 Move 段的目标未同时取全（Move 只该顶替同段的源）" >&2; return 3; }
-  grep -q 'patch_context_move :: pros=\[\] patch=\[book/正文/第12章.md\]' "$tmp/cpy.txt" \
-    || { echo "FAIL: patch 上下文行里的字面 *** Move to 被误当控制指令，实际正文目标被顶掉" >&2; return 3; }
+    || { echo "FAIL: 순수 *** Delete File: 대상 테이블에 진입하면 안 됨(삭제는 쓰기가 아니므로 삭제 오보만 발생시킬 것임)" >&2; return 3; }
+  grep -q 'patch_multi_move :: pros=\[\] patch=\[notes.md|book/정문/제10장.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: 한 패치 내에서 Add 섹션과 Move 섹션의 대상이 동시에 모두 캡처되지 않음(Move는 같은 섹션의 소스만 치환해야 함)" >&2; return 3; }
+  grep -q 'patch_context_move :: pros=\[\] patch=\[book/정문/제12장.md\]' "$tmp/cpy.txt" \
+    || { echo "FAIL: patch 컨텍스트 라인의 리터럴 *** Move to가 제어 명령으로 오인되어 실제 정문 대상이 치환됨" >&2; return 3; }
 
-  # ReDoS 回归（shellWords）：调用方先按 [;&|\n] 拆段会拆开引号内的 |，留下一个不闭合的 "。
-  # 旧的 /"(?:\\.|[^"])*"|'[^']*'|[^\s]+/ 里 \\. 与 [^"] 都能吃反斜杠，每个反斜杠让搜索空间翻倍，
-  # 这条百余字的提交命令实测烧掉数十秒 CPU（超过 zcode hooks.json 的 timeoutMs 15000 被杀）。
-  # 线性手写分词必须毫秒级判完，故给 2 秒预算（Python 侧 shlex 本就线性，一并计时防漂移）。
+  # ReDoS 회귀(shellWords): 호출자가 먼저 [;&|\n]으로 분할하면 따옴표 내의 |를 분할하고 닫지 않은 "를 남깁니다.
+  # 기존 /"(?:\\.|[^"])*"|'[^']*'|[^\s]+/ 에서 \\. 와 [^"] 모두 역슬래시를 처리할 수 있으며, 각 역슬래시는 검색 공간을 두 배로 만듭니다.
+  # 이 백여 글자의 커밋 명령은 실제로 수십 초의 CPU를 소모했습니다(zcode hooks.json의 timeoutMs 15000을 초과하여 종료됨).
+  # 선형 수동 토큰화는 밀리초 단위로 판정을 완료해야 하므로 2초의 예산을 제공합니다(Python 쪽 shlex는 이미 선형이므로 함께 시간을 측정하여 드리프트 방지).
   node - "$ZCODE" > "$tmp/redos.txt" <<'JS' || return 3
 const h = require(process.argv[2])
-const cmd = 'git commit -m "fix: 正则转义覆盖 ' + Array.from({ length: 18 }, () => "\\\\x").join(" ") + ' covered | see README"'
+const cmd = 'git commit -m "fix: 정규식 이스케이프 커버리지 ' + Array.from({ length: 18 }, () => "\\\\x").join(" ") + ' covered | see README"'
 const t0 = Date.now()
 const hit = h.isGitCommitCommand(cmd)
 const ms = Date.now() - t0
-if (!hit) { console.error("FAIL: git commit 侦测漏判带转义/管道的提交命令"); process.exit(3) }
-if (ms > 2000) { console.error(`FAIL: shellWords 回溯爆炸（${ms}ms > 2000ms），宿主 hook 会超时被杀`); process.exit(3) }
+if (!hit) { console.error("FAIL: git commit 감지 실패 - 이스케이프/파이프가 포함된 커밋 명령 누락"); process.exit(3) }
+if (ms > 2000) { console.error(`FAIL: shellWords 역추적 폭발(${ms}ms > 2000ms) - 호스트 hook이 시간 초과로 종료됨`); process.exit(3) }
 console.log(`redos_budget :: ${ms}ms`)
 JS
   python3 - "$CODEX" >> "$tmp/redos.txt" <<'PY' || return 3
 import importlib.util, sys, time
 spec = importlib.util.spec_from_file_location("ch", sys.argv[1]); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-cmd = 'git commit -m "fix: 正则转义覆盖 ' + " ".join([r"\\x"] * 18) + ' covered | see README"'
+cmd = 'git commit -m "fix: 정규식 이스케이프 커버 ' + " ".join([r"\\x"] * 18) + ' covered | see README"'
 t0 = time.time()
 hit = m.is_git_commit_command(cmd)
 ms = int((time.time() - t0) * 1000)
-# 失败文案走 stderr.buffer 直写 UTF-8：Windows python 的文本 stderr 是 cp1252，中文会 UnicodeEncodeError
+# 실패 메시지는 stderr.buffer를 통해 UTF-8로 직접 쓰기: Windows python의 텍스트 stderr는 cp1252이므로 중문은 UnicodeEncodeError 발생
 if not hit:
-    sys.stderr.buffer.write("FAIL: py 侧 git commit 侦测漏判带转义/管道的提交命令\n".encode("utf-8")); sys.exit(3)
+    sys.stderr.buffer.write("FAIL: py 쪽 git commit 감지 실패 - 이스케이프/파이프가 포함된 커밋 명령 누락\n".encode("utf-8")); sys.exit(3)
 if ms > 2000:
-    sys.stderr.buffer.write(f"FAIL: py 侧 git commit 侦测退化成非线性（{ms}ms > 2000ms）\n".encode("utf-8")); sys.exit(3)
+    sys.stderr.buffer.write(f"FAIL: Python 측 git commit 감지가 비선형으로 성능이 저하됨({ms}ms > 2000ms)\n".encode("utf-8")); sys.exit(3)
 PY
   return 0
 }
 
-# ── D. Claude 归核回归守卫（CI 硬保证）─────────────────────────────────────────────
-# Claude 的 4 个 bash hook（check-prose-after-write / guard-outline-before-prose /
-# validate-story-commit / detect-story-gaps）不再内嵌 heredoc python，改调本目录同一份 node
-# 共享核 story_hook_core.js（经 story_hook_cli.js）——正文网/字数/大纲守卫/git-commit 侦测/
-# 连续性。这份核与 OpenCode/ZCode 是同一份（check-shared-files 保证字节相同），已由 Part B/C
-# 锁到 codex，故 claude==codex 结构性闭环，无需再抽 heredoc 重跑。这里守两条防回退：
-# ① 4 个 hook 里不得再出现 heredoc python（防有人手抄回退成第 5 份实现）；② 必须经
-# story_hook_cli.js 调核。字节一致另由 check-shared-files 保证。
+# ── D. Claude 핵심 회귀 가드(CI 하드 보장) ─────────────────────────────────────────────
+# Claude의 4개 bash hook(check-prose-after-write / guard-outline-before-prose /
+# validate-story-commit / detect-story-gaps)는 더 이상 heredoc python을 내장하지 않고, 같은 디렉터리의 단일 node
+# 공유 핵 story_hook_core.js(story_hook_cli.js를 통해)를 호출함 ── 본문 네트워크/글자 수/대강 구성 가드/git-commit 감지/
+# 연속성. 이 코어와 OpenCode/ZCode는 동일한 파일입니다(check-shared-files가 바이트 일치 보장), Part B/C에서
+# codex로 잠금 처리되었으므로 claude==codex 구조적 폐루프이며, heredoc을 다시 추출하여 재실행할 필요가 없습니다. 여기서 두 가지 회귀 방지 규칙을 지킵니다:
+# ① 4개의 hook에서 heredoc python이 다시 나타나면 안 됩니다(누군가 수동으로 5번째 구현으로 회귀하는 것을 방지); ② 반드시
+# story_hook_cli.js를 통해 코어를 검증해야 합니다. 바이트 일치는 check-shared-files에서 별도로 보장합니다.
 run_claude_core_check() {
   local hooks_dir cli bad=0 hook
   hooks_dir="$(dirname "$CLAUDE")"
   cli="$hooks_dir/story_hook_cli.js"
-  [ -f "$cli" ] || { echo "FAIL: 缺少 story_hook_cli.js（Claude 调核桥）" >&2; return 3; }
-  [ -f "$hooks_dir/story_hook_core.js" ] || { echo "FAIL: 缺少 story_hook_core.js（Claude 共享核副本）" >&2; return 3; }
+  [ -f "$cli" ] || { echo "FAIL: story_hook_cli.js 누락(Claude 검증 브릿지)" >&2; return 3; }
+  [ -f "$hooks_dir/story_hook_core.js" ] || { echo "FAIL: story_hook_core.js 누락됨(Claude 공유 핵심 복사본)" >&2; return 3; }
   if command -v node >/dev/null 2>&1; then
-    node --check "$cli" >/dev/null 2>&1 || { echo "FAIL: story_hook_cli.js node 语法错误" >&2; return 3; }
+    node --check "$cli" >/dev/null 2>&1 || { echo "FAIL: story_hook_cli.js node 구문 오류" >&2; return 3; }
   fi
   for hook in check-prose-after-write guard-outline-before-prose validate-story-commit detect-story-gaps; do
     if grep -q "<<'PY'" "$hooks_dir/$hook.sh"; then
-      echo "FAIL: $hook.sh 又内嵌 heredoc python（应改调 node 共享核 story_hook_cli.js）" >&2; bad=1
+      echo "FAIL: $hook.sh 내부에 heredoc python 포함됨(node 공유 핵심 story_hook_cli.js로 변경해야 함)" >&2; bad=1
     fi
-    grep -q 'story_hook_cli\.js' "$hooks_dir/$hook.sh" || { echo "FAIL: $hook.sh 未经 story_hook_cli.js 调核" >&2; bad=1; }
+    grep -q 'story_hook_cli\.js' "$hooks_dir/$hook.sh" || { echo "FAIL: $hook.sh가 story_hook_cli.js를 통해 핵심 검증되지 않음" >&2; bad=1; }
   done
   [ "$bad" -eq 0 ] || return 3
   return 0
 }
 
-# ── E. 未归核面 parity（codex python vs JS core），CI 硬保证 ─────────────────────
-# staged markdown warnings 与大纲阻断判定未归核：codex python（staged_markdown_warnings /
-# prose_block_reason）与 JS core（stagedMarkdownWarnings / proseBlockReason）各有一份实现，
-# 语义/文案以 JS core 为准，这里在 fixture 上逐字比对防漂移。Claude 端的纯 bash 实现不在此锁，
-# 由 check-story-setup-deployment.sh / test-hook-encoding-portable.sh 的运行回归覆盖。
-# fixture 至少覆盖：① name 字段大小写变体（NAME/全角空格补白）命中一致——有字段不告警；
-# ② 缺字段/硬编码属性的中文警告文案（含头尾框线）逐字一致；③ 长篇缺细纲/有细纲、
-# 短篇缺小节大纲/无设定信号 4 组阻断判定与阻断文案逐字一致；④ 毒句式欠账门 4 组：
-# 有欠账拦、标「去味:跳过」/全角冒号「去味：跳过」豁免放、上一章含坏字节替换解码继续扫。
+# ── E. 미정렬 parity(codex python vs JS core), CI 강제 보증 ─────────────────────
+# staged markdown warnings와 대안 차단 판정 통합 부재: codex python(staged_markdown_warnings / prose_block_reason)와 JS core(stagedMarkdownWarnings / proseBlockReason)가 각각 구현되어 있으며,
+# 의미/문안은 JS core를 기준으로 하고, 여기서는 fixture 상에서 글자 단위로 비교하여 드리프트를 방지합니다. Claude 측의 순수 bash 구현은 이 범위에 포함되지 않으며,
+# check-story-setup-deployment.sh / test-hook-encoding-portable.sh 실행 회귀 커버로 검증됩니다.
+# fixture는 최소한 다음을 커버해야 합니다: ① name 필드 대소문자 변형(NAME/전각 공백 보충)이 일치하게 명중——필드가 있으면 경고하지 않음;
+
+# ② 누락된 필드/하드코딩된 속성의 중문 경고 문안(헤더/푸터 프레임 포함)이 정확히 일치; ③ 장문 누락된 세부 개요/세부 개요 있음, 단문 누락된 소절 개요/신호 없음 4가지 차단 판정과 차단 문안이 정확히 일치; ④ 독성 문식 미해결 항목 4가지:
+# 미해결 항목 차단, 「제거:스킵」로 표기/전각 콜론「제거：스킵」면제 처리, 이전 챕터에 손상된 바이트 대체 디코딩 계속 스캔.
+# 유효한 미해결 항목 차단, 「제거:스킵」/전각 콜론「제거：스킵」 면제 적용, 이전 장 손상된 바이트 대체 디코딩 후 계속 스캔.
 run_uncored_parity() {
   command -v node >/dev/null 2>&1 || return 1
   command -v python3 >/dev/null 2>&1 || return 1
@@ -424,22 +424,22 @@ run_uncored_parity() {
   local tmp; tmp="$(mktemp -d)"
   trap 'rm -rf "$tmp"' RETURN
 
-  # E1: staged markdown warnings —— 建独立 git 仓库并 stage 固定文件集
+  # E1: staged markdown warnings —— 독립적인 git 저장소를 생성하고 고정 파일 집합을 stage
   local repo="$tmp/repo"
-  mkdir -p "$repo/book/正文" "$repo/设定"
+  mkdir -p "$repo/book/정문" "$repo/설정"
   git -C "$repo" init -q
-  printf '身高: 180\n他推门而入。\n年龄　：18\n' > "$repo/book/正文/第1章.md"
-  printf 'NAME：林远\n' > "$repo/设定/主角.md"            # 大小写变体：字段在，不告警
-  printf '　名字 ：苏离\n' > "$repo/设定/配角.md"          # 全角空格补白：字段在，不告警
-  printf '简介：没有名字字段\n' > "$repo/设定/反派.md"     # 缺字段：告警
-  # 角色卡收窄：只有 设定/角色|人物 子目录内的文件 + 设定/ 直属扁平角色卡才查 name 字段；
-  # 项目级设定件（关系/文风/题材定位…）与非角色子目录不查。四端（bash/OpenCode/JS/py）
-  # 同口径，这里锁 py↔js 两端，防任一端被改回「整棵 设定/ 一刀切」的假警告版本。
-  mkdir -p "$repo/设定/角色" "$repo/设定/世界观"
-  printf '简介：没有名字字段的角色卡\n' > "$repo/设定/角色/新人.md"  # 角色卡子目录：缺字段，告警
-  printf '# 角色关系图\n' > "$repo/设定/关系.md"                     # 项目级设定件：不告警
-  printf '# 文风\n' > "$repo/设定/文风.md"                           # 项目级设定件：不告警
-  printf '# 地理\n' > "$repo/设定/世界观/地理.md"                    # 非角色子目录：整目录跳过
+  printf '키: 180\n문을 밀고 들어갔다.\n나이　：18\n' > "$repo/book/본문/제1장.md"
+  printf 'NAME：린원\n' > "$repo/설정/주인공.md"            # 대소문자 변형: 필드 있음, 경고 없음
+  printf '　이름 ：수리\n' > "$repo/설정/조연.md"          # 전각 공백 채우기: 필드 있음, 경고 없음
+  printf '소개：이름 필드 없음\n' > "$repo/설정/악역.md"     # 필드 누락: 경고
+  # 캐릭터 카드 축소: 설정/캐릭터|인물 하위 디렉터리 내 파일 + 설정/ 직속 평면 캐릭터 카드의 name 필드만 확인; 
+  # 프로젝트 레벨 설정 파일(관계/문체/소재 포지셔닝…)과 비역할 하위 디렉터리는 검사하지 않음. 네 엔드포인트(bash/OpenCode/JS/py)
+  # 동일한 기준으로 여기서는 py↔js 두 엔드를 고정하여, 어느 한쪽이 "전체 설정/ 일괄 처리" 거짓 경고 버전으로 롤백되는 것을 방지합니다.
+  mkdir -p "$repo/설정/역할" "$repo/설정/월드빌딩"
+  printf '소개: 이름 필드가 없는 캐릭터 카드\n' > "$repo/설정/역할/신입.md"  # 캐릭터 카드 하위 디렉터리: 필드 누락, 경고 발생
+  printf '# 캐릭터 관계도\n' > "$repo/설정/관계.md"                     # 프로젝트 레벨 설정 파일: 경고 없음
+  printf '# 문체\n' > "$repo/설정/문체.md"                           # 프로젝트 수준 설정 파일: 경고 없음
+  printf '# 지리\n' > "$repo/설정/세계관/지리.md"                    # 비캐릭터 하위 디렉토리: 전체 디렉토리 스킵
   git -C "$repo" add -A
 
   python3 - "$CODEX" "$repo" > "$tmp/spy.txt" <<'PY'
@@ -454,59 +454,59 @@ const core = require(process.argv[2])
 console.log(core.stagedMarkdownWarnings(process.argv[3]))
 JS
   if ! diff "$tmp/spy.txt" "$tmp/sjs.txt" >/dev/null; then
-    echo "FAIL: staged warnings parity 不一致（codex python vs JS core）：" >&2
+    echo "FAIL: staged warnings parity 불일치(codex python vs JS core):" >&2
     diff "$tmp/spy.txt" "$tmp/sjs.txt" >&2 || true
     return 3
   fi
-  # 防空转（两边都输出空串也会 diff 通过）：断言命中/未命中与统一后的中文文案确实在场
-  grep -q '正文硬编码角色属性，应引用设定文件' "$tmp/spy.txt" || { echo "FAIL: staged warnings 未按统一文案报硬编码属性" >&2; return 3; }
-  grep -q '反派.md: 设定文件缺少 name/名字 必填字段。' "$tmp/spy.txt" || { echo "FAIL: staged warnings 未按统一文案报缺 name 字段" >&2; return 3; }
-  grep -q '主角.md' "$tmp/spy.txt" && { echo "FAIL: 大写 NAME： 应视为字段已存在（大小写不敏感）" >&2; return 3; }
-  grep -q '配角.md' "$tmp/spy.txt" && { echo "FAIL: 全角空格补白的 名字 ： 应视为字段已存在" >&2; return 3; }
-  grep -q '设定/角色/新人.md: 设定文件缺少 name/名字 必填字段。' "$tmp/spy.txt" || { echo "FAIL: 设定/角色 子目录下的角色卡应仍查 name 字段" >&2; return 3; }
-  grep -q '关系.md' "$tmp/spy.txt" && { echo "FAIL: 项目级设定件 关系.md 不该被当角色卡查 name" >&2; return 3; }
-  grep -q '文风.md' "$tmp/spy.txt" && { echo "FAIL: 项目级设定件 文风.md 不该被当角色卡查 name" >&2; return 3; }
-  grep -q '地理.md' "$tmp/spy.txt" && { echo "FAIL: 设定/ 下非角色子目录应整目录跳过" >&2; return 3; }
+  # 방공 전환(양쪽 모두 빈 문자열 출력해도 diff 통과): 명중/미명중 단언과 통일된 중문 문안이 실제로 존재하는지 확인
+  grep -q '정문 하드코딩 캐릭터 속성, 설정 파일을 참조해야 함' "$tmp/spy.txt" || { echo "FAIL: staged warnings 통일 문안으로 하드코딩 속성 보고 안 됨" >&2; return 3; }
+  grep -q '반파.md: 설정 파일에 name/이름 필수 필드가 누락되었습니다.' "$tmp/spy.txt" || { echo "FAIL: staged warnings에서 name 필드 누락을 통일된 문안으로 보고하지 않음" >&2; return 3; }
+  grep -q '주인공.md' "$tmp/spy.txt" && { echo "FAIL: 대문자 NAME:은 필드가 존재하는 것으로 간주해야 함(대소문자 구분 안 함)" >&2; return 3; }
+  grep -q '조연.md' "$tmp/spy.txt" && { echo "FAIL: 전각 공백이 채워진 이름 :은 필드가 존재하는 것으로 간주해야 함" >&2; return 3; }
+  grep -q '설정/캐릭터/신입.md: 설정 파일에 name/이름 필수 필드가 누락되었습니다.' "$tmp/spy.txt" || { echo "FAIL: 설정/캐릭터 하위 디렉터리의 캐릭터 카드는 여전히 name 필드를 확인해야 함" >&2; return 3; }
+  grep -q '관계.md' "$tmp/spy.txt" && { echo "FAIL: 프로젝트 수준 설정 파일 관계.md는 캐릭터 카드로서 name을 확인해서는 안 됨" >&2; return 3; }
+  grep -q '문풍.md' "$tmp/spy.txt" && { echo "FAIL: 프로젝트 레벨 설정 파일 문풍.md는 캐릭터 카드로 검사되면 안 됨" >&2; return 3; }
+  grep -q '지리.md' "$tmp/spy.txt" && { echo "FAIL: 설정/ 아래 비캐릭터 서브디렉토리는 전체 디렉토리를 건너뛰어야 함" >&2; return 3; }
 
-  # E2: 大纲/追踪阻断判定 —— 长篇缺细纲(拦)/有细纲(放)、短篇缺小节大纲(拦)/无设定信号(放)、
-  #     毒句式欠账门（上一章有欠账拦 / 标「去味:跳过」豁免放 / 全角冒号「去味：跳过」豁免放 /
-  #     上一章含坏字节替换解码继续扫仍拦）、新书无脚手架时仍须先建细纲（拦）
+  # E2: 대강/추적 차단 판정 —— 장편 세부 대강 없음(차단)/세부 대강 있음(통과), 단편 소절 대강 없음(차단)/설정 신호 없음(통과),
+  #     독성 문법 미처리(이전 장에 미처리 있으면 차단 / "불순물 제거:건너뛰기" 표시 시 면제 통과 / 전각 콜론「불순물 제거：건너뛰기」면제 통과 /
+  #     이전 장에 나쁜 바이트 대체 디코딩 후 계속 스캔해도 차단), 신규 도서 스캐폴딩 없을 시에도 먼저 세부 대강 생성 필수(차단)
   local blk="$tmp/blk"
-  mkdir -p "$blk/long/正文" "$blk/long/大纲" "$blk/short" "$blk/short2" \
-    "$blk/long2/正文" "$blk/long2/大纲" "$blk/long3/正文" "$blk/long3/大纲"
-  : > "$blk/long/大纲/细纲_第2章.md"
-  : > "$blk/short/设定.md"
-  : > "$blk/short2/其他.md"
-  : > "$blk/long2/大纲/细纲_第2章.md"
-  printf '%s\n' '# 第1章 旧' '' '声音不大，却带着一股狠劲。' > "$blk/long2/正文/第1章_旧.md"
-  : > "$blk/long3/大纲/细纲_第2章.md"
-  printf '%s\n' '# 第1章 旧' '<!-- 去味:跳过 -->' '声音不大，却带着一股狠劲。' > "$blk/long3/正文/第1章_旧.md"
-  mkdir -p "$blk/long4/正文" "$blk/long4/大纲" "$blk/long5/正文" "$blk/long5/大纲"
-  : > "$blk/long4/大纲/细纲_第2章.md"
-  printf '%s\n' '# 第1章 旧' '<!-- 去味：跳过 -->' '声音不大，却带着一股狠劲。' > "$blk/long4/正文/第1章_旧.md"
-  : > "$blk/long5/大纲/细纲_第2章.md"
-  { printf '%s\n' '# 第1章 旧' '声音不大，却带着一股狠劲。'; printf '\xff\n'; } > "$blk/long5/正文/第1章_旧.md"
+  mkdir -p "$blk/long/정문" "$blk/long/대강" "$blk/short" "$blk/short2" \
+    "$blk/long2/정문" "$blk/long2/대강" "$blk/long3/정문" "$blk/long3/대강"
+  : > "$blk/long/대강/세강_제2장.md"
+  : > "$blk/short/설정.md"
+  : > "$blk/short2/기타.md"
+  : > "$blk/long2/대강/세부강_제2장.md"
+  printf '%s\n' '# 제1장 구' '' '음성이 크지 않지만 날카로운 기세가 묻어난다.' > "$blk/long2/정문/제1장_구.md"
+  : > "$blk/long3/대강/세부강_제2장.md"
+  printf '%s\n' '# 제1장 구' '<!-- 제거:건너뛰기 -->' '음성이 크지 않지만 날카로운 기세가 묻어난다.' > "$blk/long3/정문/제1장_구.md"
+  mkdir -p "$blk/long4/정문" "$blk/long4/대강" "$blk/long5/정문" "$blk/long5/대강"
+  : > "$blk/long4/대강/세강_제2장.md"
+  printf '%s\n' '# 제1장 이전' '<!-- 제거: 스킵 -->' '음성이 크지 않지만 거칠게 들린다.' > "$blk/long4/본문/제1장_이전.md"
+  : > "$blk/long5/대강/세강_제2장.md"
+  { printf '%s\n' '# 제1장 이전' '음성이 크지 않지만 거칠게 들린다.'; printf '\xff\n'; } > "$blk/long5/본문/제1장_이전.md"
   for book in long long2 long3 long4 long5; do
-    mkdir -p "$blk/$book/追踪"
-    printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":1}' > "$blk/$book/追踪/_tracking-state.json"
-    printf '%s\n' '> 状态修订：0' > "$blk/$book/追踪/上下文.md"
+    mkdir -p "$blk/$book/추적"
+    printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":1}' > "$blk/$book/추적/_tracking-state.json"
+    printf '%s\n' '> 상태 리비전: 0' > "$blk/$book/추적/컨텍스트.md"
   done
-  # 上一章正文已存在、state 提交进度落后：必须拦住下一章首建。
-  mkdir -p "$blk/long6/正文" "$blk/long6/大纲" "$blk/long6/追踪"
-  : > "$blk/long6/大纲/细纲_第2章.md"
-  printf '%s\n' '# 第1章 旧' '他把门关上了。' > "$blk/long6/正文/第1章_旧.md"
-  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":0}' > "$blk/long6/追踪/_tracking-state.json"
-  printf '%s\n' '> 状态修订：0' > "$blk/long6/追踪/上下文.md"
-  # canonical case：agent 直接首建 {书}/正文/第N章.md，即使书目录还没有大纲/追踪/设定脚手架，
-  # 也必须 fail closed；相对目标的 cwd 语义由各宿主 adapter 单独负责，不能靠削弱核心守卫来掩盖。
-  mkdir -p "$blk/bare/正文"
+  # 이전 장 본문이 존재하고 state 커밋 진행도가 뒤처짐: 다음 장 초기 생성을 반드시 차단해야 함.
+  mkdir -p "$blk/long6/본문" "$blk/long6/개요" "$blk/long6/추적"
+  : > "$blk/long6/개요/세부개요_제2장.md"
+  printf '%s\n' '# 제1장 구판' '그는 문을 닫았다.' > "$blk/long6/정문/제1장_구판.md"
+  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":0}' > "$blk/long6/추적/_tracking-state.json"
+  printf '%s\n' '> 상태 수정판: 0' > "$blk/long6/추적/컨텍스트.md"
+  # 표준 케이스: agent가 {책}/정문/제N장.md를 직접 최초 생성하는데, 책 디렉토리에 아직 개요/추적/설정 스캐폴드가 없어도 반드시 fail closed되어야 함.
+  # 상대 대상의 cwd 의미론은 각 호스트 adapter가 별도로 담당하며, 핵심 보안 강화를 약화시켜 문제를 덮을 수 없음.
+  mkdir -p "$blk/bare/본문"
 
   python3 - "$CODEX" "$blk" > "$tmp/bpy.txt" <<'PY'
 import importlib.util, sys
 from pathlib import Path
 spec = importlib.util.spec_from_file_location("ch", sys.argv[1]); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 root = Path(sys.argv[2])
-for rel in ["long/正文/第1章_起.md", "long/正文/第2章_承.md", "short/正文.md", "short2/正文.md", "long2/正文/第2章_新.md", "long3/正文/第2章_新.md", "long4/正文/第2章_新.md", "long5/正文/第2章_新.md", "long6/正文/第2章_新.md", "bare/正文/第1章_起.md"]:
+for rel in ["long/본문/제1장_기.md", "long/본문/제2장_승.md", "short/본문.md", "short2/본문.md", "long2/본문/제2장_신.md", "long3/본문/제2장_신.md", "long4/본문/제2장_신.md", "long5/본문/제2장_신.md", "long6/본문/제2장_신.md", "bare/본문/제1장_기.md"]:
     reason = m.prose_block_reason(root, root / rel)
     sys.stdout.buffer.write((f"{rel} :: {reason if reason else '-'}\n").encode("utf-8"))
 PY
@@ -514,51 +514,51 @@ PY
 const path = require("node:path")
 const core = require(process.argv[2])
 const root = process.argv[3]
-for (const rel of ["long/正文/第1章_起.md", "long/正文/第2章_承.md", "short/正文.md", "short2/正文.md", "long2/正文/第2章_新.md", "long3/正文/第2章_新.md", "long4/正文/第2章_新.md", "long5/正文/第2章_新.md", "long6/正文/第2章_新.md", "bare/正文/第1章_起.md"]) {
+for (const rel of ["long/본문/제1장_기.md", "long/본문/제2장_승.md", "short/본문.md", "short2/본문.md", "long2/본문/제2장_신.md", "long3/본문/제2장_신.md", "long4/본문/제2장_신.md", "long5/본문/제2장_신.md", "long6/본문/제2장_신.md", "bare/본문/제1장_기.md"]) {
   const reason = core.proseBlockReason(root, path.join(root, rel))
   console.log(`${rel} :: ${reason || "-"}`)
 }
 JS
   if ! diff "$tmp/bpy.txt" "$tmp/bjs.txt" >/dev/null; then
-    echo "FAIL: 大纲阻断 parity 不一致（codex python vs JS core）：" >&2
+    echo "FAIL: 개요 차단 parity 불일치(codex python vs JS core):" >&2
     diff "$tmp/bpy.txt" "$tmp/bjs.txt" >&2 || true
     return 3
   fi
-  grep -q '第1章_起.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 长篇缺细纲未被拦截" >&2; return 3; }
-  grep -q '第2章_承.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 长篇有细纲被误拦" >&2; return 3; }
-  grep -q 'short/正文.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 短篇缺小节大纲未被拦截" >&2; return 3; }
-  grep -q 'short2/正文.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 无设定信号的正文.md 被误拦" >&2; return 3; }
-  grep -q '毒句式欠账' "$tmp/bpy.txt" || { echo "FAIL: 上一章毒句式欠账未被欠账门拦截" >&2; return 3; }
-  grep -q 'long3/正文/第2章_新.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 标「去味:跳过」豁免的上一章仍被欠账门误拦" >&2; return 3; }
-  grep -q 'long4/正文/第2章_新.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 全角冒号豁免标记「去味：跳过」未被欠账门认可" >&2; return 3; }
-  grep -q 'long5/正文/第2章_新.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 上一章含坏字节时两端应替换解码继续扫（不得整体放行）" >&2; return 3; }
-  grep -q 'long6/正文/第2章_新.md :: ⛔.*必须先提交第1章追踪事务' "$tmp/bpy.txt" || { echo "FAIL: state 的 last_committed_chapter 落后正文时未拦住下一章" >&2; return 3; }
-  grep -q 'bare/正文/第1章_起.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 新书无 大纲/追踪/设定 脚手架时首章守卫 fail open" >&2; return 3; }
+  grep -q '제1장_기.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 장편 세부 개요 미차단" >&2; return 3; }
+  grep -q '제2장_승.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 장편에 세부 개요가 있는데 잘못 차단됨" >&2; return 3; }
+  grep -q 'short/정문.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 단편의 소절 개요 부족이 차단되지 않음" >&2; return 3; }
+  grep -q 'short2/정문.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 설정 신호가 없는 정문.md가 잘못 차단됨" >&2; return 3; }
+  grep -q '독성 문장식 미결제' "$tmp/bpy.txt" || { echo "FAIL: 이전 장의 독성 문장식 미결제가 미결제 필터에 의해 차단되지 않음" >&2; return 3; }
+  grep -q 'long3/정문/제2장_신.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 「제맛:건너뛰기」 면제 표시된 이전 장이 여전히 미결제 필터에 의해 잘못 차단됨" >&2; return 3; }
+  grep -q 'long4/정문/제2장_신.md :: -' "$tmp/bpy.txt" || { echo "FAIL: 전각 콜론 면제 표시「제거:건너뛰기」가 미지급 게이트웨이에서 인정되지 않음" >&2; return 3; }
+  grep -q 'long5/정문/제2장_신.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 이전 장에 손상된 바이트가 있을 때 양쪽 끝에서 디코딩을 대체하고 계속 스캔해야 함(전체 허용 불가)" >&2; return 3; }
+  grep -q 'long6/정문/제2장_신.md :: ⛔.*반드시 먼저 제1장 추적 트랜잭션을 커밋해야 함' "$tmp/bpy.txt" || { echo "FAIL: state의 last_committed_chapter가 정문보다 뒤떨어져 있을 때 다음 장이 차단되지 않음" >&2; return 3; }
+  grep -q 'bare/정문/제1장_시.md :: ⛔' "$tmp/bpy.txt" || { echo "FAIL: 새 책에 대강/추적/설정 스캐폴딩이 없을 때 첫 장 보호 실패 열림" >&2; return 3; }
 
-  # E3: 追踪状态判定 parity。覆盖缺失、坏 JSON、旧 schema、派生 revision 不一致、
-  #     缺修订号、缺章号、提交落后和有效 state 放行，避免 Codex Python 与三端 JS core 漂移。
+  # E3: 추적 상태 판정 parity. 누락, 손상된 JSON, 이전 schema, 파생 revision 불일치,
+  #     수정 버전 누락, 장 번호 누락, 제출 지연 및 유효 state는 통과시켜 Codex Python과 3개 플랫폼 JS core의 편차를 방지합니다.
   local cp="$tmp/checkpoints"
-  mkdir -p "$cp"/{missing,malformed,old,mismatch,norevision,nolast,behind,valid,revised}/追踪
+  mkdir -p "$cp"/{missing,malformed,old,mismatch,norevision,nolast,behind,valid,revised}/tracking
   for name in malformed old mismatch norevision nolast behind valid revised; do
-    printf '%s\n' '> 状态修订：0' > "$cp/$name/追踪/上下文.md"
+    printf '%s\n' '> 상태 수정: 0' > "$cp/$name/tracking/context.md"
   done
-  printf '%s\n' '{not-json' > "$cp/malformed/追踪/_tracking-state.json"
-  printf '%s\n' '{"schema_version":3,"state_revision":0,"last_committed_chapter":7}' > "$cp/old/追踪/_tracking-state.json"
-  printf '%s\n' '{"schema_version":4,"state_revision":1,"last_committed_chapter":7}' > "$cp/mismatch/追踪/_tracking-state.json"
-  printf '%s\n' '{"schema_version":4,"last_committed_chapter":7}' > "$cp/norevision/追踪/_tracking-state.json"
-  printf '%s\n' '{"schema_version":4,"state_revision":0}' > "$cp/nolast/追踪/_tracking-state.json"
-  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":6}' > "$cp/behind/追踪/_tracking-state.json"
-  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":7}' > "$cp/valid/追踪/_tracking-state.json"
-  # 回炉/改名/留原稿备份：章号已在追踪范围内（expected 7 < last 9），文件名是新的但该章早已提交，
-  # 顺序校验对它恒为假，必须放行——否则 workflow-revision 的「备份原稿」步骤在三端被硬拦。
-  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":9}' > "$cp/revised/追踪/_tracking-state.json"
+  printf '%s\n' '{not-json' > "$cp/malformed/tracking/_tracking-state.json"
+  printf '%s\n' '{"schema_version":3,"state_revision":0,"last_committed_chapter":7}' > "$cp/old/tracking/_tracking-state.json"
+  printf '%s\n' '{"schema_version":4,"state_revision":1,"last_committed_chapter":7}' > "$cp/mismatch/추적/_tracking-state.json"
+  printf '%s\n' '{"schema_version":4,"last_committed_chapter":7}' > "$cp/norevision/추적/_tracking-state.json"
+  printf '%s\n' '{"schema_version":4,"state_revision":0}' > "$cp/nolast/추적/_tracking-state.json"
+  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":6}' > "$cp/behind/추적/_tracking-state.json"
+  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":7}' > "$cp/valid/추적/_tracking-state.json"
+  # 재작업/이름 변경/원본 보관: 챕터 번호가 추적 범위 내임(예상 7 < 마지막 9), 파일명은 새로우나 해당 챕터는 이미 제출됨,
+  # 순서 검증은 항상 거짓을 반환하므로 통과 허용 필요——그렇지 않으면 workflow-revision의 「원본 보관」 단계가 세 플랫폼에서 강제 차단됨.
+  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":9}' > "$cp/revised/추적/_tracking-state.json"
   python3 - "$CODEX" "$cp" > "$tmp/cpy.txt" <<'PY'
 import importlib.util, sys
 from pathlib import Path
 spec = importlib.util.spec_from_file_location("ch", sys.argv[1]); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 root = Path(sys.argv[2])
-# 同 B/C 段：Windows runner 上 python<3.15 的文本 stdout 是 cp1252，
-# 含中文的 issue 直接 print 会 UnicodeEncodeError，必须走 stdout.buffer 直写 UTF-8。
+# B/C 섹션과 동일: Windows runner의 python<3.15 텍스트 stdout은 cp1252,
+# 중국어가 포함된 issue를 직접 print하면 UnicodeEncodeError 발생, stdout.buffer를 통해 UTF-8로 직접 작성 필요.
 for name, expected in [("missing", None), ("malformed", None), ("old", None), ("mismatch", None), ("norevision", None), ("nolast", 7), ("behind", 7), ("valid", 7), ("revised", 7)]:
     issue = m.tracking_checkpoint_issue(root / name, require_state=True, expected_last_committed=expected)
     sys.stdout.buffer.write((f"{name} :: {issue or '-'}" + "\n").encode("utf-8"))
@@ -573,35 +573,35 @@ for (const [name, expected] of [["missing", null], ["malformed", null], ["old", 
 }
 JS
   if ! diff "$tmp/cpy.txt" "$tmp/cjs.txt" >/dev/null; then
-    echo "FAIL: 追踪检查点 parity 不一致（codex python vs JS core）：" >&2
+    echo "FAIL: 추적 체크포인트 parity 불일치 (codex python vs JS core):" >&2
     diff "$tmp/cpy.txt" "$tmp/cjs.txt" >&2 || true
     return 3
   fi
-  grep -q 'missing :: .*_tracking-state.json 缺失' "$tmp/cpy.txt" || { echo "FAIL: 缺失 state 未 fail closed" >&2; return 3; }
-  grep -q 'malformed :: .*无法解析' "$tmp/cpy.txt" || { echo "FAIL: 坏 JSON 未 fail closed" >&2; return 3; }
-  grep -q 'old :: .*schema_version=4' "$tmp/cpy.txt" || { echo "FAIL: 旧 schema 未 fail closed" >&2; return 3; }
-  grep -q 'mismatch :: .*状态修订.*mode=revision 事务重建派生视图' "$tmp/cpy.txt" || { echo "FAIL: 派生 revision 不一致未给 mode=revision 重建动作" >&2; return 3; }
-  grep -q 'norevision :: .*缺少整数 state_revision' "$tmp/cpy.txt" || { echo "FAIL: 缺 state_revision 未 fail closed" >&2; return 3; }
-  grep -q 'nolast :: .*缺少整数 last_committed_chapter' "$tmp/cpy.txt" || { echo "FAIL: 缺 last_committed 未 fail closed" >&2; return 3; }
-  grep -q 'behind :: .*必须先提交第7章追踪事务' "$tmp/cpy.txt" || { echo "FAIL: 落后章号未 fail closed" >&2; return 3; }
-  grep -q 'valid :: -' "$tmp/cpy.txt" || { echo "FAIL: 有效 state 被误拦" >&2; return 3; }
-  grep -q 'revised :: -' "$tmp/cpy.txt" || { echo "FAIL: 回炉/备份已提交章号被误拦（workflow-revision 备份原稿会卡死）" >&2; return 3; }
+  grep -q 'missing :: .*_tracking-state.json 누락' "$tmp/cpy.txt" || { echo "FAIL: 누락된 state가 실패 처리되지 않음" >&2; return 3; }
+  grep -q 'malformed :: .*파싱 불가' "$tmp/cpy.txt" || { echo "FAIL: 잘못된 JSON이 실패 처리되지 않음" >&2; return 3; }
+  grep -q 'old :: .*schema_version=4' "$tmp/cpy.txt" || { echo "FAIL: 이전 schema가 실패 처리되지 않음" >&2; return 3; }
+  grep -q 'mismatch :: .*상태 리비전.*mode=revision 트랜잭션 재구성 파생 뷰' "$tmp/cpy.txt" || { echo "FAIL: 파생 revision 불일치가 mode=revision 재구성 작업을 받지 않음" >&2; return 3; }
+  grep -q 'norevision :: .*정수 state_revision 누락' "$tmp/cpy.txt" || { echo "FAIL: state_revision 누락으로 실패 처리 안 됨" >&2; return 3; }
+  grep -q 'nolast :: .*정수 last_committed_chapter 누락' "$tmp/cpy.txt" || { echo "FAIL: last_committed 누락으로 실패 처리 안 됨" >&2; return 3; }
+  grep -q 'behind :: .*7장을 먼저 커밋하고 트랜잭션 추적 필요' "$tmp/cpy.txt" || { echo "FAIL: 뒤처진 장 번호로 실패 처리 안 됨" >&2; return 3; }
+  grep -q 'valid :: -' "$tmp/cpy.txt" || { echo "FAIL: 유효한 state가 잘못 차단됨" >&2; return 3; }
+  grep -q 'revised :: -' "$tmp/cpy.txt" || { echo "FAIL: 재작업/백업 완료된 장 번호가 잘못 차단됨(workflow-revision 백업 원고가 중단됨)" >&2; return 3; }
 
-  # E4: 续写状态卡超预算在 Python/JS 两端都告警，且不得依赖 mtime 偶然触发。
+  # E4: 연속 쓰기 상태 카드가 예산을 초과할 때 Python/JS 양쪽 끝에서 모두 경고하고, mtime 우발적 트리거에 의존하면 안 됨.
   local hot="$tmp/hot-context"
-  mkdir -p "$hot/book/正文" "$hot/book/追踪"
-  printf '%s\n' '# 第1章 开端' '正文。' > "$hot/book/正文/第001章_开端.md"
-  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":1}' > "$hot/book/追踪/_tracking-state.json"
-  python3 - "$hot/book/追踪/上下文.md" <<'PY'
+  mkdir -p "$hot/book/정문" "$hot/book/추적"
+  printf '%s\n' '# 제1장 시작' '정문.' > "$hot/book/정문/제001장_시작.md"
+  printf '%s\n' '{"schema_version":4,"state_revision":0,"last_committed_chapter":1}' > "$hot/book/추적/_tracking-state.json"
+  python3 - "$hot/book/추적/상하문.md" <<'PY'
 from pathlib import Path
 import sys
-Path(sys.argv[1]).write_bytes(("> 状态修订：0\n" + "状态" * 7000).encode("utf-8"))
+Path(sys.argv[1]).write_bytes(("> 상태 수정: 0\n" + "상태" * 7000).encode("utf-8"))
 PY
   python3 - "$CODEX" "$hot" > "$tmp/hpy.txt" <<'PY'
 import importlib.util, sys
 from pathlib import Path
 spec = importlib.util.spec_from_file_location("ch", sys.argv[1]); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-# findings 运行期含中文；Windows 文本 stdout 是 cp1252，必须走 buffer 直写 UTF-8。
+# findings 실행 중 한글 포함; Windows 텍스트 stdout은 cp1252이므로 buffer를 통해 직접 UTF-8 작성해야 함.
 for finding in m.continuity_findings(Path(sys.argv[2])):
     sys.stdout.buffer.write((finding + "\n").encode("utf-8"))
 PY
@@ -610,11 +610,11 @@ const core = require(process.argv[2])
 for (const finding of core.continuityFindings(process.argv[3])) console.log(finding)
 JS
   if ! diff "$tmp/hpy.txt" "$tmp/hjs.txt" >/dev/null; then
-    echo "FAIL: 热上下文超预算 parity 不一致（codex python vs JS core）：" >&2
+    echo "실패: 핫 컨텍스트 초과 예산 parity 불일치(codex python vs JS core):" >&2
     diff "$tmp/hpy.txt" "$tmp/hjs.txt" >&2 || true
     return 3
   fi
-  grep -q '超出续写状态卡预算 12288 字节' "$tmp/hpy.txt" || { echo "FAIL: 热上下文超预算未告警" >&2; return 3; }
+  grep -q '속성 쓰기 상태 카드 예산 12288 바이트 초과' "$tmp/hpy.txt" || { echo "실패: 핫 컨텍스트 초과 예산 경고 없음" >&2; return 3; }
   return 0
 }
 
@@ -623,8 +623,8 @@ run_functional
 rc=$?
 set -e
 case "$rc" in
-  0) echo "功能 parity：codex python 网 == opencode TS 网 == zcode JS 网（39 fixtures 逐字相等，含毒句式正反例/AI 自指/截断收尾与豁免标记）。" ;;
-  2) echo "功能 parity：跳过（无 TS 运行时；规范串检查已给 CI 安全保证）。" ;;
+  0) echo "기능 parity: codex python 웹 == opencode TS 웹 == zcode JS 웹(39개 fixture 글자 단위 일치, 독성 구문 정반대 예제/AI 자기참조/절단 종료 및 면제 표시 포함)." ;;
+  2) echo "기능 parity: 건너뜀 (TS 런타임 없음; 규범 문자열 검사는 이미 CI 보안 보증 완료)." ;;
   *) fails=$((fails + 1)) ;;
 esac
 
@@ -633,8 +633,8 @@ run_cmd_parity
 rc_cmd=$?
 set -e
 case "$rc_cmd" in
-  0) echo "命令函数 parity：codex python == zcode JS（31 fixtures：正文抽取/apply-patch/git commit 侦测逐字相等，含引号内操作符/空格/全角空格目标、apply_patch 搬家与上下文伪指令、ReDoS 预算）。" ;;
-  1) echo "命令函数 parity：跳过（无 node/python3 运行时）。" ;;
+  0) echo "명령 함수 parity: codex python == zcode JS (31 fixtures: 본문 추출/apply-patch/git commit 감지 문자 단위 동등성, 따옴표 내 연산자/공백/전각 공백 대상, apply_patch 이동 및 문맥 의사 명령, ReDoS 예산)." ;;
+  1) echo "명령 함수 parity: 건너뜀 (node/python3 런타임 없음)." ;;
   *) fails=$((fails + 1)) ;;
 esac
 
@@ -643,23 +643,23 @@ run_claude_core_check
 rc_claude=$?
 set -e
 case "$rc_claude" in
-  0) echo "Claude 归核回归：4 个 bash hook 无内嵌 python、均经 story_hook_cli.js 调共享核（与 OpenCode/ZCode 同一份，经 B/C 锁到 codex）。" ;;
+  0) echo "Claude 핵심 회귀: 4개 bash hook 내장 python 없음, 모두 story_hook_cli.js를 통해 공유 핵심 호출 (OpenCode/ZCode와 동일 사본, B/C 잠금으로 codex에 고정)." ;;
   *) fails=$((fails + 1)) ;;
 esac
 
-# F. Claude bash 写正文守卫 ↔ JS core proseBlockReason 行为 parity（CI 硬保证）。
-# 大纲/细纲阻断必须在无 node 的运行时也拦得住，所以 guard-outline-before-prose.sh 用纯 bash
-# 判定；追踪检查点要解析 JSON，只能经 story_hook_cli.js 调共享核。两条路径混在一个 BLOCKING
-# 守卫里，此前无任何跨端断言覆盖 bash 那一面——#283 给另三端加了追踪门，Claude 侧静默漏了
-# 一整版（issue #305）。这里按「同一工程同一次写入，bash 拦不拦 == JS 核拦不拦」逐场景比对，
-# 任一端单边改动都会红。
+# F. Claude bash 본문 가드 ↔ JS core proseBlockReason 동작 parity (CI 강제 보증).
+# 대강/세부 차단은 node가 없는 런타임에서도 막아야 하므로 guard-outline-before-prose.sh는 순수 bash로
+# 판정합니다. 추적 체크포인트는 JSON을 파싱해야 하므로 story_hook_cli.js를 통해 공유 코어를 호출해야 합니다. 두 경로가 하나의 BLOCKING
+# 가드에 섞여 있는데, 이전까지 bash 쪽에 대한 교차 플랫폼 단언 커버리지가 없었습니다. #283에서 다른 세 플랫폼에 추적 게이트를 추가했지만 Claude 쪽은 조용히 놓쳤습니다
+# (이슈 #305). 여기서는 「같은 프로젝트 같은 쓰기에서 bash 차단 여부 == JS 코어 차단 여부」를 각 시나리오별로 비교하며
+# 어느 한쪽이라도 단독으로 변경되면 빨강색으로 표시됩니다.
 run_bash_guard_parity() {
   command -v node >/dev/null 2>&1 || return 1
   command -v python3 >/dev/null 2>&1 || return 1
   local tmp; tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' RETURN
 
-  # scenario|last_committed|ctx_revision|schema|outline_ch|target_ch|target_exists|拆文库|state
-  # state=none 时 last/ctx/schema 无意义。target_exists=1 走续写路径（不判细纲，仍判追踪）。
+  # scenario|last_committed|ctx_revision|schema|outline_ch|target_ch|target_exists|split_lib|state
+  # state=none일 때 last/ctx/schema는 무의미합니다. target_exists=1이면 계속 작성 경로를 진행합니다(세부 대강은 판단하지 않지만 추적은 여전히 판단).
   local scenarios="
 nostate|-|-|-|1|1|0|0|none
 nooutline|-|-|-|-|1|0|0|none
@@ -678,19 +678,19 @@ revisionbackup|5|0|4|3|3|0|0|yes
   local line
   while IFS='|' read -r name last ctx schema outline target exists lib state; do
     [ -n "${name:-}" ] || continue
-    local proj="$tmp/$name" book="$tmp/$name/书"
-    mkdir -p "$book/大纲" "$book/正文" "$book/追踪"
-    [ "$lib" = "1" ] && mkdir -p "$proj/拆文库/书"
-    [ "$outline" != "-" ] && printf '# 细纲\n' > "$book/大纲/细纲_第00${outline}章.md"
+    local proj="$tmp/$name" book="$tmp/$name/책"
+    mkdir -p "$book/개요" "$book/본문" "$book/추적"
+    [ "$lib" = "1" ] && mkdir -p "$proj/분해문고/책"
+    [ "$outline" != "-" ] && printf '# 상세 개요\n' > "$book/개요/상세개요_제00${outline}장.md"
     if [ "$state" = "yes" ]; then
       printf '{"schema_version":%s,"state_revision":0,"last_committed_chapter":%s}\n' "$schema" "$last" \
-        > "$book/追踪/_tracking-state.json"
-      printf '> 状态修订：%s。\n' "$ctx" > "$book/追踪/上下文.md"
+        > "$book/추적/_tracking-state.json"
+      printf '> 상태 수정: %s.\n' "$ctx" > "$book/추적/컨텍스트.md"
     fi
-    local abs="$book/正文/第00${target}章_测试.md"
-    [ "$exists" = "1" ] && printf '# 第%s章 测试\n正文。\n' "$target" > "$abs"
+    local abs="$book/본문/제00${target}장_테스트.md"
+    [ "$exists" = "1" ] && printf '# 제%s장 테스트\n본문.\n' "$target" > "$abs"
 
-    # bash 侧：exit 2 = 拦，0 = 放行
+    # bash 측: exit 2 = 차단, 0 = 허용
     local payload code
     payload=$(python3 -c 'import json,sys;print(json.dumps({"tool_input":{"file_path":sys.argv[1]}}))' "$abs")
     ( cd "$proj" && CLAUDE_PROJECT_DIR="$proj" CLAUDE_TOOL_INPUT="$payload" bash "$CLAUDE_GUARD" ) >/dev/null 2>&1
@@ -698,7 +698,7 @@ revisionbackup|5|0|4|3|3|0|0|yes
     if [ "$code" = 2 ]; then printf '%s :: block\n' "$name" >> "$out_bash"
     else printf '%s :: pass\n' "$name" >> "$out_bash"; fi
 
-    # JS 核侧
+    # JS 핵심부
     node - "$CLAUDE_CORE" "$proj" "$abs" "$name" >> "$out_js" <<'JS'
 const core = require(process.argv[2])
 const reason = core.proseBlockReason(process.argv[3], process.argv[4])
@@ -707,11 +707,11 @@ JS
   done <<< "$scenarios"
 
   if ! diff "$out_bash" "$out_js" >/dev/null; then
-    echo "FAIL: 写正文守卫 parity 不一致（Claude bash guard vs JS core）：" >&2
+    echo "FAIL: 본문 가드 parity 불일치(Claude bash guard vs JS core):" >&2
     diff "$out_bash" "$out_js" >&2 || true
     return 3
   fi
-  # 光对齐还不够：两端一起漏拦也会 diff 干净。锚死每个场景的期望方向。
+  # 정렬만으로는 부족: 양쪽이 동시에 차단 누락해도 diff가 깔끔합니다. 각 시나리오의 예상 방향을 고정하세요.
   local expect="nostate block
 nooutline block
 importwindow pass
@@ -725,18 +725,18 @@ revisionbackup pass"
   while read -r want_name want_verdict; do
     [ -n "$want_name" ] || continue
     grep -qx "$want_name :: $want_verdict" "$out_bash" || {
-      echo "FAIL: 场景 $want_name 期望 $want_verdict，实得：$(grep "^$want_name ::" "$out_bash")" >&2
+      echo "FAIL: 시나리오 $want_name 예상값 $want_verdict, 실제 결과: $(grep "^$want_name ::" "$out_bash")" >&2
       return 3
     }
   done <<< "$expect"
 
-  # node 缺席时追踪门必须 fail-open（大纲门仍靠纯 bash 拦住）。
+  # node 부재 시 추적 게이트는 fail-open이어야 합니다(개요 게이트는 순수 bash로만 차단).
   local nonode="$tmp/nonode"; mkdir -p "$nonode"
-  local proj="$tmp/nostate" abs="$tmp/nostate/书/正文/第001章_测试.md"
+  local proj="$tmp/nostate" abs="$tmp/nostate/책/본문/제001장_테스트.md"
   local payload; payload=$(python3 -c 'import json,sys;print(json.dumps({"tool_input":{"file_path":sys.argv[1]}}))' "$abs")
   ( cd "$proj" && PATH="$nonode:/usr/bin:/bin" CLAUDE_PROJECT_DIR="$proj" CLAUDE_TOOL_INPUT="$payload" \
       bash "$CLAUDE_GUARD" ) >/dev/null 2>&1
-  [ $? -eq 0 ] || { echo "FAIL: node 缺席时追踪门未 fail-open（BLOCKING 路径不得依赖 node 在场）" >&2; return 3; }
+  [ $? -eq 0 ] || { echo "FAIL: node 부재 시 추적 게이트가 fail-open되지 않음(BLOCKING 경로는 node 존재 여부에 의존하면 안 됨)" >&2; return 3; }
   return 0
 }
 
@@ -745,8 +745,8 @@ run_uncored_parity
 rc_uncored=$?
 set -e
 case "$rc_uncored" in
-  0) echo "未归核面 parity：codex python == JS core（staged warnings 大小写变体/文案 + 大纲阻断 9 组判定含毒句式欠账门/无脚手架 fail-closed/文案逐字相等）。" ;;
-  1) echo "未归核面 parity：跳过（无 node/python3/git 运行时）。" ;;
+  0) echo "parity 미통과: codex python == JS core(staged warnings 대소문자 변체/문안 + 개요 차단 9개 판정 독성 문구 결함 게이트/스캐폴딩 부재 fail-closed/문안 글자 단위 일치)." ;;
+  1) echo "parity 미통과: 건너뜀(node/python3/git 런타임 부재)." ;;
   *) fails=$((fails + 1)) ;;
 esac
 
@@ -755,8 +755,8 @@ run_bash_guard_parity
 rc_guard=$?
 set -e
 case "$rc_guard" in
-  0) echo "写正文守卫 parity：Claude bash guard == JS core（10 组工程场景：无 state/缺细纲/导入窗口/跳章/续写/派生修订不一致/坏 schema/回炉备份，含 node 缺席 fail-open）。" ;;
-  1) echo "写正文守卫 parity：跳过（无 node/python3 运行时）。" ;;
+ 0) echo "산문 검증 parity: Claude bash guard == JS core (10개 엔지니어링 시나리오: 상태 없음/세부 계획 부족/import 창 열림/챕터 스킵/계속 작성/파생 수정 불일치/잘못된 schema/재작업 백업, node 미실행 fail-open 포함)." ;;
+ 1) echo "산문 검증 parity: 스킵됨 (node/python3 런타임 없음)." ;;
   *) fails=$((fails + 1)) ;;
 esac
 
