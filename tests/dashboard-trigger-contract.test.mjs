@@ -19,7 +19,7 @@ test("story skill exposes the platform-specific dashboard triggers", async () =>
   assert.match(skill, /\$story dashboard/);
   assert.match(
     skill,
-    /\| 工作台 \| dashboard、工作台、看拆文库、浏览项目文件、打开项目面板 \| 见下方「Dashboard 工作台」 \|/,
+    /\| 작업대 \| dashboard, 작업대, 분석 라이브러리 보기, 프로젝트 파일 탐색, 프로젝트 패널 열기 \| 아래 「Dashboard 작업대」 참조 \|/,
   );
   assert.match(
     skill,

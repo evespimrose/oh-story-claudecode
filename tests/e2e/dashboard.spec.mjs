@@ -12,7 +12,7 @@ test("用现有 demo 浏览拆文库、搜索项目并编辑保存", async ({ pa
   await page.goto("/");
   await expect(page).toHaveTitle(/OH STORY/);
   await expect(page.getByText("OH STORY", { exact: true })).toBeVisible();
-  await expect(page.locator("#connectionStatus")).toContainText("仅本机");
+  await expect(page.locator("#connectionStatus")).toContainText("내 컴퓨터만");
   await expect(page.locator("#libraryCount")).toHaveText("2");
   await expect(page.locator("#projectCount")).toHaveText("1");
   await expect(page.locator("#fileCount")).not.toHaveText("—");
