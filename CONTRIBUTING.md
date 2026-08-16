@@ -19,7 +19,7 @@ skills/
 ├── story-review/            # 다각도 심사
 ├── story-cover/             # 표지 생성
 └── browser-cdp/             # 브라우저 조작
-scripts/                       # 개발 가드 / 테스트 / 코드 생성（전체 인덱스는 scripts/README.md 참고）
+scripts/                       # 개발 가드 / 테스트 / 코드 생성 (전체 인덱스는 scripts/README.md 참고)
 ```
 
 각 skill은 `SKILL.md`(진입점)와 `references/` 디렉터리(지식 베이스)로 구성됩니다.
