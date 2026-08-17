@@ -1,4 +1,4 @@
-# 중국어→한국어 현지화 작업 목록
+﻿# 중국어→한국어 현지화 작업 목록
 
 > 최종 갱신 기준: 2026-08-17
 > 기준 브랜치: `main`
@@ -38,7 +38,7 @@
 
 ## 현재 진행 중이던 항목
 
-- [ ] `skills/story-long-write/references/genre-readers.md`
+- [x] `skills/story-long-write/references/genre-readers.md` — Batch 4 완료, 커밋 `59443c5`
   - 문서 설명·표·예시의 중국어를 한국어로 번역하는 작업을 시작했으나 아직 완료하지 않았습니다.
   - 마지막 실행이 완료되지 않았으므로 커밋·푸시하지 않았습니다.
 
