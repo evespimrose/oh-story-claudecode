@@ -60,7 +60,7 @@
 - [x] `skills/story-long-write/references/state-tracking.md`
 - [x] `skills/story-long-write/references/style-craft.md`
 - [x] `skills/story-long-write/references/style-combat-face.md`
-- [ ] `skills/story-long-write/references/tracking-transaction.md`
+- [x] `skills/story-long-write/references/tracking-transaction.md` — Batch 21
 - [ ] `skills/story-long-write/references/workflow-daily.md`
 - [ ] `skills/story-long-write/references/workflow-revision.md`
 - [ ] `skills/story-long-write/references/workflow-setup.md`
