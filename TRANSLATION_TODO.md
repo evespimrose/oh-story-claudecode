@@ -49,7 +49,7 @@
 - [x] `skills/story-long-write/references/genre-writing-formulas.md` — Batch 7 완료, 커밋 `c3ebe5b`
 - [x] `skills/story-short-write/references/genre-writing-techniques.md` — Batch 8 완료, 커밋 `8b29f4d` (TODO의 장기 경로 오기 정정)
 - [x] `skills/story-long-write/references/hooks-paragraph.md`
-- [ ] `skills/story-long-write/references/hooks-suspense.md`
+- [x] `skills/story-long-write/references/hooks-suspense.md`
 - [ ] `skills/story-long-write/references/outline-methods.md`
 - [ ] `skills/story-long-write/references/outline-rhythm.md`
 - [ ] `skills/story-long-write/references/plot-core-methods.md`
@@ -82,3 +82,4 @@
 - [ ] 경로 참조와 중복 참조본의 용어 일관성 확인
 - [ ] `git diff --check` 통과 확인
 - [ ] 배치별 5MB 이하 커밋 및 순차 푸시
+
