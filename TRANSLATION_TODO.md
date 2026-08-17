@@ -58,7 +58,7 @@
 - [x] `skills/story-long-write/references/quality-checklist.md`
 - [x] `skills/story-long-write/references/reversal-toolkit.md`
 - [x] `skills/story-long-write/references/state-tracking.md`
-- [ ] `skills/story-long-write/references/style-craft.md`
+- [x] `skills/story-long-write/references/style-craft.md`
 - [ ] `skills/story-long-write/references/style-combat-face.md`
 - [ ] `skills/story-long-write/references/tracking-transaction.md`
 - [ ] `skills/story-long-write/references/workflow-daily.md`
@@ -82,6 +82,7 @@
 - [ ] 경로 참조와 중복 참조본의 용어 일관성 확인
 - [ ] `git diff --check` 통과 확인
 - [ ] 배치별 5MB 이하 커밋 및 순차 푸시
+
 
 
 
