@@ -44,8 +44,8 @@
 
 ## 다음 문서 번역 배치
 
-- [ ] `skills/story-long-write/references/emotional-methods.md`
-- [ ] `skills/story-long-write/references/female-audience-writing.md`
+- [x] `skills/story-long-write/references/emotional-methods.md` — Batch 5 완료, 커밋 `ae098bb`
+- [x] `skills/story-long-write/references/female-audience-writing.md` — Batch 6 완료, 커밋 `6d8d011`
 - [ ] `skills/story-long-write/references/genre-writing-formulas.md`
 - [ ] `skills/story-long-write/references/genre-writing-techniques.md`
 - [ ] `skills/story-long-write/references/hooks-paragraph.md`
