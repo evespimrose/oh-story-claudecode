@@ -55,7 +55,7 @@
 - [x] `skills/story-long-write/references/plot-core-methods.md`
 - [x] `skills/story-long-write/references/plot-emotion-system.md`
 - [x] `skills/story-long-write/references/plot-special-topics.md`
-- [ ] `skills/story-long-write/references/quality-checklist.md`
+- [x] `skills/story-long-write/references/quality-checklist.md`
 - [ ] `skills/story-long-write/references/reversal-toolkit.md`
 - [ ] `skills/story-long-write/references/state-tracking.md`
 - [ ] `skills/story-long-write/references/style-craft.md`
@@ -82,6 +82,7 @@
 - [ ] 경로 참조와 중복 참조본의 용어 일관성 확인
 - [ ] `git diff --check` 통과 확인
 - [ ] 배치별 5MB 이하 커밋 및 순차 푸시
+
 
 
 
