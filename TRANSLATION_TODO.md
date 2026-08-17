@@ -51,7 +51,7 @@
 - [x] `skills/story-long-write/references/hooks-paragraph.md`
 - [x] `skills/story-long-write/references/hooks-suspense.md`
 - [x] `skills/story-long-write/references/outline-methods.md`
-- [ ] `skills/story-long-write/references/outline-rhythm.md`
+- [x] `skills/story-long-write/references/outline-rhythm.md`
 - [ ] `skills/story-long-write/references/plot-core-methods.md`
 - [ ] `skills/story-long-write/references/plot-emotion-system.md`
 - [ ] `skills/story-long-write/references/plot-special-topics.md`
@@ -82,5 +82,6 @@
 - [ ] 경로 참조와 중복 참조본의 용어 일관성 확인
 - [ ] `git diff --check` 통과 확인
 - [ ] 배치별 5MB 이하 커밋 및 순차 푸시
+
 
 
