@@ -125,3 +125,11 @@
 ## 8. 다음 세션에 대한 최종 주의
 
 이번 세션의 핵심 실패 지점은 **범위 제약 검증보다 일괄 번역을 먼저 실행한 것**이다. 다음 세션은 속도보다 `TRANSLATION_TODO.md`의 작업 규칙, 특히 `demo/` 본문 금지 규칙과 기존 변경 보존을 우선한다. 파일명 현지화와 본문 현지화를 같은 작업으로 취급하지 말고, 각 단계에서 Git 추적과 경로 참조의 정합성을 검수한다.
+
+## 다음 세션 재개 지점 (Batch 22)
+
+**인계 기준 커밋:** `b2daf5f` (`docs: localize tracking transaction reference (batch 21)`). 이 커밋은 `skills/story-long-write/references/tracking-transaction.md`와 `TRANSLATION_TODO.md`를 포함하며 `origin/main`에 푸시되어 있다.
+
+**다음에 할 일:** `skills/story-long-write/references/workflow-daily.md`를 원문에서 다시 번역한다. 이전 세션에서 만든 후보 번역은 사용하지 않는다. 해당 후보는 줄 병합, 번역 메타 문구 삽입, 기능용 보호 문자열 변형이 발생하여 검증을 통과하지 못했고 원격 저장소에도 적용되지 않았다.
+
+**재개 절차:** 실제 추적 경로를 `git ls-files`로 확인한 뒤 원문을 가져온다. 번역 전에 URL, 경로, 명령어, 정규식, JSON 키, 앵커, 셀렉터, 코드 블록과 인라인 코드를 보호한다. 번역 후 보호 문자열의 원문 일치 여부, 가시 본문 CJK 잔존 여부, Markdown 구조, `git diff --check`를 확인한다. 검증된 파일만 Batch 22로 커밋하고 즉시 푸시한다. 커밋은 5MB 미만으로 유지하며 `demo/`는 건드리지 않는다.

@@ -93,3 +93,12 @@
 
 
 
+
+## 다음 세션 재개 지점 (Batch 22)
+
+- **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
+- **현재 브랜치 상태:** `main`은 `origin/main`과 동기화되어 있으며, 인수인계 작성 전 작업 트리는 깨끗했음.
+- **다음 대상:** `skills/story-long-write/references/workflow-daily.md`.
+- **다음 작업 순서:** 먼저 `git ls-files -- skills/story-long-write/references/workflow-daily.md`로 실제 경로를 확인한다. 원문을 샌드박스로 가져와 기능용 문자열(경로, 명령어, 정규식, JSON 키, URL, 앵커, 셀렉터)을 보호한 상태로 번역한다. 번역 후 기능 문자열 복원 여부, 가시 본문 CJK 잔존, Markdown 줄 구조, `git diff --check`를 검증한다.
+- **현재 주의사항:** 이전 세션에서 `workflow-daily.md`의 번역 후보를 만들었으나 품질 검증을 통과하지 못해 원격 저장소에는 적용하지 않았다. 특히 줄 병합, 메타 안내 문구 삽입, 보호 토큰 변형이 발생했으므로 해당 후보를 그대로 사용하지 말고 원문에서 다시 시작한다.
+- **커밋 규칙:** 검증을 통과한 변경만 5MB 미만 단위로 커밋하고 즉시 푸시한다. `demo/` 디렉터리는 수정하지 않는다.
