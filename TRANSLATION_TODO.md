@@ -48,7 +48,7 @@
 - [x] `skills/story-long-write/references/female-audience-writing.md` — Batch 6 완료, 커밋 `6d8d011`
 - [x] `skills/story-long-write/references/genre-writing-formulas.md` — Batch 7 완료, 커밋 `c3ebe5b`
 - [x] `skills/story-short-write/references/genre-writing-techniques.md` — Batch 8 완료, 커밋 `8b29f4d` (TODO의 장기 경로 오기 정정)
-- [ ] `skills/story-long-write/references/hooks-paragraph.md`
+- [x] `skills/story-long-write/references/hooks-paragraph.md`
 - [ ] `skills/story-long-write/references/hooks-suspense.md`
 - [ ] `skills/story-long-write/references/outline-methods.md`
 - [ ] `skills/story-long-write/references/outline-rhythm.md`
