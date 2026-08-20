@@ -101,7 +101,7 @@
 - `skills/story-short-scan/scripts/dz-browse-scraper.js`의 점중 단편 수집 주석·연결 오류·채널 전환·품질 경고·저장 로그를 한국어로 번역했다. `/book/{id}`, URL, DOM 선택자, 정규식, `bookId`, 채널 ID와 탭 값은 보존했다.
 - `skills/story-short-scan/scripts/heiyan-booklist-scraper.js`의 흑암 API 수집 주석·로그·로그인 안내·필드 품질 게이트·채널 필터 메시지를 한국어로 번역했다. API URL, `Admin-Token`, Bearer 인증, JSON 키, `--channel`, `--pages`, `--detail`, 분류 값은 보존했다.
 - 네 파일 모두 `node --check`와 `git diff --check`를 통과했다. 중국어 잔존은 실제 출력 파일명·분류 값·사이트명·정규식 대상·플랫폼 원문을 포함한 기능 보호 예외로 분리했다. `demo/`는 수정하지 않았다.
-- `TRANSLATION_PROGRESS_REPORT.md`에 Batch 28 결과와 다음 작업 범위를 기록했다. 이번 배치는 아직 커밋·푸시하지 않았다.
+- `TRANSLATION_PROGRESS_REPORT.md`에 Batch 28 결과와 다음 작업 범위를 기록했다. Batch 28은 `8662413` 커밋으로 커밋·푸시 완료했다.
 
 ## 번역·검증 실행 기록 (Batch 27)
 
@@ -129,7 +129,7 @@
 ## 다음 세션 재개 지점 (Batch 28)
 
 - **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
-- **현재 브랜치 상태:** `main`은 Batch 28 번역 파일과 TODO·진행 보고서가 작업 트리에 적용된 상태이며, 아직 새 커밋·푸시는 하지 않았다.
+- **현재 브랜치 상태:** `main`은 Batch 28 번역 파일과 TODO·진행 보고서가 `8662413` 커밋으로 원격에 반영된 상태이며, 작업 트리는 깨끗하다.
 - **완료 대상:** `skills/story-long-scan/scripts/fanqie-rank-scraper.js`, `skills/story-short-scan/scripts/cdp-utils.js`, `dz-browse-scraper.js`, `heiyan-booklist-scraper.js`.
 - **다음 대상 파일:** `skills/story-setup/references/templates/`의 실행 주석·사용자 표시 메시지, `memory-bank/TRANSLATION_HANDOVER.md`의 설명 문장, 이후 남은 `skills/` 참조 문서.
 - **다음 작업 순서:** URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 보호하고, story-setup 템플릿과 인수인계 문서의 일반 주석·도움말·설명만 작은 배치로 번역한다. 이후 기능 연결 문자열과 비-demo Markdown의 중국어 잔존을 재검증한다.
