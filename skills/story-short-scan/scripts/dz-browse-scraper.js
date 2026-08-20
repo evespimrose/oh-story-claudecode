@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * 点众阅读短篇采集脚本
+ * 점중 독서 단편 수집 스크립트
  *
- * 配合 browser-cdp skill 使用。先启动 Chrome CDP 环境，再运行本脚本。
- * 采集策略：以 /book/{id} 链接为骨架，按 bookId 聚合每本书的多个 anchor
- * （封面/书名+评分/简介各一个），从中解出书名、评分、简介、作品页，再从卡片
- * 容器文本里解出 作者·标签·状态·字数 与最新章节。避免纯 innerText 行序解析把
- * UI 文字或简介误当书名。
- * 输出 Markdown 格式。
+ * browser-cdp 스킬과 함께 사용합니다. 먼저 Chrome CDP 환경을 시작한 뒤 이 스크립트를 실행합니다.
+ * 수집 방식: /book/{id} 링크를 뼈대로 삼고 bookId별로 각 작품의 여러 anchor를 묶습니다.
+ * (표지·작품명+평점·소개 각각 하나)에서 작품명·평점·소개·작품 페이지를 추출한 뒤 카드
+ * 컨테이너 텍스트에서 작가·태그·상태·글자 수와 최신 장을 추출합니다. innerText의 행 순서만으로 파싱해
+ * UI 문구나 소개를 작품명으로 잘못 인식하는 일을 피합니다.
+ * 출력은 Markdown 형식입니다.
  *
- * 用法：
- *   node dz-browse-scraper.js --channel male              # 男频
- *   node dz-browse-scraper.js --channel female             # 女频
- *   node dz-browse-scraper.js --channel all                # 全部
+ * 사용법:
+ *   node dz-browse-scraper.js --channel male              # 남성향
+ *   node dz-browse-scraper.js --channel female             # 여성향
+ *   node dz-browse-scraper.js --channel all                # 전체
  *
- * 前置：
+ * 사전 조건:
  *   node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
  */
 
@@ -28,10 +28,10 @@ const CHANNELS = [
 ];
 
 // ---------------------------------------------------------------------------
-// 页面操作
+// 페이지 조작
 // ---------------------------------------------------------------------------
 
-/** 连通性 + 页面就绪自检 */
+/** 연결 상태 및 페이지 준비 여부 자가 점검 */
 function probePage(port) {
   return evalJSONBase64(
     port,
@@ -39,7 +39,7 @@ function probePage(port) {
   );
 }
 
-/** 点击指定文本的 tab */
+/** 지정한 텍스트의 탭을 클릭합니다. */
 function clickTab(port, text) {
   const js =
     "JSON.stringify((function(){" +
@@ -51,9 +51,9 @@ function clickTab(port, text) {
 }
 
 /**
- * 以 /book/{id} 链接为骨架聚合每本书的字段。
- * 书名取自“书名+评分”anchor（去掉尾部 X.X分），简介取自最长 anchor，
- * 作者/标签/状态/字数从卡片容器文本里正则提取。
+ * /book/{id} 링크를 뼈대로 삼아 작품별 필드를 묶습니다.
+ * 작품명은 “작품명+평점” anchor에서 가져오고(끝의 X.X分 제거), 소개는 가장 긴 anchor에서 가져오며,
+ * 작가·태그·상태·글자 수는 카드 컨테이너 텍스트에서 정규식으로 추출합니다.
  */
 function buildStoriesJS() {
   return `JSON.stringify((function(){
@@ -79,10 +79,10 @@ function buildStoriesJS() {
         var cand=g.texts.filter(Boolean).slice().sort(function(a,b){return a.length-b.length;});
         title=cand.length?cand[0]:'';
       }
-      // 简介：最长的、不是“书名+评分”的 anchor 文本
+      // 소개: “작품명+평점”이 아닌 가장 긴 anchor 텍스트
       var desc='';
       g.texts.forEach(function(t){ if(/分$/.test(t))return; if(t.length>desc.length)desc=t; });
-      // 卡片容器：从任一 anchor 向上找到含“字”的祖先
+      // 카드 컨테이너: 임의의 anchor에서 위로 올라가 “字”를 포함한 조상을 찾음
       var el=g.node;
       for(var j=0;j<6;j++){ if(el.parentElement){el=el.parentElement; if((el.innerText||'').indexOf('字')>-1)break;} }
       var card=(el.innerText||'').replace(/\\s+/g,' ');
@@ -106,7 +106,7 @@ function extractStories(port) {
 }
 
 // ---------------------------------------------------------------------------
-// 主流程
+// 주요 흐름
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
@@ -118,34 +118,34 @@ function scrapeChannel(port, channelId) {
   const ch = CHANNELS.find((c) => c.id === channelId);
   if (!ch) return null;
 
-  console.log(`\n→ 采集 点众${ch.label}短篇...`);
+  console.log(`\n→ 점중 ${ch.label} 단편 수집 중...`);
 
   let stories;
   try {
     ab(port, "open", ch.url);
     sleep(3000);
 
-    // 连通性自检：CDP 未起/被重定向时给可操作报错，而非静默产空
+    // 연결 상태 자가 점검: CDP가 시작되지 않았거나 리디렉션되었을 때 빈 결과를 조용히 내지 않고 조치 가능한 오류를 표시합니다.
     const probe = probePage(port);
     if (!probe) {
       console.error(
-        `  ✗ CDP 无响应。请确认已用 browser-cdp 启动 Chrome（端口 ${port}），且 agent-browser 可用。`
+        `  ✗ CDP가 응답하지 않습니다. browser-cdp로 Chrome을 시작했는지(포트 ${port}), agent-browser를 사용할 수 있는지 확인하세요.`
       );
       return null;
     }
     if (probe.host && probe.host.indexOf("ishugui") === -1) {
-      console.error(`  ✗ 当前页面非点众（host=${probe.host}），可能被重定向，已跳过。`);
+      console.error(`  ✗ 현재 페이지는 점중이 아닙니다(host=${probe.host}). 리디렉션되었을 수 있어 건너뜁니다.`);
       return null;
     }
 
-    // 切换频道（female 已有独立 URL，tab 失败不致命）
+    // 채널 전환(female은 독립 URL이 있어 탭 전환 실패가 치명적이지 않음)
     try {
       if (clickTab(port, ch.tab)) {
-        console.log(`  ✓ 切换到${ch.tab}`);
+        console.log(`  ✓ ${ch.tab}(으)로 전환`);
         sleep(2000);
       }
     } catch (tabErr) {
-      console.error(`[dz] ${ch.label} tab切换出错，继续采集: ${tabErr.message}`);
+      console.error(`[dz] ${ch.label} 탭 전환 오류, 수집을 계속합니다: ${tabErr.message}`);
     }
 
     scrollLoad(port, 8);
@@ -153,24 +153,24 @@ function scrapeChannel(port, channelId) {
 
     stories = extractStories(port);
   } catch (err) {
-    console.error(`[dz] ${ch.label} 页面加载或提取出错: ${err.message}`);
+    console.error(`[dz] ${ch.label} 페이지 로드 또는 추출 오류: ${err.message}`);
     return null;
   }
 
   if (!stories.length) {
     console.error(
-      `[dz] 采集失败：未解析到书目（页面结构可能变动或未加载）。请人工打开 ${ch.url} 确认页面正常。`
+      `[dz] 수집 실패: 작품 목록을 파싱하지 못했습니다(페이지 구조가 바뀌었거나 로드되지 않았을 수 있음). ${ch.url}을 직접 열어 페이지가 정상인지 확인하세요.`
     );
     return null;
   }
 
-  // 质量门：书名命中率是点众采集成败的核心信号
+  // 품질 게이트: 작품명 적중률은 점중 수집의 성패를 판단하는 핵심 신호입니다.
   const titled = stories.filter((s) => s.title).length;
   const ratio = titled / stories.length;
   const quality = ratio < 0.5 ? "[书名解析异常]" : "[OK]";
   console.log(`  ✓ 提取 ${stories.length} 条（书名 ${titled}/${stories.length}）`);
   if (ratio < 0.5) {
-    console.error(`  ⚠ 书名解析率偏低（${titled}/${stories.length}），结果质量已标注。`);
+    console.error(`  ⚠ 작품명 파싱률이 낮습니다(${titled}/${stories.length}). 결과에 품질 표시를 추가했습니다.`);
   }
 
   const now = new Date().toISOString();
@@ -200,7 +200,7 @@ function scrapeChannel(port, channelId) {
       }
       lines.push("", "---", "");
     } catch (storyErr) {
-      console.error(`[dz] ${ch.label} 第${i + 1}条处理出错: ${storyErr.message}`);
+      console.error(`[dz] ${ch.label} ${i + 1}번째 항목 처리 오류: ${storyErr.message}`);
       lines.push("", "---", "");
     }
   });
@@ -223,13 +223,13 @@ function main() {
     const filepath = path.join(OUTDIR, filename);
     fs.writeFileSync(filepath, content, "utf-8");
     written++;
-    console.log(`  ✓ 已保存: ${filepath}`);
+    console.log(`  ✓ 저장 완료: ${filepath}`);
   }
   return written;
 }
 
 if (require.main === module) {
-  runCli(main, "点众采集");
+  runCli(main, "점중 수집");
 }
 
 module.exports = { buildStoriesJS };

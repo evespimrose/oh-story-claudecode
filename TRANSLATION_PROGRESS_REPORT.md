@@ -2,7 +2,7 @@
 
 ## 기준 시점
 
-본 보고서는 `2026-08-17` 현재 `main` 브랜치의 실제 저장소 상태를 기준으로 작성했다. 로컬 `HEAD`와 `origin/main`은 모두 `5b7f673c8b3a64751a88f7484ac18098abfccb95`이며, 작업 트리는 깨끗하다.
+본 보고서는 `2026-08-21` 현재 `main` 브랜치의 실제 저장소 상태를 기준으로 갱신했다. 마지막 원격 커밋은 `bcc5289`이며, 현재 작업 트리에는 Batch 28의 스크래퍼 번역 변경이 아직 커밋되지 않은 상태다.
 
 ## 작업 원칙
 
@@ -11,6 +11,19 @@
 > 실행 기능에 직접 연결된 문자열은 보존하고, 그 밖의 문서 본문·주석·예시·인용·설명은 한국어로 현지화한다.
 
 따라서 외부 사이트의 URL·필드명·선택자·정규식 대상·테스트 픽스처처럼 기능에 직접 연결된 문자열은 임의로 번역하지 않는다. 반면 문서 설명, 표의 항목, 중국어 원문 예시, 장르 용어 해설은 한국어 독자가 자연스럽게 이해할 수 있도록 재구성한다. `demo/` 본문은 기존 프로젝트 규칙에 따라 수정하지 않는다.
+
+## Batch 28: 스크래퍼 주석·로그 현지화
+
+이번 배치에서는 다음 파일의 중국어 주석과 사용자 표시 로그를 한국어로 현지화했다.
+
+| 파일 | 처리 내용 | 기능 보존 항목 |
+|---|---|---|
+| `skills/story-long-scan/scripts/fanqie-rank-scraper.js` | 판치에 순위 수집 방식, 상세 파싱, 연결 오류, 품질 경고, 저장 로그와 사용법 주석을 번역 | URL, `__INITIAL_STATE__`, JSON 필드, 정규식, 장르·채널 ID, CLI 옵션, 출력 파일명 형식 |
+| `skills/story-short-scan/scripts/cdp-utils.js` | CDP 공통 유틸리티의 주석과 JSDoc을 번역 | `agent-browser`, base64 인자, `evalJSONBase64`, 경로, 옵션, 반환 객체 키 |
+| `skills/story-short-scan/scripts/dz-browse-scraper.js` | 점중 단편 수집 주석, 연결 오류, 채널 전환, 품질 경고와 저장 로그를 번역 | `/book/{id}`, URL, DOM 선택자, 정규식, `bookId`, 채널 ID·탭 값 |
+| `skills/story-short-scan/scripts/heiyan-booklist-scraper.js` | 흑암 API 수집의 로그인 안내, 페이지 처리, 필드 품질 게이트, 채널 필터와 상세 수집 로그를 번역 | API URL, `Admin-Token`, Bearer 인증, JSON 키, `--channel`, `--pages`, `--detail`, 분류 값 |
+
+중국어 잔존 검색 결과는 기능 문자열·사이트명·실제 출력 파일명·분류 값·정규식 대상에 집중되어 있으며, 이를 일반 설명 문장과 구분해 보존했다. 네 파일 모두 `node --check`를 통과했고 `git diff --check`도 통과했다. `demo/` 본문은 수정하지 않았다. 이번 배치는 아직 커밋·푸시하지 않았다.
 
 ## 완료된 커밋
 
@@ -33,13 +46,11 @@
 
 `skills/` 전체에서 중국어 문자가 남아 있는 후보는 100개 이상으로 확인됐다. 다만 이 후보에는 문서 본문뿐 아니라 실행 코드의 외부 사이트 필드명·선택자·URL, 테스트 문자열, 스크래퍼 식별자가 함께 포함되어 있다. 다음 작업에서는 후보 파일을 작은 배치로 직접 읽어 기능 연결 문자열과 문서 언어를 분리한다.
 
-현재 마지막으로 작업을 시작했으나 완료·커밋하지 않은 대상은 `skills/story-long-write/references/genre-readers.md`다. 이 파일의 번역 패치는 아직 원격 반영되지 않았으므로 **미완료**로 기록한다.
-
-우선순위는 `genre-readers.md`를 마무리한 뒤 `emotional-methods.md`, `female-audience-writing.md`, `genre-writing-formulas.md`, `genre-writing-techniques.md`, `hooks-paragraph.md`, `hooks-suspense.md` 등 문서 중심 참고자료를 이어서 처리하는 것이다. 이후 코드·스크립트 후보를 기능 연결 문자열과 일반 주석으로 나누어 검토한다.
+현재 문서·스크립트 번역은 배치 단위로 진행 중이며, Batch 28의 네 스크립트 변경이 아직 커밋되지 않았다. 다음 우선순위는 `skills/story-setup/references/templates/`의 실행 주석·사용자 표시 메시지, `TRANSLATION_PROGRESS_REPORT.md`와 `memory-bank/TRANSLATION_HANDOVER.md`의 설명 문장, 그리고 남은 `skills/` 참조 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
 
 ## 검증 상태
 
-현재 `git diff --check`는 통과했고, 작업 트리는 clean이다. `demo/` 본문은 이번 단계에서 변경하지 않았다. 중국어 잔존 전수 검색은 후보 수가 많고 원격 Windows 파일시스템 검색이 지연되므로, 앞으로는 파일 단위의 소규모 검색과 직접 검수를 병행한다.
+Batch 28 기준으로 네 스크립트의 `node --check`와 `git diff --check`는 통과했다. 작업 트리는 Batch 28 변경으로 clean하지 않으며, 커밋 전 상태다. `demo/` 본문은 이번 단계에서 변경하지 않았다. 중국어 잔존 전수 검색은 기능 문자열과 일반 설명을 분리해야 하므로 파일 단위의 소규모 검색과 직접 검수를 병행한다.
 
 ## 주의사항
 

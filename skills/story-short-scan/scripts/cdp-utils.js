@@ -1,10 +1,10 @@
 /**
- * CDP 工具函数 — 各平台采集脚本的公共依赖
+ * CDP 유틸리티 함수 — 각 플랫폼 수집 스크립트의 공통 의존성
  *
- * 使用方式：
+ * 사용법:
  *   const { ab, sleep, evalJSON, evalJSONBase64, scrollLoad, getArg, safeStr, localDateStamp } = require("./cdp-utils");
  *
- * 前置：
+ * 사전 조건:
  *   node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
  */
 
@@ -73,14 +73,14 @@ function buildAgentBrowserInvocation(port, args, platform = process.platform) {
 }
 
 // ---------------------------------------------------------------------------
-// agent-browser 工具函数
+// agent-browser 유틸리티 함수
 // ---------------------------------------------------------------------------
 
 /**
- * 调用 agent-browser CLI
- * @param {number} port - CDP 端口
- * @param  {...string} args - agent-browser 参数
- * @returns {string} stdout（trim 后）
+ * agent-browser CLI 호출
+ * @param {number} port - CDP 포트
+ * @param  {...string} args - agent-browser 인자
+ * @returns {string} stdout(trim 후)
  */
 function ab(port, ...args) {
   const invocation = buildAgentBrowserInvocation(port, args);
@@ -103,7 +103,7 @@ function ab(port, ...args) {
   }
 }
 
-/** 等待 ms 毫秒（跨平台，不依赖系统 sleep 命令） */
+/** ms 밀리초 대기(플랫폼과 무관하며 시스템 sleep 명령에 의존하지 않음) */
 function sleep(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
@@ -126,17 +126,17 @@ function parseJSONResult(raw) {
 }
 
 /**
- * 在浏览器内执行 JS，并解析 JSON 返回值。
- * 一律走 base64（-b）：正文提取用的 JS 常含引号、反斜杠等，作为命令行参数时在 Windows 上
- * 无法逐字透传（.cmd 的 %* 与 PowerShell 都会二次解析）。base64 让参数只含 [A-Za-z0-9+/=]，
- * 和各采集脚本已在用的 evalJSONBase64 走同一条安全通道。
+ * 브라우저 안에서 JS를 실행하고 JSON 반환값을 파싱합니다.
+ * 항상 base64(-b)를 사용합니다. 본문 추출용 JS에는 따옴표와 백슬래시가 자주 포함되어 Windows에서 명령줄 인자로 전달하면
+ * 문자 그대로 전달되지 않습니다(.cmd의 %*와 PowerShell이 모두 다시 파싱함). base64를 사용하면 인자가 [A-Za-z0-9+/=]만 포함하게 되어,
+ * 각 수집 스크립트가 이미 사용하는 evalJSONBase64와 같은 안전한 경로를 사용합니다.
  */
 function evalJSON(port, js) {
   return evalJSONBase64(port, js);
 }
 
 /**
- * 通过 agent-browser 的 base64 参数执行复杂 JS，避免命令行转义和参数边界问题。
+ * agent-browser의 base64 인자로 복잡한 JS를 실행해 명령줄 이스케이프와 인자 경계 문제를 피합니다.
  */
 function evalJSONBase64(port, js) {
   const encoded = Buffer.from(String(js), "utf8").toString("base64");
@@ -144,20 +144,20 @@ function evalJSONBase64(port, js) {
 }
 
 /**
- * 安全地将值插入浏览器 eval 字符串。
- * 使用 JSON.stringify 确保值不会因特殊字符（引号、反斜杠等）破坏 eval 字符串。
- * @param {*} val - 要插入的值
- * @returns {string} JSON 字符串表示（含引号）
+ * 브라우저 eval 문자열에 값을 안전하게 삽입합니다.
+ * JSON.stringify를 사용해 특수 문자(따옴표·백슬래시 등)가 eval 문자열을 깨뜨리지 않도록 합니다.
+ * @param {*} val - 삽입할 값
+ * @returns {string} JSON 문자열 표현(따옴표 포함)
  */
 function safeStr(val) {
   return JSON.stringify(String(val));
 }
 
 /**
- * 滚动页面加载更多内容
- * @param {number} port - CDP 端口
- * @param {number} times - 滚动次数
- * @param {number} [interval=1000] - 每次滚动间隔（ms）
+ * 페이지를 스크롤해 더 많은 콘텐츠를 로드합니다.
+ * @param {number} port - CDP 포트
+ * @param {number} times - 스크롤 횟수
+ * @param {number} [interval=1000] - 스크롤 간격（ms）
  */
 function scrollLoad(port, times, interval = 1000) {
   for (let i = 0; i < times; i++) {
@@ -166,7 +166,7 @@ function scrollLoad(port, times, interval = 1000) {
   }
 }
 
-/** 解析 --xxx 参数 */
+/** --xxx 인자를 파싱합니다. */
 function getArg(args, name) {
   const i = args.indexOf(name);
   if (i >= 0) return i + 1 < args.length ? args[i + 1] : null;
@@ -176,11 +176,11 @@ function getArg(args, name) {
 }
 
 /**
- * 输出文件名用的日期戳（YYYYMMDD），一律取**本地日历日**。
- * 不能用 new Date().toISOString().slice(0,10)：那是 UTC 日期，比 UTC+8 晚 8 小时。
- * 文件名是各采集脚本唯一的去重键（一个榜单一天一份），北京时间 00:00-08:00 之间的采集
- * 会退回「昨天」的文件名，静默覆盖前一晚采到的同名报告，且这份数据被标成前一天。
- * @param {Date} [date] - 默认当前时间
+ * 출력 파일명에 사용하는 날짜 스탬프(YYYYMMDD)는 항상 **현지 날짜**를 사용합니다.
+ * new Date().toISOString().slice(0,10)은 사용할 수 없습니다. UTC 날짜라 UTC+8보다 8시간 늦습니다.
+ * 파일명은 각 수집 스크립트의 유일한 중복 제거 키입니다(순위표마다 하루 한 파일). 베이징 시간 00:00~08:00에 수집하면
+ * 「어제」의 파일명으로 되돌아가 전날 밤 수집한 같은 이름의 보고서를 조용히 덮어쓰고, 데이터도 전날 것으로 표시됩니다.
+ * @param {Date} [date] - 기본값은 현재 시간
  * @returns {string} YYYYMMDD
  */
 function localDateStamp(date) {
@@ -192,8 +192,8 @@ function localDateStamp(date) {
 }
 
 /**
- * Run a scraper entrypoint and turn empty/partial output into machine-readable
- * CLI status. Legacy entrypoints may return an integer; multi-target scrapers
+ * 스크래퍼 진입점을 실행하고 빈 출력·부분 출력을 기계 판독 가능한
+ * CLI status. 레거시 진입점은 정수를 반환할 수 있으며, 다중 대상 스크래퍼는
  * return {planned,written,failed,partial,partialReasons}.
  */
 function runCli(main, label) {

@@ -94,6 +94,15 @@
 
 
 
+## 번역·검증 실행 기록 (Batch 28)
+
+- `skills/story-long-scan/scripts/fanqie-rank-scraper.js`의 사용법·수집 전략·상세 파싱·연결 오류·품질 경고·저장 로그 주석을 한국어로 번역했다. URL, `__INITIAL_STATE__`, JSON 필드, 정규식, 채널·장르 ID, CLI 옵션과 출력 파일명 형식은 보존했다.
+- `skills/story-short-scan/scripts/cdp-utils.js`의 공통 CDP 유틸리티 주석과 JSDoc을 한국어로 번역했다. `agent-browser`, base64 인자, `evalJSONBase64`, 경로, 옵션, 반환 객체 키는 보존했다.
+- `skills/story-short-scan/scripts/dz-browse-scraper.js`의 점중 단편 수집 주석·연결 오류·채널 전환·품질 경고·저장 로그를 한국어로 번역했다. `/book/{id}`, URL, DOM 선택자, 정규식, `bookId`, 채널 ID와 탭 값은 보존했다.
+- `skills/story-short-scan/scripts/heiyan-booklist-scraper.js`의 흑암 API 수집 주석·로그·로그인 안내·필드 품질 게이트·채널 필터 메시지를 한국어로 번역했다. API URL, `Admin-Token`, Bearer 인증, JSON 키, `--channel`, `--pages`, `--detail`, 분류 값은 보존했다.
+- 네 파일 모두 `node --check`와 `git diff --check`를 통과했다. 중국어 잔존은 실제 출력 파일명·분류 값·사이트명·정규식 대상·플랫폼 원문을 포함한 기능 보호 예외로 분리했다. `demo/`는 수정하지 않았다.
+- `TRANSLATION_PROGRESS_REPORT.md`에 Batch 28 결과와 다음 작업 범위를 기록했다. 이번 배치는 아직 커밋·푸시하지 않았다.
+
 ## 번역·검증 실행 기록 (Batch 27)
 
 - `CHANGELOG.md` 후반부(v0.7.0 이하)의 설명용 중국어 혼용 표현을 추가 현지화했다. `세纲`, `章首`, `章尾`, `中文化`, `信息差`, `前3章`, `套路` 등 일반 설명 문장은 각각 `세부 개요`, `장 시작`, `장 끝`, `한국어화`, `정보 격차`, `처음 3장`, `클리셰`로 재구성했다. 경로·필드명·상태 토큰·고유명은 보존했다.
@@ -117,11 +126,12 @@
 - 새 스킬 `.claude/skills/chinese-translation-localization/SKILL.md`는 frontmatter, `CAVE-MAN-OUTPUT-ARM` 마커, 500줄 이하 조건, 시작·번역·검증·TODO·커밋 절차를 모두 통과했다(70줄).
 - `git diff --check`는 통과했다. 이번 감사에서 문서 본문이나 스크립트는 수정하지 않았으며, 감사용 임시 파일은 제거했다.
 
-## 다음 세션 재개 지점 (Batch 27)
+## 다음 세션 재개 지점 (Batch 28)
 
 - **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
-- **현재 브랜치 상태:** `main`은 번역 대상 문서와 TODO가 작업 트리에 적용된 상태이며, 아직 새 커밋·푸시는 하지 않았다.
-- **다음 대상 파일:** `skills/story-long-scan/scripts/fanqie-rank-scraper.js`, `skills/story-short-scan/scripts/*scraper.js`, `skills/story-setup/references/templates/`의 실행 주석·사용자 표시 메시지, 이후 `TRANSLATION_PROGRESS_REPORT.md`와 `memory-bank/TRANSLATION_HANDOVER.md`의 설명 문장.
-- **다음 작업 순서:** 먼저 `fanqie-rank-scraper.js`의 URL·필드명·선택자·정규식·랭킹 ID·파일명은 보존하고 중국어 주석과 사용자 표시 로그만 번역한다. 다음으로 short-scan 스크래퍼와 story-setup 템플릿을 작은 배치로 처리한 뒤, 비-demo Markdown의 중국어 잔존을 보호 예외와 일반 설명으로 나눠 재검증한다.
+- **현재 브랜치 상태:** `main`은 Batch 28 번역 파일과 TODO·진행 보고서가 작업 트리에 적용된 상태이며, 아직 새 커밋·푸시는 하지 않았다.
+- **완료 대상:** `skills/story-long-scan/scripts/fanqie-rank-scraper.js`, `skills/story-short-scan/scripts/cdp-utils.js`, `dz-browse-scraper.js`, `heiyan-booklist-scraper.js`.
+- **다음 대상 파일:** `skills/story-setup/references/templates/`의 실행 주석·사용자 표시 메시지, `memory-bank/TRANSLATION_HANDOVER.md`의 설명 문장, 이후 남은 `skills/` 참조 문서.
+- **다음 작업 순서:** URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 보호하고, story-setup 템플릿과 인수인계 문서의 일반 주석·도움말·설명만 작은 배치로 번역한다. 이후 기능 연결 문자열과 비-demo Markdown의 중국어 잔존을 재검증한다.
 - **현재 주의사항:** `workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`는 한국어 현지화하여 적용했으며 `git diff --check`를 통과했다. 작업 트리에는 기존 변경과 이번 번역 변경이 함께 있을 수 있으므로 일괄 복원·리셋하지 않는다.
 - **커밋 규칙:** 사용자가 커밋·푸시를 명시하거나 프로젝트 작업 규칙상 승인된 경우에만 검증된 변경을 5MB 미만 단위로 커밋·푸시한다. `demo/` 디렉터리는 수정하지 않는다.

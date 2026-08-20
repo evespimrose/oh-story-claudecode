@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * 黑岩短篇书库列表采集脚本
+ * 흑암 단편 서고 목록 수집 스크립트
  *
- * ⚠️ 前置条件（必须）：
- *   1. 启动 Chrome CDP 环境
- *   2. 在 Chrome 中手动登录 https://manage.zhangwenpindu.cn
- *      登录后会生成 Admin-Token cookie，脚本需要它调用后端 API
- *      未登录 → 脚本报错「未检测到 Admin-Token」
+ * ⚠️ 사전 조건(필수):
+ *   1. Chrome CDP 환경 시작
+ *   2. Chrome에서 수동 로그인 https://manage.zhangwenpindu.cn
+ *      로그인하면 Admin-Token 쿠키가 생성되며, 스크립트는 이 쿠키로 백엔드 API를 호출합니다.
+ *      미로그인 상태에서는 「Admin-Token을 찾지 못함」 오류가 발생합니다.
  *
- * 采集策略：从 Cookie 提取 Bearer token，调用 ms.zhangwenpindu.cn 后端 API
- * 获取结构化 JSON 数据（书名、作者、字数、分类、标签等）。
+ * 수집 방식: Cookie에서 Bearer token을 추출해 ms.zhangwenpindu.cn 백엔드 API를 호출합니다.
+ * 구조화된 JSON 데이터(작품명·작가·글자 수·분류·태그 등)를 가져옵니다.
  *
- * 用法：
- *   node heiyan-booklist-scraper.js --pages 5              # 采集前5页（每页20条）
- *   node heiyan-booklist-scraper.js --pages 3 --channel male   # 仅男频
- *   node heiyan-booklist-scraper.js --pages 2 --detail         # 含逐本详情（标签等）
+ * 사용법:
+ *   node heiyan-booklist-scraper.js --pages 5              # 앞 5페이지 수집(페이지당 20개)
+ *   node heiyan-booklist-scraper.js --pages 3 --channel male   # 남성향만
+ *   node heiyan-booklist-scraper.js --pages 2 --detail         # 작품별 상세 정보 포함(태그 등)
  */
 
 const fs = require("fs");
@@ -26,15 +26,15 @@ const API_BASE = "https://ms.zhangwenpindu.cn";
 const PAGE_SIZE = 20;
 
 // ---------------------------------------------------------------------------
-// API 调用
+// API 호출
 // ---------------------------------------------------------------------------
 
-/** 连通性自检：区分 CDP 未连 vs 已连但未登录 */
+/** 연결 상태 자가 점검: CDP 미연결과 연결되었지만 미로그인인 상태를 구분합니다. */
 function probePage(port) {
   return evalJSON(port, "JSON.stringify({host:location.host})");
 }
 
-/** 从 Cookie 中提取 Admin-Token */
+/** Cookie에서 Admin-Token 추출 */
 function getToken(port) {
   const js =
     "JSON.stringify((()=>{" +
@@ -44,7 +44,7 @@ function getToken(port) {
   return evalJSON(port, js) || "";
 }
 
-/** 调用后端 API 获取书籍列表 */
+/** 백엔드 API를 호출해 작품 목록을 가져옵니다. */
 function fetchBookList(port, token, pageNum) {
   const t = safeStr(token);
   const js =
@@ -59,7 +59,7 @@ function fetchBookList(port, token, pageNum) {
   return evalJSON(port, js);
 }
 
-/** 调用后端 API 获取书籍详情（标签等） */
+/** 백엔드 API를 호출해 작품 상세 정보(태그 등)를 가져옵니다. */
 function fetchBookDetail(port, token, bookId) {
   const t = safeStr(token);
   const js =
@@ -70,7 +70,7 @@ function fetchBookDetail(port, token, bookId) {
 }
 
 // ---------------------------------------------------------------------------
-// 主流程
+// 주요 흐름
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
@@ -81,10 +81,10 @@ const CHANNEL = getArg(args, "--channel") || "all";
 const DETAIL = args.includes("--detail");
 
 /**
- * 字数格式化：手写千分位，不能用 toLocaleString()。
- * 后者按宿主 ICU locale 取分隔符，de_* 会写成「123.456字」（读起来像 123 字），
- * fr_* 用 U+202F、en-IN 会分成「1,23,456」——同一份报告在不同机器上数字不一样。
- * 兼容接口把 words 返回成字符串的情况。
+ * 글자 수 형식화: 천 단위 구분을 직접 처리하며 toLocaleString()은 사용하지 않습니다.
+ * 후자는 호스트 ICU locale에 따라 구분자를 선택하므로 de_*에서는 「123.456자」로 표시되어 123자로 오해할 수 있고,
+ * fr_*에서는 U+202F를, en-IN에서는 「1,23,456」을 사용해 같은 보고서의 숫자가 기기마다 달라집니다.
+ * words를 문자열로 반환하는 호환 API도 처리합니다.
  */
 function fmtWords(words) {
   const n =
@@ -97,7 +97,7 @@ function fmtWords(words) {
 
 function outputFilename(channel, date) {
   if (!["all", "male", "female"].includes(channel)) {
-    throw new Error(`未知 --channel: ${channel}（支持 male/female/all）`);
+    throw new Error(`알 수 없는 --channel: ${channel}(male/female/all 지원)`);
   }
   return `黑岩书库列表_${channel}_${date}.md`;
 }
@@ -141,8 +141,8 @@ function buildAndSave(allBooks, total, filtered, filepath) {
         lines.push(`### #${i + 1} ${b.name}`);
         const meta = [
           b.userName,
-          // 分别入数组再拼：预先 classifyStr + "/" + typeDesc 会把缺字段拼成
-          // 「undefined/undefined」这种真值字符串，filter(Boolean) 拦不住，直接写进报告
+          // 배열에 나누어 담은 뒤 합칩니다. classifyStr + "/" + typeDesc를 미리 이어 붙이면 누락 필드가
+          // 「undefined/undefined」 같은 참 문자열이 되어 filter(Boolean)으로 걸러지지 않고 보고서에 그대로 기록됩니다.
           [b.classifyStr, b.typeDesc].filter(Boolean).join("/"),
           fmtWords(b.words),
           b.price ? b.price + "钻" : "",
@@ -164,7 +164,7 @@ function buildAndSave(allBooks, total, filtered, filepath) {
 
         lines.push("");
       } catch (bookErr) {
-        console.error(`[heiyan] ${g.label} 第${i + 1}条处理出错: ${bookErr.message}`);
+        console.error(`[heiyan] ${g.label} ${i + 1}번째 항목 처리 오류: ${bookErr.message}`);
         lines.push("");
       }
     }
@@ -174,47 +174,47 @@ function buildAndSave(allBooks, total, filtered, filepath) {
 
   fs.mkdirSync(OUTDIR, { recursive: true });
   fs.writeFileSync(filepath, lines.join("\n"), "utf-8");
-  console.log(`  ✓ 已保存: ${filepath}`);
+  console.log(`  ✓ 저장 완료: ${filepath}`);
 }
 
 function main() {
-  console.log("\n→ 采集 黑岩书库列表（API 模式）...");
-  console.log(`  计划采集: ${PAGES} 页（每页 ${PAGE_SIZE} 条）`);
+  console.log("\n→ 흑암 서고 목록 수집 중(API 모드)...");
+  console.log(`  수집 계획: ${PAGES}페이지(페이지당 ${PAGE_SIZE}개)`);
 
   const date = localDateStamp();
   const filename = outputFilename(CHANNEL, date);
   const filepath = path.join(OUTDIR, filename);
 
-  // 先导航到管理后台获取 token
+  // 먼저 관리 콘솔로 이동해 token을 가져옵니다.
   let token;
   try {
     ab(PORT, "open", BOOKLIST_URL);
     sleep(3000);
 
-    // 连通性自检：把"CDP 没起来"和"没登录"分开，避免误导用户去登录
+    // 연결 상태 자가 점검: "CDP가 시작되지 않음"과 "미로그인"을 구분해 사용자가 불필요하게 로그인하도록 유도하지 않습니다.
     const probe = probePage(PORT);
     if (!probe) {
       console.error(
-        `  ✗ CDP 无响应。请确认已用 browser-cdp 启动 Chrome（端口 ${PORT}），且 agent-browser 可用。`
+        `  ✗ CDP가 응답하지 않습니다. browser-cdp로 Chrome을 시작했는지(포트 ${PORT}), agent-browser를 사용할 수 있는지 확인하세요.`
       );
       return 0;
     }
 
     token = getToken(PORT);
   } catch (err) {
-    console.error(`[heiyan] 页面加载或 token 提取出错: ${err.message}`);
+    console.error(`[heiyan] 페이지 로드 또는 token 추출 오류: ${err.message}`);
     return 0;
   }
 
   if (!token) {
-    console.log("  ✗ 未检测到 Admin-Token（CDP 已连，但当前未登录）");
-    console.log("  → 请先在 Chrome 中打开 https://manage.zhangwenpindu.cn 并登录");
-    console.log("  → 登录后重新运行本脚本");
+    console.log("  ✗ Admin-Token을 찾지 못했습니다(CDP는 연결되었지만 현재 로그인하지 않음).");
+    console.log("  → 먼저 Chrome에서 https://manage.zhangwenpindu.cn을 열고 로그인하세요.");
+    console.log("  → 로그인한 뒤 이 스크립트를 다시 실행하세요.");
     return 0;
   }
-  console.log("  ✓ 获取到认证 token");
+  console.log("  ✓ 인증 token을 가져왔습니다.");
 
-  // 分页采集
+  // 페이지 단위 수집
   const allBooks = [];
   let total = 0;
 
@@ -223,52 +223,52 @@ function main() {
       sleep(800);
       const resp = fetchBookList(PORT, token, p);
 
-      // 区分失败：接口无响应(超时/CDP) / 401 未授权
+      // 실패 원인을 구분합니다: API 무응답(시간 초과/CDP) / 401 권한 없음
       if (!resp) {
-        console.error(`  ✗ 第${p}页接口无响应（请求超时或 CDP 中断），已停止。`);
+        console.error(`  ✗ ${p}페이지 API가 응답하지 않아 중단합니다(요청 시간 초과 또는 CDP 중단).`);
         break;
       }
       if (resp.code === 401) {
-        console.log(`  ⚠ 第${p}页认证失败（401），请重新登录后重试。`);
+        console.log(`  ⚠ ${p}페이지 인증에 실패했습니다(401). 다시 로그인한 뒤 재시도하세요.`);
         break;
       }
 
       const rows = resp?.data?.rows;
       if (!rows || !rows.length) {
-        // 仅在无数据时才用 code 区分"服务端错误"与"正常到底"，避免把
-        // 携带非常规成功 code 的有效响应误判为错误（成功带 rows 一律放行）
+        // 데이터가 없을 때만 code로 "서버 오류"와 "정상적인 데이터 종료"를 구분해,
+        // 비정상적인 성공 code를 포함한 유효한 응답을 오류로 잘못 판단하지 않습니다( rows가 있으면 항상 통과).
         if (resp.code != null && resp.code !== 0 && resp.code !== 200) {
-          console.error(`  ✗ 第${p}页接口返回错误 code=${resp.code} ${resp.msg || ""}，已停止。`);
+          console.error(`  ✗ ${p}페이지 API가 오류를 반환했습니다(code=${resp.code}) ${resp.msg || ""}. 중단합니다.`);
         } else {
-          console.log(`  第${p}页无数据，停止`);
+          console.log(`  ${p}페이지에 데이터가 없어 중단합니다.`);
         }
         break;
       }
 
       if (p === 1) {
         total = parseInt(resp.data.total) || 0;
-        console.log(`  总条目: ${total}`);
+        console.log(`  전체 항목: ${total}`);
       }
 
       allBooks.push(...rows);
-      console.log(`  第${p}页: ${rows.length} 条 (累计 ${allBooks.length})`);
+      console.log(`  ${p}페이지: ${rows.length}개(누적 ${allBooks.length}개)`);
     } catch (pageErr) {
-      console.error(`[heiyan] 第${p}页采集出错，跳过: ${pageErr.message}`);
+      console.error(`[heiyan] ${p}페이지 수집 오류, 건너뜁니다: ${pageErr.message}`);
       if (allBooks.length > 0) {
-        console.log(`  已采集 ${allBooks.length} 条，继续处理已有数据`);
+        console.log(`  ${allBooks.length}개를 수집했으며 기존 데이터를 계속 처리합니다.`);
       }
       break;
     }
   }
 
   if (!allBooks.length) {
-    console.error("[heiyan] 采集失败：未取到任何书目。多为登录态过期或接口变动，请重新登录后重试。");
+    console.error("[heiyan] 수집 실패: 작품 목록을 가져오지 못했습니다. 로그인 만료나 API 변경이 원인일 수 있으므로 다시 로그인한 뒤 재시도하세요.");
     return 0;
   }
 
-  // 质量门：核心字段命中率。API 改字段名时会整片 undefined，必须拦截而非静默写盘。
-  // classifyStr 同样要查：它决定男频/女频分组和 --channel 筛选，字段一改全部书都掉进
-  // 「其他」、--channel male 直接筛成 0 条，写出一份「已采集：0 条」的假成功报告。
+  // 품질 게이트: 핵심 필드 적중률을 확인합니다. API가 필드명을 바꾸면 전체가 undefined가 되므로 조용히 파일에 쓰지 않고 차단해야 합니다.
+  // classifyStr도 확인해야 합니다. 이 값이 남성향·여성향 그룹과 --channel 필터를 결정하므로 필드가 바뀌면 모든 작품이
+  // 「기타」로 들어가고 --channel male의 결과가 0개가 되어 「수집 완료: 0개」라는 가짜 성공 보고서가 작성됩니다.
   const CORE_FIELDS = [
     { key: "name", label: "书名" },
     { key: "classifyStr", label: "频道(classifyStr)" },
@@ -277,20 +277,20 @@ function main() {
     const hit = allBooks.filter((b) => b && b[f.key]).length;
     if (hit / allBooks.length < 0.5) {
       console.error(
-        `[heiyan] 采集失败：${allBooks.length} 条里仅 ${hit} 条有${f.label}，疑似接口字段变动，已放弃写盘。`
+        `[heiyan] 수집 실패: ${allBooks.length}개 중 ${hit}개에만 ${f.label}이 있습니다. API 필드가 바뀐 것으로 보여 파일 저장을 포기합니다.`
       );
       return 0;
     }
   }
 
-  // 频道筛选
+  // 채널 필터
   let filtered = allBooks;
   if (CHANNEL === "male" || CHANNEL === "female") {
     const want = CHANNEL === "male" ? "男频" : "女频";
     filtered = allBooks.filter((b) => b.classifyStr === want);
     if (!filtered.length) {
-      // 筛成 0 条不能算成功：把实际 classifyStr 分布打出来，区分「接口字段变了」
-      // 和「这个频道确实没作品」，而不是写一份看不出差别的空报告
+      // 0개로 필터링된 것은 성공으로 볼 수 없습니다. 실제 classifyStr 분포를 출력해 「API 필드가 바뀐 경우」와
+      // 「이 채널에 실제로 작품이 없는 경우」를 구분하며, 원인을 알 수 없는 빈 보고서를 작성하지 않습니다.
       const seen = {};
       for (const b of allBooks) {
         const k = b && b.classifyStr ? b.classifyStr : "(空)";
@@ -298,16 +298,16 @@ function main() {
       }
       const dist = Object.keys(seen).map((k) => `${k}×${seen[k]}`).join("、");
       console.error(
-        `[heiyan] 采集失败：--channel ${CHANNEL} 筛选后 0 条（${allBooks.length} 条的 classifyStr 取值：${dist}），已放弃写盘。`
+        `[heiyan] 수집 실패: --channel ${CHANNEL} 필터 결과가 0개입니다(${allBooks.length}개의 classifyStr 값: ${dist}). 파일 저장을 포기합니다.`
       );
-      console.error(`  → 若确实没有${want}作品，去掉 --channel 重跑即可拿到全部书目。`);
+      console.error(`  → 정말 ${want} 작품이 없다면 --channel을 제거하고 다시 실행해 전체 목록을 가져오세요.`);
       return 0;
     }
   }
 
-  // 可选：逐本获取详情（标签等）
+  // 선택 사항: 작품별 상세 정보(태그 등)를 가져옵니다.
   if (DETAIL && filtered.length) {
-    console.log(`  获取 ${filtered.length} 本详情...`);
+    console.log(`  ${filtered.length}개 작품의 상세 정보를 가져오는 중...`);
     for (let i = 0; i < filtered.length; i++) {
       try {
         sleep(500);
@@ -318,13 +318,13 @@ function main() {
           filtered[i].chapterCount = detail.data.chapterCount || 0;
         }
         if ((i + 1) % 10 === 0) {
-          console.log(`    已获取 ${i + 1}/${filtered.length}`);
+          console.log(`    ${i + 1}/${filtered.length} 가져옴`);
         }
       } catch (detailErr) {
-        console.error(`[heiyan] 第${i + 1}本详情获取出错，跳过: ${detailErr.message}`);
+        console.error(`[heiyan] ${i + 1}번째 작품의 상세 정보 가져오기 오류, 건너뜁니다: ${detailErr.message}`);
       }
     }
-    console.log("  ✓ 详情获取完成");
+    console.log("  ✓ 상세 정보 가져오기 완료");
   }
 
   buildAndSave(allBooks, total, filtered, filepath);
@@ -332,7 +332,7 @@ function main() {
 }
 
 if (require.main === module) {
-  runCli(main, "黑岩采集");
+  runCli(main, "흑암 수집");
 }
 
 module.exports = {

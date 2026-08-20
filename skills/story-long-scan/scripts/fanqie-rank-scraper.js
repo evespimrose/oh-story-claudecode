@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * 番茄小说排行榜采集脚本
+ * 판치에 소설 순위 수집 스크립트
  *
- * 配合 browser-cdp skill 使用。先启动 Chrome CDP 环境，再运行本脚本。
- * 采集策略：从榜单页 __INITIAL_STATE__ 取结构化列表，再逐本请求详情页解码真实
- * 书名/作者/简介/题材/标签（番茄列表页有字体反爬，详情页 HTML 里是明文）。
- * 输出 Markdown 格式匹配 scan-output-format.md 规范。
+ * browser-cdp 스킬과 함께 사용합니다. 먼저 Chrome CDP 환경을 시작한 뒤 이 스크립트를 실행합니다.
+ * 수집 방식: 순위 페이지의 __INITIAL_STATE__에서 구조화된 목록을 가져온 뒤, 각 작품의 상세 페이지를 요청해 실제
+ * 작품명·작가·소개·장르·태그를 해독합니다(판치에 목록 페이지에는 폰트 기반 크롤링 방지가 있지만, 상세 페이지 HTML에는 평문이 들어 있습니다).
+ * 출력 Markdown 형식은 scan-output-format.md 규격에 맞춥니다.
  *
- * 用法：
- *   node fanqie-rank-scraper.js --channel 1 --type 2              # 男频阅读榜
- *   node fanqie-rank-scraper.js --channel 0 --type 1              # 女频新书榜
- *   node fanqie-rank-scraper.js --channel 1 --type 2 --outdir ./  # 指定输出目录
- *   node fanqie-rank-scraper.js --channel all                     # 全部采集
- *   node fanqie-rank-scraper.js --channel 1 --top 15              # 每题材只取前 15 本
+ * 사용법:
+ *   node fanqie-rank-scraper.js --channel 1 --type 2              # 남성향 독서 순위
+ *   node fanqie-rank-scraper.js --channel 0 --type 1              # 여성향 신작 순위
+ *   node fanqie-rank-scraper.js --channel 1 --type 2 --outdir ./  # 출력 디렉터리 지정
+ *   node fanqie-rank-scraper.js --channel all                     # 전체 수집
+ *   node fanqie-rank-scraper.js --channel 1 --top 15              # 장르별 상위 15개만 수집
  *
- * 前置：
+ * 사전 조건:
  *   node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
  */
 
@@ -22,15 +22,15 @@ const fs = require("fs");
 const path = require("path");
 const { ab, sleep, evalJSONBase64, scrollLoad, getArg, localDateStamp, runCli } = require("./cdp-utils");
 
-// 一次详情请求的并发批大小。番茄详情页用同步 XHR 拉取，批太大会撞上
-// cdp-utils 里 ab() 的 20s 超时；超时会显式失败，这里分批是为了避免整个题材被中断。
+// 상세 요청의 동시 처리 배치 크기입니다. 판치에 상세 페이지는 동기 XHR로 가져오므로 배치가 너무 크면
+// cdp-utils의 ab() 20초 제한에 걸립니다. 시간 초과가 명시적으로 실패 처리되므로, 전체 장르 수집이 중단되지 않도록 나누어 처리합니다.
 const DETAIL_CHUNK = 5;
 
 // ---------------------------------------------------------------------------
-// 页面提取
+// 페이지 추출
 // ---------------------------------------------------------------------------
 
-/** 连通性 + 页面就绪自检 */
+/** 연결 상태 및 페이지 준비 여부 자가 점검 */
 function probePage(port) {
   return evalJSONBase64(
     port,
@@ -38,7 +38,7 @@ function probePage(port) {
   );
 }
 
-/** 构建：提取侧边菜单品类链接的浏览器 JS */
+/** 구성: 사이드 메뉴 장르 링크를 추출하는 브라우저 JS */
 function buildCategoriesJS(prefix) {
   return `JSON.stringify((function(){
     var prefix=${JSON.stringify(prefix)};
@@ -55,15 +55,15 @@ function buildCategoriesJS(prefix) {
   })())`;
 }
 
-/** 提取侧边菜单品类链接 */
+/** 사이드 메뉴 장르 링크 추출 */
 function extractCategories(port, channel, type) {
   const prefix = `/rank/${channel}_${type}_`;
   return evalJSONBase64(port, buildCategoriesJS(prefix)) || [];
 }
 
 /**
- * 从 __INITIAL_STATE__ 提取当前品类页的作品列表。
- * 多路径尝试 + 深度兜底扫描，并把字段名归一，避免站点改 state 结构就全盘失败。
+ * __INITIAL_STATE__에서 현재 장르 페이지의 작품 목록을 추출합니다.
+ * 여러 경로를 시도하고 깊이 우선의 대체 검색을 수행한 뒤 필드명을 정규화해, 사이트가 state 구조를 바꾸더라도 전체가 실패하지 않게 합니다.
  */
 function buildBookListJS() {
   return `JSON.stringify((function(){
@@ -103,11 +103,11 @@ function extractBookList(port) {
 }
 
 /**
- * 批量解码详情：逐本同步 XHR 请求 /page/{id}，多策略解析明文字段。
- * 番茄列表页书名/作者被字体反爬，详情页 HTML 内嵌 JSON 与 <title> 是明文。
- * 字段名以真实 SSR(__INITIAL_STATE__) 为准：bookName/author/abstract 明文，
- * 题材在 categoryV2(转义 JSON 数组的首个 Name)，番茄 SSR 不含数字评分。
- * 返回 { id: {title, author, desc, category, tags} }。
+ * 상세 정보 일괄 해독: 작품별로 /page/{id}에 동기 XHR을 요청하고 여러 전략으로 평문 필드를 파싱합니다.
+ * 판치에 목록 페이지의 작품명·작가는 폰트 기반 크롤링 방지 대상이지만, 상세 페이지 HTML에 포함된 JSON과 <title>에는 평문이 있습니다.
+ * 필드명은 실제 SSR(__INITIAL_STATE__)을 기준으로 합니다. bookName/author/abstract는 평문이고,
+ * 장르는 categoryV2(이스케이프된 JSON 배열의 첫 번째 Name)에 있으며, 판치에 SSR에는 숫자 평점이 없습니다.
+ * { id: {title, author, desc, category, tags} } 형식으로 반환합니다.
  */
 function buildDetailJS(ids) {
   return `JSON.stringify((function(){
@@ -132,20 +132,20 @@ function buildDetailJS(ids) {
           /"authorName"\\s*:\\s*"([^"]+)"/,
           /<meta[^>]+property="og:novel:author"[^>]+content="([^"]+)"/
         ]);
-        // abstract(真实简介)优先；meta description 是平台模板("番茄小说提供...")，
-        // 且常带 data-rh 属性，故用宽松属性匹配兜底。
+        // abstract(실제 소개)을 우선합니다. meta description은 플랫폼 템플릿("番茄小说提供...")이고,
+        // data-rh 속성을 포함하는 경우가 많으므로 속성 순서를 넓게 허용해 대체 파싱합니다.
         var abs=pick(h,[/"abstract"\\s*:\\s*"([^"]{6,}?)"/]);
         var desc=abs||pick(h,[
           /<meta[^>]+name="description"[^>]+content="([^"]+)"/,
           /<meta[^>]+property="og:description"[^>]+content="([^"]+)"/
         ]);
-        // 题材：category 常为空字符串，真实题材在 categoryV2(转义 JSON)首个 Name。
+        // 장르: category는 빈 문자열인 경우가 많고, 실제 장르는 categoryV2(이스케이프된 JSON)의 첫 번째 Name에 있습니다.
         var category=pick(h,[
           /"categoryV2":"\\[\\{[\\s\\S]*?\\\\"Name\\\\":\\\\"([^"\\\\]+)/,
           /"category"\\s*:\\s*"([^"]{1,20})"/,
           /<meta[^>]+property="og:novel:category"[^>]+content="([^"]+)"/
         ]);
-        // 标签：番茄简介开头常带【tag+tag+...】，是题材细分的真实信号。
+        // 태그: 판치에 소개 앞부분에는 장르 세분화를 나타내는 【tag+tag+...】 형식이 자주 붙습니다.
         var tags='';
         var bm=(abs||desc||'').match(/[【\\[]([^】\\]]{2,40})[】\\]]/);
         if(bm){tags=bm[1].split(/[+、,\\/\\s]+/).filter(Boolean).slice(0,6).join('、');}
@@ -162,7 +162,7 @@ function fetchDetailsChunk(port, ids) {
   return evalJSONBase64(port, buildDetailJS(ids)) || {};
 }
 
-/** 分批解码，避免单次 eval 超时；返回合并后的 map */
+/** 단일 eval 시간 초과를 피하도록 나누어 해독하고 병합된 map을 반환합니다. */
 function fetchDetails(port, bookIds) {
   const map = {};
   for (let i = 0; i < bookIds.length; i += DETAIL_CHUNK) {
@@ -175,7 +175,7 @@ function fetchDetails(port, bookIds) {
 }
 
 // ---------------------------------------------------------------------------
-// 格式化
+// 형식화
 // ---------------------------------------------------------------------------
 
 function fmtReads(count) {
@@ -201,11 +201,11 @@ function fmtStatus(s) {
   return s ? String(s) : "未知";
 }
 
-/** 清洗简介：去平台模板文本 → 折叠空白 → 句末截断 100 字 */
+/** 소개 정리: 플랫폼 템플릿 문구 제거 → 공백 축약 → 문장 끝 기준 100자 자르기 */
 function cleanDesc(raw) {
   if (!raw) return "";
   let d = String(raw)
-    // 简介取自 JSON 字符串原文，先还原常见转义（\n \uXXXX \" 等）
+    // 소개는 JSON 문자열 원문에서 가져오므로, 먼저 일반적인 이스케이프(\n, \uXXXX, \" 등)를 복원합니다.
     .replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
     .replace(/\\[nrt]/g, " ")
     .replace(/\\"/g, '"')
@@ -220,7 +220,7 @@ function cleanDesc(raw) {
 }
 
 // ---------------------------------------------------------------------------
-// 主流程
+// 주요 흐름
 // ---------------------------------------------------------------------------
 
 const args = process.argv.slice(2);
@@ -241,45 +241,45 @@ function typeLabel(t) {
 function scrapeChannel(ch, type) {
   const chLabel = channelLabel(ch);
   const tyLabel = typeLabel(type);
-  console.log(`\n→ 采集 ${chLabel}${tyLabel}...`);
+  console.log(`\n→ ${chLabel}${tyLabel} 수집 중...`);
 
-  // 用已知品类 ID 作为入口，确保菜单只显示当前频道/类型的品类
-  const initCatId = ch === "1" ? "1141" : "1139"; // 男频:西方奇幻 / 女频:古风世情
+  // 알려진 장르 ID를 진입점으로 사용해 메뉴에 현재 채널·유형의 장르만 표시되도록 합니다.
+  const initCatId = ch === "1" ? "1141" : "1139"; // 남성향: 서양 판타지 / 여성향: 고풍 세정
   const initUrl = `https://fanqienovel.com/rank/${ch}_${type}_${initCatId}`;
   ab(PORT, "open", initUrl);
   sleep(3000);
 
-  // 连通性自检：把"静默写出一堆 bookId"变成可操作的报错
+  // 연결 상태 자가 점검: "bookId만 조용히 출력되는 현상"을 조치 가능한 오류로 바꿉니다.
   const probe = probePage(PORT);
   if (!probe) {
     console.error(
-      `  ✗ CDP 无响应。请确认已用 browser-cdp 启动 Chrome（端口 ${PORT}），且 agent-browser 可用。`
+      `  ✗ CDP가 응답하지 않습니다. browser-cdp로 Chrome을 시작했는지(포트 ${PORT}), agent-browser를 사용할 수 있는지 확인하세요.`
     );
     return null;
   }
   if (probe.host && probe.host.indexOf("fanqie") === -1) {
     console.error(
-      `  ✗ 当前页面非番茄（host=${probe.host}），可能被重定向到登录/验证页，已跳过。`
+      `  ✗ 현재 페이지는 판치에가 아닙니다(host=${probe.host}). 로그인·인증 페이지로 리디렉션되었을 수 있어 건너뜁니다.`
     );
     return null;
   }
   if (!probe.hasState) {
-    console.error(`  ⚠ 页面未挂载 __INITIAL_STATE__，将尝试兜底扫描，结果可能不完整。`);
+    console.error(`  ⚠ 페이지에 __INITIAL_STATE__가 연결되지 않았습니다. 대체 검색을 시도하지만 결과가 불완전할 수 있습니다.`);
   }
 
   let categories = extractCategories(PORT, ch, type);
   if (!categories.length) {
-    // 菜单可能懒加载，滚动后重试一次
+    // 메뉴가 지연 로드되었을 수 있으므로 스크롤 후 한 번 더 시도합니다.
     scrollLoad(PORT, 2);
     sleep(1000);
     categories = extractCategories(PORT, ch, type);
   }
   if (!categories.length) {
-    // 仍失败：降级为只采当前入口页，至少产出数据而不是空跑
-    console.log(`  ⚠ 未提取到品类菜单，降级为单题材采集（入口页）`);
+    // 여전히 실패하면 현재 진입 페이지만 수집하도록 낮춰, 빈 실행 대신 최소한의 데이터를 출력합니다.
+    console.log(`  ⚠ 장르 메뉴를 추출하지 못해 단일 장르 수집(진입 페이지)으로 전환합니다.`);
     categories = [{ name: "全部（入口页）", href: `/rank/${ch}_${type}_${initCatId}` }];
   } else {
-    console.log(`  发现 ${categories.length} 个品类`);
+    console.log(`  장르 ${categories.length}개를 찾았습니다.`);
   }
 
   const now = new Date().toISOString();
@@ -314,7 +314,7 @@ function scrapeChannel(ch, type) {
       }
       if (books.length > TOP) books = books.slice(0, TOP);
 
-      // 分批解码真实书名/作者/简介/题材/评分/标签
+      // 실제 작품명·작가·소개·장르·평점·태그를 나누어 해독합니다.
       const bookIds = books.map((b) => String(b.bookId));
       const details = fetchDetails(PORT, bookIds);
 
@@ -353,13 +353,13 @@ function scrapeChannel(ch, type) {
       bodyLines.push("---", "");
     } catch (catErr) {
       console.error(
-        `  [fanqie] 品类 ${cat.name} 处理出错，跳过: ${catErr && catErr.message ? catErr.message : catErr}`
+        `  [fanqie] 장르 ${cat.name} 처리 중 오류가 발생해 건너뜁니다: ${catErr && catErr.message ? catErr.message : catErr}`
       );
       bodyLines.push(`## ${cat.name} — 采集失败`, "", "---", "");
     }
   }
 
-  // 质量状态：标题解析比例是番茄采集成败的核心信号
+  // 품질 상태: 제목 파싱 비율은 판치에 수집의 성패를 판단하는 핵심 신호입니다.
   const ratio = totalBooks ? resolvedTitles / totalBooks : 0;
   const quality = totalBooks === 0
     ? "[无数据]"
@@ -373,12 +373,12 @@ function scrapeChannel(ch, type) {
 
   if (totalBooks > 0 && resolvedTitles === 0) {
     console.error(
-      `  ✗ ${chLabel}${tyLabel}：${totalBooks} 本全部标题解析失败。多为详情页结构变动或登录/验证拦截，` +
-      `请在 Chrome 内手动打开任一 https://fanqienovel.com/page/{bookId} 确认页面正常。`
+      `  ✗ ${chLabel}${tyLabel}: ${totalBooks}권 모두 제목 파싱에 실패했습니다. 상세 페이지 구조 변경이나 로그인·인증 차단일 가능성이 높습니다.` +
+      `Chrome에서 다음 주소 중 하나를 직접 열어 페이지가 정상인지 확인하세요: https://fanqienovel.com/page/{bookId}`
     );
   } else if (ratio < 0.5) {
     console.error(
-      `  ⚠ ${chLabel}${tyLabel}：标题解析率偏低（${resolvedTitles}/${totalBooks}），结果质量已标注。`
+      `  ⚠ ${chLabel}${tyLabel}: 제목 파싱률이 낮습니다(${resolvedTitles}/${totalBooks}). 결과에 품질 표시를 추가했습니다.`
     );
   }
 
@@ -402,10 +402,10 @@ function main() {
         const filepath = path.join(OUTDIR, filename);
         fs.writeFileSync(filepath, content, "utf-8");
         written++;
-        console.log(`  ✓ 已保存: ${filepath}`);
+        console.log(`  ✓ 저장 완료: ${filepath}`);
       } catch (chErr) {
         console.error(
-          `[fanqie] ${channelLabel(ch)}${typeLabel(ty)} 采集失败，跳过: ${chErr && chErr.message ? chErr.message : chErr}`
+          `[fanqie] ${channelLabel(ch)}${typeLabel(ty)} 수집에 실패해 건너뜁니다: ${chErr && chErr.message ? chErr.message : chErr}`
         );
       }
     }
@@ -417,7 +417,7 @@ if (require.main === module) {
   runCli(main, "番茄采集");
 }
 
-// 导出纯函数/JS 构建器，供测试在 sandbox 内验证解析逻辑
+// 파싱 로직을 sandbox에서 검증할 수 있도록 순수 함수와 JS 빌더를 내보냅니다.
 module.exports = {
   buildCategoriesJS,
   buildBookListJS,
