@@ -10,15 +10,15 @@
 
 전문 작가의 방법론은 3단계로 이뤄집니다:
 
-1. **순위 스캔 (扫榜)**：인기 순위를 분석해 소재, 인물 설정, 접근 포인트를 파악합니다.
-2. **작품 분석 (拆文)**：개요의 리듬과 플롯 소재를 분해해 개인 모듈 라이브러리를 구축합니다.
-3. **상업적 집필**：갈고리(Hook), 쾌감, 기대감 등 핵심 기법을 학습하고 활용합니다.
+1. **순위 스캔**: 인기 순위를 분석해 소재, 인물 설정, 접근 포인트를 파악합니다.
+2. **작품 분석**: 개요의 리듬과 플롯 소재를 분해해 개인 모듈 라이브러리를 구축합니다.
+3. **상업적 집필**: 갈고리(Hook), 쾌감, 기대감 등 핵심 기법을 학습하고 활용합니다.
 
 네 가지 축을 중심으로 전개됩니다: 인기작 역분석 · 플롯 모듈화 재구성 · 컨텍스트 상태 계층 관리 · 인간-AI 협업.
 
-> v0.7.5 부터: 안정판. Claude Code에서 본문 작성 가드에 빠져 있던 추적 체크포인트 게이트를 보강——다른 세 플랫폼은 v0.7.3부터 지원했지만, 메인 플랫폼은 그동안 추적 없는 본문을 몇 챕터씩 조용히 써내려갔습니다; 장편 `story-long-write`에서 매 트리거마다 컨텍스트에 통째로 올라가던 SKILL.md를 82 KB에서 54 KB로 축소(개설 3단계를 필요 시 읽는 `workflow-setup.md`로 분리해, 일일 연재 시 쓸모없는 개纲 단계 비용을 지불하지 않게 함); 과도하게 누적된 제한 지시사항을 정리했고, 그중 하나는 본문의 평범한 「그가 말했다」를 위반으로 판정하는 문제였습니다. **이번 판 `agents_version`은 24**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
+> v0.7.5 부터: 안정판. Claude Code에서 본문 작성 가드에 빠져 있던 추적 체크포인트 게이트를 보강——다른 세 플랫폼은 v0.7.3부터 지원했지만, 메인 플랫폼은 그동안 추적 없는 본문을 몇 챕터씩 조용히 써내려갔습니다; 장편 `story-long-write`에서 매 트리거마다 컨텍스트에 통째로 올라가던 SKILL.md를 82 KB에서 54 KB로 축소(집필 시작 3단계를 필요 시 읽는 `workflow-setup.md`로 분리해, 일일 연재 시 쓸모없는 개요 단계 비용을 지불하지 않게 함); 과도하게 누적된 제한 지시사항을 정리했고, 그중 하나는 본문의 평범한 「그가 말했다」를 위반으로 판정하는 문제였습니다. **이번 판 `agents_version`은 24**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
 >
-> v0.7.4 부터: 전부 수정사항입니다. `story-import`가 사용자 자신의 책을 대상(对标)으로 등록하지 않게 수정(이전에는 「대상 디렉터리 내용이 자기 설정과 완전히 동일」한 현상 발생); story-setup 재배포 시 Reasonix / generic 프로젝트를 OpenClaw로 오판하지 않게 수정, 다중 플랫폼 배포에서도 매 세션마다 참고 패키지 누수를 잘못 보고하지 않게 함; Stage 6 문풍 통계가 Windows에서 필수로 죽지 않게 함. spawn의 `agents_version` 하드 게이트를 알림으로 완화——버전 불일치해도 병렬 처리 정상 진행, agent 파일 누락 시에만 solo로 다운그레이드. **이번 판 `agents_version`은 23**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
+> v0.7.4 부터: 전부 수정사항입니다. `story-import`가 사용자 자신의 책을 대조 도서로 등록하지 않게 수정(이전에는 「대상 디렉터리 내용이 자기 설정과 완전히 동일」한 현상 발생); story-setup 재배포 시 Reasonix / generic 프로젝트를 OpenClaw로 오판하지 않게 수정, 다중 플랫폼 배포에서도 매 세션마다 참고 패키지 누수를 잘못 보고하지 않게 함; Stage 6 문풍 통계가 Windows에서 필수로 죽지 않게 함. spawn의 `agents_version` 하드 게이트를 알림으로 완화——버전 불일치해도 병렬 처리 정상 진행, agent 파일 누락 시에만 solo로 다운그레이드. **이번 판 `agents_version`은 23**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
 >
 > v0.7.3 부터: 장편 추적을 단일 권한 트랜잭션 모델로 개편——`추적/_tracking-state.json`이 유일한 구조화 상태이며, 연속 상태 카드(고정 7칼럼, ≤12KB)와 복선/타임라인/캐릭터 스냅샷은 모두 `tracking_commit.py`가 통째로 생성; 일일 연재 시 챕터마다 필수로 읽던 파일이 5개에서 3개로 축소; Dashboard 디렉터리 트리를 필요 시 로드로 변경. **v0.7.2 이하 장편 프로젝트는 반드시 `추적/`를 마이그레이션해야 계속 쓸 수 있습니다**(`/story-import`의 「이전 추적 프로젝트 마이그레이션」 사용, 전체 작품 재분석 필요 없음, [UPGRADING](skills/story-setup/UPGRADING.md) 참조). **이번 판 `agents_version`은 22**, 이미 배포된 프로젝트는 `/story-setup`을 재실행하고 새 세션을 열어야 합니다.
 >
@@ -122,7 +122,7 @@ Windows에서 가끔 `ENOENT ... mkdir` 오류가 나는데도 마지막에 `Don
 
 업그레이드 후 프로젝트에서 이미 `/story-setup`을 실행한 적이 있다면 프로젝트 루트에서 `/story-setup`을 한번 더 실행해 hooks / agents / references를 동기화하는 것을 권장합니다. 각 판 변경사항은 [CHANGELOG.md](CHANGELOG.md)와 [Releases](https://github.com/worldwonderer/oh-story-claudecode/releases)를 참조하세요.
 
-**다중 agent 협업은 먼저 배포한 뒤 새 세션 열기:** 7개 전문 agent(story-architect, narrative-writer, consistency-checker 등)는 `/story-setup`으로 프로젝트 `.claude/agents/`에 기록되거나, `$story-setup`으로 `.codex/agents/*.toml`에 기록됩니다. Claude Code / Codex는 모두 세션 시작 시 custom agent를 더 안정적으로 등록; ZCode 3.3.4、OpenClaw Phase 1、Reasonix Phase 1과 generic 경로는 기본적으로 skills + solo fallback으로 동작합니다. 활성화 여부 판정: 새 세션에서 `/story-review`를 실행했을 때 보고서 헤더가 `Effective Mode: full/lean`이면 등록 성공, `Fallback: ... -> solo`면 현재 런타임이 해당 agent를 노출하지 않은 것입니다.
+**다중 agent 협업은 먼저 배포한 뒤 새 세션 열기:** 7개 전문 agent(story-architect, narrative-writer, consistency-checker 등)는 `/story-setup`으로 프로젝트 `.claude/agents/`에 기록되거나, `$story-setup`으로 `.codex/agents/*.toml`에 기록됩니다. Claude Code / Codex는 모두 세션 시작 시 custom agent를 더 안정적으로 등록; ZCode 3.3.4, OpenClaw Phase 1, Reasonix Phase 1과 generic 경로는 기본적으로 skills + solo fallback으로 동작합니다. 활성화 여부 판정: 새 세션에서 `/story-review`를 실행했을 때 보고서 헤더가 `Effective Mode: full/lean`이면 등록 성공, `Fallback: ... -> solo`면 현재 런타임이 해당 agent를 노출하지 않은 것입니다.
 
 **가져오기·연속 집필 순서:** 우선 집필 프로젝트 루트에서 `/story-setup`을 실행(hooks/agents/AGENTS 배포)하고, 새 세션을 열거나 새로고침한 뒤 `/story-import`로 기존 소설을 가져온 다음 `/story-long-write 일일 연재` 또는 `/story-long-write N장 집필`로 이어 쓰는 것을 권장합니다. 바로 `/story-import`를 실행해도 됩니다; 이 명령은 먼저 setup 완료 여부를 감지해, 미배포 시 먼저 setup으로 갈지 계속 직렬 가져오기를 진행할지 선택하게 합니다.
 
@@ -376,7 +376,7 @@ Agent는 필요할 때마다 `references/` 내 작성 이론(캐릭터 디자인
 
 실제 산출 샘플은 [demo/](demo/)를 참조: 단편 분석 《증장애의사장》· 장편 분석 《반룡》· 장편 연속 집필 공정 《너 관계 맡겨라, 네 고혼 합편이 전 폭발했다》· 커버 《검도독존》 예시 이미지.
 
-이 skill 덕분에 취업 준비 기간을 버틸 수 있네요 :joy:，필요한 분들께도 도움이 되길 바랍니다.
+이 skill 덕분에 취업 준비 기간을 버틸 수 있네요 :joy:, 필요한 분들께도 도움이 되길 바랍니다.
 
 ## 기여
 
@@ -384,8 +384,8 @@ Agent는 필요할 때마다 `references/` 내 작성 이론(캐릭터 디자인
 
 ## 교류
 
-- **Telegram 그룹**：<https://t.me/ohstoryclaudecode> —— 일상 교류, 삽질담, 신기능 논의.
-- **GitHub Discussions**：[질문 / 도움 요청 / 사용법 공유](https://github.com/worldwonderer/oh-story-claudecode/discussions), 검색 용이.
+- **Telegram 그룹**: <https://t.me/ohstoryclaudecode> — 일상 교류, 삽질담, 신기능 논의.
+- **GitHub Discussions**: [질문 / 도움 요청 / 사용법 공유](https://github.com/worldwonderer/oh-story-claudecode/discussions), 검색하기 쉽습니다.
 
 ## 감사
 

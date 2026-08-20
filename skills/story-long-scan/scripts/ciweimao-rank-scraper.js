@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
- * 刺猬猫阅读排行榜采集脚本
+ * 刺猬猫 독서 순위 수집 스크립트
  *
- * 配合 browser-cdp skill 使用。先启动 Chrome CDP 环境，再运行本脚本。
- * 采集策略：刺猬猫 rank-index 页面单页展示所有榜单，文本解析提取结构化数据。
- * 输出 Markdown 格式匹配 scan-output-format.md 规范。
+ * `browser-cdp` skill과 함께 사용한다. 먼저 Chrome CDP 환경을 시작한 뒤 이 스크립트를 실행한다.
+ * 수집 방식: 刺猬猫의 `rank-index` 페이지는 한 페이지에 모든 순위를 표시하므로, 텍스트를 파싱해 구조화된 데이터를 추출한다.
+ * 출력 Markdown 형식은 `scan-output-format.md` 규격에 맞춘다.
  *
- * 用法：
- *   node ciweimao-rank-scraper.js --type click       # 点击榜
- *   node ciweimao-rank-scraper.js --type monthly      # 月票榜
- *   node ciweimao-rank-scraper.js --type all           # 全部榜单
+ * 사용법:
+ *   node ciweimao-rank-scraper.js --type click       # 클릭 순위
+ *   node ciweimao-rank-scraper.js --type monthly      # 월간 투표 순위
+ *   node ciweimao-rank-scraper.js --type all           # 전체 순위
  *
- * 前置：
+ * 사전 조건:
  *   node {SKILL_DIR}/browser-cdp/scripts/setup-cdp-chrome.js 9222
  */
 
@@ -21,7 +21,7 @@ const { ab, sleep, evalJSONBase64, scrollLoad, getArg, localDateStamp, runCli } 
 
 const RANK_URL = "https://www.ciweimao.com/rank-index";
 
-/** 连通性 + 页面就绪自检 */
+/** 연결 상태 및 페이지 준비 여부 자체 점검 */
 function probePage(port) {
   return evalJSONBase64(
     port,
@@ -46,10 +46,10 @@ const RANK_TYPES = [
 // ---------------------------------------------------------------------------
 
 /**
- * 从 rank-index 单页解析所有榜单。
- * 页面结构：每个榜单有标题行（如"点击榜"），后跟 NO.1 特殊条目 + #2-10 普通条目。
- * NO.1 格式：标题 / 作者 / 指标值（三行）
- * #2-10 格式：N[题材]书名 / 指标值（两行）
+ * `rank-index` 단일 페이지에서 모든 순위를 파싱한다.
+ * 페이지 구조: 각 순위에는 제목 행(예: "点击榜") 뒤에 NO.1 특수 항목과 #2-10 일반 항목이 이어진다.
+ * NO.1 형식: 제목 / 작가 / 지표 값(세 줄)
+ * #2-10 형식: N[장르]도서명 / 지표 값(두 줄)
  */
 function extractAllRanks(port) {
   const js =
@@ -60,23 +60,23 @@ function extractAllRanks(port) {
     "var sections=[];var curName='';var curEntries=[];" +
     "for(var i=0;i<lines.length;i++){" +
     "  var line=lines[i];" +
-    // 检测新 section
+    // 새 섹션 감지
     "  var headerIdx=headers.indexOf(line);" +
     "  if(headerIdx>=0){" +
     "    if(curName&&curEntries.length)sections.push({name:curName,entries:curEntries});" +
     "    curName=headers[headerIdx];curEntries=[];continue" +
     "  }" +
     "  if(!curName)continue;" +
-    // 跳过周期 tab 和 UI 文字
+    // 기간 탭과 UI 문구 건너뛰기
     "  if(/^(周榜|月榜|总榜)$/.test(line))continue;" +
-    // NO.1 条目
+    // NO.1 항목
     "  if(line==='NO.1'&&i+3<lines.length){" +
     "    var t=lines[i+1]||'';var a=lines[i+2]||'';var v=lines[i+3]||'';" +
     "    if(headers.indexOf(v)>=0)continue;" +
     "    curEntries.push({rank:1,title:t,author:a,genre:'',metric:v});" +
     "    i+=2;continue" +
     "  }" +
-    // #2-10 条目：N[题材]书名
+    // #2-10 항목: N[장르]도서명
     "  var rm=line.match(/^(\\d{1,2})\\[(.+?)\\](.+)$/);" +
     "  if(rm){" +
     "    var nextVal=i+1<lines.length?lines[i+1]:'';" +
@@ -93,8 +93,8 @@ function extractAllRanks(port) {
 }
 
 /**
- * 从 DOM 获取书籍链接。每本书常有封面图 anchor（textContent 为空）和书名 anchor，
- * 按 bookId 聚合后取最长的非空文本作为书名，避免空封面 anchor 覆盖书名导致回填全失败。
+ * DOM에서 도서 링크를 가져온다. 각 도서에는 표지 이미지 anchor(textContent가 비어 있음)와 도서명 anchor가 함께 있는 경우가 많다.
+ * `bookId`별로 묶은 뒤 비어 있지 않은 텍스트 중 가장 긴 값을 도서명으로 사용해, 빈 표지 anchor가 도서명을 덮어쓰면서 링크 보정이 전부 실패하는 일을 막는다.
  */
 function extractBookUrls(port) {
   const js = `JSON.stringify((function(){
@@ -123,7 +123,7 @@ const OUTDIR = getArg(args, "--outdir") || ".";
 const RANKTYPE = getArg(args, "--type") || "all";
 
 function main() {
-  console.log("\n→ 采集 刺猬猫排行榜...");
+  console.log("\n→ 刺猬猫 순위 수집 중...");
   console.log(`  URL: ${RANK_URL}`);
 
   let sections, urls;
@@ -131,16 +131,16 @@ function main() {
     ab(PORT, "open", RANK_URL);
     sleep(4000);
 
-    // 连通性自检：CDP 未起/被重定向时给可操作报错，而非误报"结构已变"
+    // 연결 상태 자체 점검: CDP가 시작되지 않았거나 리디렉션된 경우 "구조가 변경됨"으로 오판하지 않고 조치 가능한 오류를 표시한다.
     const probe = probePage(PORT);
     if (!probe) {
       console.error(
-        `  ✗ CDP 无响应。请确认已用 browser-cdp 启动 Chrome（端口 ${PORT}），且 agent-browser 可用。`
+        `  ✗ CDP가 응답하지 않습니다. browser-cdp로 Chrome(포트 ${PORT})을 시작했고 agent-browser를 사용할 수 있는지 확인하세요.`
       );
       return 0;
     }
     if (probe.host && probe.host.indexOf("ciweimao") === -1) {
-      console.error(`  ✗ 当前页面非刺猬猫（host=${probe.host}），可能被重定向，已跳过。`);
+      console.error(`  ✗ 현재 페이지가 刺猬猫이 아닙니다(host=${probe.host}). 리디렉션으로 판단해 건너뜁니다.`);
       return 0;
     }
 
@@ -149,25 +149,25 @@ function main() {
 
     sections = extractAllRanks(PORT);
     if (!sections.length) {
-      // 懒加载可能未触发，再滚动重试一次
+      // 지연 로딩이 실행되지 않았을 수 있으므로 한 번 더 스크롤해 재시도한다.
       scrollLoad(PORT, 2);
       sleep(1000);
       sections = extractAllRanks(PORT);
     }
     if (!sections.length) {
-      console.error("[ciweimao] 采集失败：未解析到榜单（页面结构可能变动或未加载）。请人工打开榜单页确认。");
+      console.error("[ciweimao] 수집 실패: 순위를 파싱하지 못했습니다(페이지 구조가 바뀌었거나 아직 로드되지 않았을 수 있습니다). 순위 페이지를 직접 열어 확인하세요.");
       return 0;
     }
 
     urls = extractBookUrls(PORT);
   } catch (err) {
-    console.error(`[ciweimao] 采集失败（页面加载或提取阶段）: ${err.message}`);
+    console.error(`[ciweimao] 수집 실패(페이지 로드 또는 추출 단계): ${err.message}`);
     return 0;
   }
 
   console.log(`  ✓ 提取 ${sections.length} 个榜单，${urls.length} 个书籍链接`);
 
-  // 筛选需要的榜单类型
+  // 필요한 순위 유형만 선택
   const targetTypes =
     RANKTYPE === "all"
       ? RANK_TYPES
@@ -178,7 +178,7 @@ function main() {
     try {
       const section = sections.find((s) => s.name === rt.header);
       if (!section || !section.entries.length) {
-        console.log(`  ⚠ ${rt.label} 无数据，跳过`);
+        console.log(`  ⚠ ${rt.label} 데이터가 없어 건너뜁니다`);
         continue;
       }
 
@@ -209,15 +209,15 @@ function main() {
           ].filter(Boolean).join(" · ");
           if (meta) lines.push(`*${meta}*`);
 
-          // 按标题匹配书籍链接（归一后比对）
+          // 정규화한 제목으로 도서 링크를 매칭한다.
           const matched = urls.find((u) => norm(u.title) === norm(entry.title));
           if (matched) {
-            lines.push(`[作品页](${matched.url})`);
+            lines.push(`[작품 페이지](${matched.url})`);
           }
 
           lines.push("", "---", "");
         } catch (entryErr) {
-          console.error(`[ciweimao] ${rt.label} 条目处理出错（#${entry.rank} ${entry.title}）: ${entryErr.message}`);
+          console.error(`[ciweimao] ${rt.label} 항목 처리 오류(#${entry.rank} ${entry.title}): ${entryErr.message}`);
           lines.push("", "---", "");
         }
       }
@@ -228,16 +228,16 @@ function main() {
       const filepath = path.join(OUTDIR, filename);
       fs.writeFileSync(filepath, lines.join("\n"), "utf-8");
       written++;
-      console.log(`  ✓ ${rt.label}：${section.entries.length} 条 → ${filepath}`);
+      console.log(`  ✓ ${rt.label}: ${section.entries.length}개 → ${filepath}`);
     } catch (rankErr) {
-      console.error(`[ciweimao] ${rt.label} 处理出错，跳过: ${rankErr.message}`);
+      console.error(`[ciweimao] ${rt.label} 처리 오류. 건너뜁니다: ${rankErr.message}`);
     }
   }
   return written;
 }
 
 if (require.main === module) {
-  runCli(main, "刺猬猫采集");
+  runCli(main, "刺猬猫 순위 수집");
 }
 
 module.exports = { extractAllRanks, extractBookUrls };

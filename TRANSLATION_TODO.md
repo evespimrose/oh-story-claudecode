@@ -94,11 +94,34 @@
 
 
 
-## 다음 세션 재개 지점 (Batch 24)
+## 번역·검증 실행 기록 (Batch 27)
+
+- `CHANGELOG.md` 후반부(v0.7.0 이하)의 설명용 중국어 혼용 표현을 추가 현지화했다. `세纲`, `章首`, `章尾`, `中文化`, `信息差`, `前3章`, `套路` 등 일반 설명 문장은 각각 `세부 개요`, `장 시작`, `장 끝`, `한국어화`, `정보 격차`, `처음 3장`, `클리셰`로 재구성했다. 경로·필드명·상태 토큰·고유명은 보존했다.
+- `README_EN.md` 후반부를 대조 검토했다. 남아 있는 중국어는 `demo/` 예시 파일명, 프로젝트 경로, CLI 인자, 플랫폼·작품 고유명, 실제 트리의 파일명과 자연어 트리거 예시로 판정되어 변경하지 않았다. 일반 영어 설명문에 번역 대상인 중국어 문장이 남아 있지 않음을 확인했다.
+- 검증 결과: `CHANGELOG.md` 446행·77개 제목·2개 코드 펜스, `README_EN.md` 393행·14개 제목·16개 코드 펜스를 유지했다. `ciweimao-rank-scraper.js`의 `node --check`가 통과했고, `git diff --check`도 통과했다.
+- 현재 변경은 `CHANGELOG.md`, `README.md`, `TRANSLATION_TODO.md`, `skills/story-long-scan/scripts/ciweimao-rank-scraper.js`에 한정된다. `demo/`는 수정하지 않았다.
+
+## 번역·검증 실행 기록 (Batch 26)
+
+- `README.md`의 설명 문장에 남은 중국어 표현과 혼용 문장부호를 정리했다. demo 파일명, 플랫폼 고유명, 프로젝트 경로와 명령어는 보호했다.
+- `CHANGELOG.md`의 상단 및 v0.7.x 구간에서 확인된 중국어 혼용 설명을 한국어로 보완했다. `세纲`처럼 설명 문장에만 쓰인 용어는 `세부 개요`로 바꾸고, `循环ID`, `单元ID`처럼 기능 필드명은 보존했다. CHANGELOG 전체는 고유명·경로·기능 식별자가 섞여 있으므로 전수 완료로 표시하지 않는다.
+- `skills/story-long-scan/scripts/ciweimao-rank-scraper.js`의 주석과 사용자 표시 로그를 한국어로 번역했다. 사이트 헤더, 순위 ID, URL, DOM 선택자, 정규식, JSON 필드, CLI 옵션, 파일명 구성과 반환 구조는 보존했다.
+- 검증 결과: `node --check` 통과, 보호 토큰 HEAD/NOW 존재 여부 일치, Markdown의 코드 펜스·제목 구조 유지, `git diff --check` 통과.
+- 비-demo Markdown에는 아직 중국어가 남아 있다. README 계열의 중국어 고유명·demo 경로는 보호 예외로 분리해야 하며, CHANGELOG 후반부와 `skills/` 참조 문서는 추가 검토가 필요하다.
+
+## 검증 실행 기록 (Batch 25)
+
+- `skills/story-long-write/references/workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`의 경로·명령어·URL·인라인 코드·플레이스홀더를 상대 경로 기준으로 대조했다. 실제 누락이 아니라 조건부로 배포되는 `.claude/agents/story-explorer.md`와 `.claude/agents/story-architect.md` 참조만 확인되었으며, 현재 저장소에는 해당 agent 파일이 없어 기능 결함으로 단정하지 않는다.
+- 스크래퍼 7개(`skills/story-long-scan/scripts/*scraper.js`, `skills/story-short-scan/scripts/*scraper.js`)와 `skills/story-setup/references/templates/`의 셸·JavaScript·JSON·규칙 파일 28개를 검사했다. 중국어 주석·사이트명·랭킹 라벨·오류 메시지가 실행 문자열과 섞여 있으므로, 기능 토큰을 보호한 채 주석과 사용자 표시 메시지를 번역하는 후속 배치가 필요하다.
+- 비-demo Markdown 전수 검색 결과, 아직 중국어가 남은 문서가 다수이며 전수 검증은 미완료다. 특히 `CHANGELOG.md`, `README.md`, `README_EN.md`, `TRANSLATION_PROGRESS_REPORT.md`, `skills/story-long-analyze/`, `skills/story-long-scan/`, `skills/story-long-write/`, `skills/story-setup/`, `skills/story-review/`, `skills/story-short-*`의 다수 참조 문서가 남아 있다. 코드·경로·고유 식별자에 포함된 중국어는 기능 보호 예외로 별도 판정해야 한다.
+- 새 스킬 `.claude/skills/chinese-translation-localization/SKILL.md`는 frontmatter, `CAVE-MAN-OUTPUT-ARM` 마커, 500줄 이하 조건, 시작·번역·검증·TODO·커밋 절차를 모두 통과했다(70줄).
+- `git diff --check`는 통과했다. 이번 감사에서 문서 본문이나 스크립트는 수정하지 않았으며, 감사용 임시 파일은 제거했다.
+
+## 다음 세션 재개 지점 (Batch 27)
 
 - **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
 - **현재 브랜치 상태:** `main`은 번역 대상 문서와 TODO가 작업 트리에 적용된 상태이며, 아직 새 커밋·푸시는 하지 않았다.
-- **다음 대상:** 현재 TODO에 남은 후속 번역·전수 검증 항목.
-- **다음 작업 순서:** `workflow-setup.md`는 수동 번역본을 적용했다. 후속 작업에서는 기능용 문자열(경로, 명령어, 정규식, JSON 키, URL, 앵커, 셀렉터)을 별도로 재검증하고, 비-demo 문서 전체의 중국어 잔존·용어 일관성·경로 참조를 점검한다.
+- **다음 대상 파일:** `skills/story-long-scan/scripts/fanqie-rank-scraper.js`, `skills/story-short-scan/scripts/*scraper.js`, `skills/story-setup/references/templates/`의 실행 주석·사용자 표시 메시지, 이후 `TRANSLATION_PROGRESS_REPORT.md`와 `memory-bank/TRANSLATION_HANDOVER.md`의 설명 문장.
+- **다음 작업 순서:** 먼저 `fanqie-rank-scraper.js`의 URL·필드명·선택자·정규식·랭킹 ID·파일명은 보존하고 중국어 주석과 사용자 표시 로그만 번역한다. 다음으로 short-scan 스크래퍼와 story-setup 템플릿을 작은 배치로 처리한 뒤, 비-demo Markdown의 중국어 잔존을 보호 예외와 일반 설명으로 나눠 재검증한다.
 - **현재 주의사항:** `workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`는 한국어 현지화하여 적용했으며 `git diff --check`를 통과했다. 작업 트리에는 기존 변경과 이번 번역 변경이 함께 있을 수 있으므로 일괄 복원·리셋하지 않는다.
 - **커밋 규칙:** 사용자가 커밋·푸시를 명시하거나 프로젝트 작업 규칙상 승인된 경우에만 검증된 변경을 5MB 미만 단위로 커밋·푸시한다. `demo/` 디렉터리는 수정하지 않는다.
