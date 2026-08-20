@@ -61,9 +61,9 @@
 - [x] `skills/story-long-write/references/style-craft.md`
 - [x] `skills/story-long-write/references/style-combat-face.md`
 - [x] `skills/story-long-write/references/tracking-transaction.md` — Batch 21
-- [ ] `skills/story-long-write/references/workflow-daily.md`
-- [ ] `skills/story-long-write/references/workflow-revision.md`
-- [ ] `skills/story-long-write/references/workflow-setup.md`
+- [x] `skills/story-long-write/references/workflow-daily.md` — Batch 22 완료(검수 후 작업 트리에 적용)
+- [x] `skills/story-long-write/references/workflow-revision.md` — Batch 23 완료(검수 후 작업 트리에 적용)
+- [x] `skills/story-long-write/references/workflow-setup.md` — Batch 24 완료(수동 번역·검수 후 작업 트리에 적용)
 
 ## 기능 연결 문자열 검토 대상
 
@@ -94,11 +94,11 @@
 
 
 
-## 다음 세션 재개 지점 (Batch 22)
+## 다음 세션 재개 지점 (Batch 24)
 
 - **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
-- **현재 브랜치 상태:** `main`은 `origin/main`과 동기화되어 있으며, 인수인계 작성 전 작업 트리는 깨끗했음.
-- **다음 대상:** `skills/story-long-write/references/workflow-daily.md`.
-- **다음 작업 순서:** 먼저 `git ls-files -- skills/story-long-write/references/workflow-daily.md`로 실제 경로를 확인한다. 원문을 샌드박스로 가져와 기능용 문자열(경로, 명령어, 정규식, JSON 키, URL, 앵커, 셀렉터)을 보호한 상태로 번역한다. 번역 후 기능 문자열 복원 여부, 가시 본문 CJK 잔존, Markdown 줄 구조, `git diff --check`를 검증한다.
-- **현재 주의사항:** 이전 세션에서 `workflow-daily.md`의 번역 후보를 만들었으나 품질 검증을 통과하지 못해 원격 저장소에는 적용하지 않았다. 특히 줄 병합, 메타 안내 문구 삽입, 보호 토큰 변형이 발생했으므로 해당 후보를 그대로 사용하지 말고 원문에서 다시 시작한다.
-- **커밋 규칙:** 검증을 통과한 변경만 5MB 미만 단위로 커밋하고 즉시 푸시한다. `demo/` 디렉터리는 수정하지 않는다.
+- **현재 브랜치 상태:** `main`은 번역 대상 문서와 TODO가 작업 트리에 적용된 상태이며, 아직 새 커밋·푸시는 하지 않았다.
+- **다음 대상:** 현재 TODO에 남은 후속 번역·전수 검증 항목.
+- **다음 작업 순서:** `workflow-setup.md`는 수동 번역본을 적용했다. 후속 작업에서는 기능용 문자열(경로, 명령어, 정규식, JSON 키, URL, 앵커, 셀렉터)을 별도로 재검증하고, 비-demo 문서 전체의 중국어 잔존·용어 일관성·경로 참조를 점검한다.
+- **현재 주의사항:** `workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`는 한국어 현지화하여 적용했으며 `git diff --check`를 통과했다. 작업 트리에는 기존 변경과 이번 번역 변경이 함께 있을 수 있으므로 일괄 복원·리셋하지 않는다.
+- **커밋 규칙:** 사용자가 커밋·푸시를 명시하거나 프로젝트 작업 규칙상 승인된 경우에만 검증된 변경을 5MB 미만 단위로 커밋·푸시한다. `demo/` 디렉터리는 수정하지 않는다.
