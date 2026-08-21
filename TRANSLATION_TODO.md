@@ -72,6 +72,12 @@
 - [ ] 테스트 픽스처는 실행 기능과 직접 연결되는지 확인한 뒤 보존 또는 함께 교체
 - [ ] `story-setup/references/templates/`의 셸·JavaScript·규칙 파일은 코드와 설명을 분리해 검토
 - [x] `skills/story-setup/references/templates/agents/chapter-extractor.md` — Batch 29 완료: 역할 추출 규칙·품질 검사·후반 출력 템플릿까지 현지화 및 기능 계약 검증
+- [x] `skills/story-setup/references/templates/agents/story-explorer.md` — Batch 30 완료: 조회 절차·benchmark·context_load·JSON 출력 설명을 현지화하고 기능 경로·키·enum 검증
+- [x] `skills/story-setup/references/templates/hooks/story_hook_core.js` — Batch 31 완료: 주석·오류·상태·품질 진단 메시지 현지화, 실행 정규식·경로·키·상태 토큰 보존
+- [x] `skills/story-setup/references/templates/agents/consistency-checker.md` — Batch 32 완료: 일관성 검사·충돌 등급·책임 경계·출력 프로토콜 현지화, 경로·필드·enum 보존
+- [x] `skills/story-setup/references/templates/agents/story-researcher.md` — Batch 32 완료: 연구 장면·CDP 워크플로·출처 평가·출력 계약 현지화, 명령어·URL·JSON 키 보존
+- [x] `skills/story-setup/references/templates/hooks/guard-outline-before-prose.sh` — Batch 33 완료: 주석·차단 메시지 현지화, 셸 제어 흐름·경로·명령·종료 코드 보존
+- [x] `skills/story-setup/references/templates/rules/story-outline.md` — Batch 33 완료: 권·세부 개요 필수 규칙·훅 유형·예시 현지화, 경로·필드·플레이스홀더 보존
 
 ## 전수 검증
 
@@ -94,6 +100,32 @@
 
 
 
+
+## 번역·검증 실행 기록 (Batch 33)
+
+- `guard-outline-before-prose.sh`의 PreToolUse 설명, fail-open 원칙, LC_ALL/UTF-8 안정성, JSON 경로 추출, Windows 경로 정규화, 단편·장편 개요 문, tracking checkpoint 문, 유해 문장 잔액 문과 사용자 표시 차단 메시지를 한국어로 현지화했다.
+- `story-outline.md`의 권·세부 개요 필수 항목, 증분 작성·본문 동기화, 장 시작·장 끝 훅 유형, 감정 변화, 누락 항목 처리, 권 대개요 예시를 한국어로 현지화했다.
+- 셸 문법은 Git Bash `bash -n`으로 통과했고, Markdown 구조는 제목 18개·코드 펜스 4개를 유지했다. 보호한 기능 요소는 `LC_ALL=C`, `story_hook_cli.js`, `tracking-checkpoint`, `prose-toxic`, 경로·정규식·JSON 필드·종료 코드이며 `git diff --check`도 통과했다.
+- 이번 배치는 아직 커밋·푸시하지 않았다.
+
+## 번역·검증 실행 기록 (Batch 32)
+
+- `consistency-checker.md`의 frontmatter, 용어 수집, 실체·설정·타임라인 충돌, 규칙 경계·설정 계층·장간 인과·규칙 악용·대가 일관성 검사, 복선·형식 검사, S1~S4 기준, 금지 사항·책임 경계·출력 프로토콜을 한국어로 현지화했다.
+- `story-researcher.md`의 연구 장면 표, CDP 우선 워크플로, Google/Bing 전환, WebSearch 대체 경로, 다중 출처 검증, 출처 신뢰도, 구조화 출력 형식, 금지 사항·책임 경계를 한국어로 현지화했다.
+- 두 파일의 도구 목록, 경로·파일명, JSON 키, URL, CLI 명령, 상태 토큰, 검색어 예시와 enum은 기능 계약으로 보존했다. Markdown 구조와 코드 블록을 유지했으며 `git diff --check`를 통과했다.
+- 이번 배치는 아직 커밋·푸시하지 않았다.
+
+## 번역·검증 실행 기록 (Batch 31)
+
+- `skills/story-setup/references/templates/hooks/story_hook_core.js`의 추적 상태 오류, 연속성 경고, 본문 작성 차단, 유해 문장 패턴, 글자 수 부족, 중복 제목, 디스크 기록, 본문 보완 검사, 커밋 경고 메시지와 관련 주석을 한국어로 현지화했다.
+- 정규식 본문, 경로·파일명, JSON·상태 필드, `去味:跳过`, 사이트·프로젝트 고유명과 스크립트 호출 토큰은 기능 계약으로 보고 보존했다. 중국어 잔존은 실제 경로·파일명·정규식 대상·상태 표식에 한정된다.
+- `node --check skills/story-setup/references/templates/hooks/story_hook_core.js`와 `git diff --check`를 통과했다. 이번 배치는 아직 커밋·푸시하지 않았다.
+
+## 번역·검증 실행 기록 (Batch 30)
+
+- `skills/story-setup/references/templates/agents/story-explorer.md`의 frontmatter 설명, 읽기 전용 역할, 조회 유형, 프로젝트 구조 주석, 공통 조회 절차, 인물·복선·설정·타임라인·진행·관계·benchmark·context_load 절차, JSON 출력 형식, 금지 사항, 책임 경계와 호출 프로토콜을 한국어로 현지화했다.
+- `Read`, `Glob`, `Grep`, `Agent(subagent_type: "story-explorer")`, query type, JSON 키, `gaps` 키, 경로·파일명, 상태 토큰, 정규식과 enum 값은 기능 계약으로 보고 보존했다. 예시의 자연어 질문과 JSON 설명 값은 한국어로 바꿨다.
+- `story-explorer.md`는 현재 작업 트리에 적용된 상태이며, `git diff --check`는 통과했다. 최종 Markdown 제목·코드 펜스·JSON 키와 남은 CJK는 기능 보호 문자열인지 별도 대조한 뒤 커밋한다.
 
 ## 번역·검증 실행 기록 (Batch 29)
 
@@ -146,8 +178,9 @@
 - **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
 - **현재 브랜치 상태:** `main`은 Batch 28과 인수인계 갱신 커밋 `9441e03`까지 원격에 반영된 상태이며, Batch 29의 세 파일 변경은 아직 작업 트리에 있다.
 - **완료 대상:** `skills/story-long-scan/scripts/fanqie-rank-scraper.js`, `skills/story-short-scan/scripts/cdp-utils.js`, `dz-browse-scraper.js`, `heiyan-booklist-scraper.js`.
-- **다음 대상 파일:** `skills/story-setup/references/templates/agents/story-explorer.md`.
-- **그 다음 대상:** `skills/story-setup/references/templates/hooks/story_hook_core.js`, `agents/consistency-checker.md`, `agents/story-researcher.md`, `hooks/guard-outline-before-prose.sh`, `rules/story-outline.md` 순으로 검토한다.
+- **완료 대상:** `skills/story-setup/references/templates/agents/story-explorer.md` — Batch 30, `skills/story-setup/references/templates/hooks/story_hook_core.js` — Batch 31.
+- **완료 대상:** `skills/story-setup/references/templates/hooks/guard-outline-before-prose.sh`, `skills/story-setup/references/templates/rules/story-outline.md` — Batch 33.
+- **다음 대상:** `skills/story-setup/references/templates/agents/story-researcher.md`와 관련 rules/hooks의 남은 기능 보호 문자열을 전수 대조한 뒤, `skills/story-review/` 및 `skills/story-short-*`의 잔여 참조 문서를 검토한다.
 - **다음 작업 순서:** URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·JSON 키·상태 토큰은 보호하고, agent·hook·rule 파일의 일반 설명·주석·사용자 표시 메시지만 번역한다. 각 배치 후 `git diff --check`, Markdown 구조 또는 JavaScript·셸 문법 검사를 실행한다.
 - **현재 주의사항:** `workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`와 Batch 29의 `chapter-extractor.md`는 한국어 현지화하여 적용했으며 `git diff --check`를 통과했다. 작업 트리에는 이번 배치의 진행 문서 변경이 함께 있으므로 일괄 복원·리셋하지 않는다.
 - **커밋 규칙:** 사용자가 커밋·푸시를 명시하거나 프로젝트 작업 규칙상 승인된 경우에만 검증된 변경을 5MB 미만 단위로 커밋·푸시한다. `demo/` 디렉터리는 수정하지 않는다.

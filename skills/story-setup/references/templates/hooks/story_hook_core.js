@@ -101,20 +101,20 @@ function trackingCheckpointIssue(book, requireState = false, expectedLastCommitt
   const state = path.join(book, "追踪", "_tracking-state.json")
   if (!fs.existsSync(state)) {
     return requireState
-      ? `追踪/_tracking-state.json 缺失；已有正文项目走 /story-import 的「旧追踪项目迁移」重建追踪（不必重跑全书拆解），新书先用 tracking_commit.py init 初始化`
+      ? `추적/_tracking-state.json이 없습니다. 기존 본문 프로젝트는 /story-import의 「기존 추적 프로젝트 마이그레이션」으로 추적을 재구성합니다(전체 분석을 다시 실행할 필요 없음). 새 프로젝트는 먼저 tracking_commit.py init으로 초기화합니다.`
       : null
   }
   let document
   try {
     document = JSON.parse(fs.readFileSync(state, "utf8"))
   } catch {
-    return `追踪/_tracking-state.json 无法解析；停止写正文并重新 /story-import，不能猜测或手补状态`
+    return `추적/_tracking-state.json을 해석할 수 없습니다. 본문 작성을 중단하고 /story-import을 다시 실행합니다. 상태를 추측하거나 수동으로 보완하지 않습니다.`
   }
   if (!document || typeof document !== "object" || Array.isArray(document) || document.schema_version !== 4) {
-    return `追踪/_tracking-state.json 不是当前 schema_version=4；停止写正文并重新 /story-import，不保留旧结构兼容路径`
+    return `추적/_tracking-state.json이 현재 schema_version=4가 아닙니다. 본문 작성을 중단하고 /story-import을 다시 실행합니다. 이전 구조 호환 경로는 유지하지 않습니다.`
   }
   if (!Number.isInteger(document.state_revision)) {
-    return `追踪/_tracking-state.json 缺少整数 state_revision；停止写正文并重新 /story-import`
+    return `추적/_tracking-state.json에 정수 state_revision이 없습니다. 본문 작성을 중단하고 /story-import을 다시 실행합니다.`
   }
   const context = path.join(book, "追踪", "上下文.md")
   let contextRevision = null
@@ -123,18 +123,18 @@ function trackingCheckpointIssue(book, requireState = false, expectedLastCommitt
     if (match) contextRevision = Number(match[1])
   } catch {}
   if (contextRevision !== document.state_revision) {
-    const shown = contextRevision === null ? "缺失" : contextRevision
-    return `追踪/上下文.md 状态修订 ${shown} 与 _tracking-state.json 的 ${document.state_revision} 不一致；重新提交该章的 mode=revision 事务重建派生视图（expected_state_revision 取 追踪/_tracking-state.json 的 state_revision 字段（check 失败时不输出 JSON））`
+    const shown = contextRevision === null ? "없음" : contextRevision
+    return `추적/上下文.md의 상태 수정 번호 ${shown}이 _tracking-state.json의 ${document.state_revision}과 일치하지 않습니다. 해당 장의 mode=revision 트랜잭션을 다시 제출해 파생 뷰를 재구성합니다(expected_state_revision은 추적/_tracking-state.json의 state_revision 필드를 사용하며 check 실패 시 JSON을 출력하지 않음).`
   }
   if (expectedLastCommitted !== null) {
     if (!Number.isInteger(document.last_committed_chapter)) {
-      return `追踪/_tracking-state.json 缺少整数 last_committed_chapter；停止写正文并重新 /story-import`
+      return `추적/_tracking-state.json에 정수 last_committed_chapter가 없습니다. 본문 작성을 중단하고 /story-import을 다시 실행합니다.`
     }
-    // 章号已在追踪范围内 = 回炉/改名/留原稿备份，不是首建新章：文件名新但章节早已提交过，
-    // 顺序校验对它恒为假（workflow-revision 的「备份原稿」步骤必然命中），跳过。
+// 장 번호가 이미 추적 범위 안에 있으면 재작업·개명·원고 백업이며 새 장을 처음 만드는 것이 아닙니다. 파일명은 새롭지만 장은 이미 제출된 상태이므로,
+    // 순서 검증은 항상 거짓이 됩니다(workflow-revision의 「원고 백업」 단계가 반드시 해당). 건너뜁니다.
     if (expectedLastCommitted < document.last_committed_chapter) return null
     if (document.last_committed_chapter !== expectedLastCommitted) {
-      return `追踪已提交到第${document.last_committed_chapter}章，首建第${expectedLastCommitted + 1}章前必须先提交第${expectedLastCommitted}章追踪事务`
+      return `추적은 ${document.last_committed_chapter}장까지 제출되었습니다. ${expectedLastCommitted + 1}장을 처음 만들기 전에 먼저 ${expectedLastCommitted}장 추적 트랜잭션을 제출해야 합니다.`
     }
   }
   return null
@@ -162,17 +162,17 @@ function continuityFindings(root) {
         const contextTime = fs.statSync(context).mtimeMs
         if (newest > contextTime + 1000) {
           const latest = chapters.reduce((left, right) => fs.statSync(left).mtimeMs > fs.statSync(right).mtimeMs ? left : right)
-          messages.push(`[continuity] ${safeRelative(root, book)}：正文已更新到「${path.basename(latest)}」但续写状态卡更早——为该章提交 tracking_commit.py 事务、check 通过后再续写，禁止分别手改 上下文.md/伏笔.md。`)
+          messages.push(`[continuity] ${safeRelative(root, book)}：본문은 「${path.basename(latest)}」까지 갱신되었지만 이어쓰기 상태 카드가 더 오래되었습니다. 해당 장의 tracking_commit.py 트랜잭션을 제출하고 check를 통과한 뒤 이어 씁니다. 上下文.md/伏笔.md를 각각 수동으로 수정하지 않습니다.`)
         }
       } catch {}
     }
 
-    // 续写状态卡预算：上下文.md 由事务工具整份重建，硬上限 12288 字节。
+    // 이어쓰기 상태 카드 예산: 上下文.md는 트랜잭션 도구가 전체를 재구성하며 하드 상한은 12288바이트입니다.
     if (fs.existsSync(context)) {
       try {
         const contextSize = fs.statSync(context).size
         if (contextSize > 12288) {
-          messages.push(`[continuity] ${safeRelative(root, book)}：追踪/上下文.md 已 ${contextSize} 字节，超出续写状态卡预算 12288 字节——提交一份 mode=revision 事务让 tracking_commit.py 整份重建，不要手改也不要继续追加。`)
+          messages.push(`[continuity] ${safeRelative(root, book)}：추적/上下文.md가 ${contextSize}바이트로 이어쓰기 상태 카드 예산 12288바이트를 초과했습니다. mode=revision 트랜잭션을 제출해 tracking_commit.py가 전체를 재구성하도록 하며, 수동 수정이나 추가 작성을 하지 않습니다.`)
         }
       } catch {}
     }
@@ -186,7 +186,7 @@ function continuityFindings(root) {
     }
     for (const [title, files] of titles.entries()) {
       if (files.length > 1) {
-        messages.push(`[continuity] ${safeRelative(root, book)}：${files.length} 章标题重复「${title}」（${files.join("、").slice(0, 60)}），建议改名。`)
+        messages.push(`[continuity] ${safeRelative(root, book)}：${files.length}개 장의 제목이 중복됩니다「${title}」(${files.join("、").slice(0, 60)}). 이름을 바꾸는 것이 좋습니다.`)
       }
     }
   }
@@ -270,7 +270,7 @@ function proseBlockReason(root, absolute) {
     if (fs.existsSync(path.join(root, "拆文库", path.basename(book)))) return null
     if (!fs.existsSync(path.join(book, "设定.md"))) return null
     if (!fs.existsSync(path.join(book, "小节大纲.md"))) {
-      return `⛔ 写正文被拦截：${safeRelative(root, absolute)} 缺少同目录 小节大纲.md。先按 story-short-write 完成「小节大纲.md」再写正文。`
+      return `⛔ 본문 작성 차단: ${safeRelative(root, absolute)}에 같은 디렉터리의 小节大纲.md가 없습니다. 먼저 story-short-write에 따라 「小节大纲.md」를 완성한 뒤 본문을 작성합니다.`
     }
     return null
   }
@@ -297,17 +297,17 @@ function proseBlockReason(root, absolute) {
       })
     } catch {}
     if (!found) {
-      return `⛔ 写正文被拦截：第 ${chapter} 章缺少细纲（${safeRelative(root, outlineDir)}/细纲_第${chapter}章.md）。先按 story-long-write 单章流程补建细纲再写正文。`
+      return `⛔ 본문 작성 차단: ${chapter}장에 세부 개요가 없습니다(${safeRelative(root, outlineDir)}/细纲_第${chapter}章.md). 먼저 story-long-write 단일 장 절차에 따라 세부 개요를 만든 뒤 본문을 작성합니다.`
     }
   }
   const checkpointIssue = trackingCheckpointIssue(book, true, exists ? null : Number(chapter) - 1)
   if (checkpointIssue) {
-    return `⛔ 写正文被拦截：${safeRelative(root, book)} 的${checkpointIssue}。`
+    return `⛔ 본문 작성 차단: ${safeRelative(root, book)}의 ${checkpointIssue}.`
   }
   if (exists) return null
-  // 欠账门（无状态）：写第 N 章（首建）前，上一章有未清毒句式且未标「去味:跳过」豁免时先清再写。
-  // 判据现算自上一章文件本身，不落任何状态文件；找不到上一章/读取失败一律放行（宁可漏拦不可误伤）。
-  // js↔py 文案由 check-hook-regex-sync.sh 锁同步，判定由 test-prose-net-parity.sh Part E 锁 parity。
+// 미정리 잔액 게이트(상태 없음): N장을 처음 작성하기 전에 이전 장에 정리되지 않은 유해 문장 패턴이 있고 「去味:跳过」면제가 없으면 먼저 정리합니다.
+  // 판정은 이전 장 파일 자체에서 즉시 계산하며 어떤 상태 파일에도 기록하지 않습니다. 이전 장을 찾지 못하거나 읽기에 실패하면 항상 허용합니다(차단 누락을 감수하더라도 오차 차단은 피함).
+  // js↔py 문구는 check-hook-regex-sync.sh가 동기화를 고정하고, 판정은 test-prose-net-parity.sh Part E가 parity를 고정합니다.
   const prevNum = Number(chapter) - 1
   if (prevNum >= 1) {
     let prevFile = null
@@ -331,8 +331,8 @@ function proseBlockReason(root, absolute) {
         if (hits.length) {
           const shown = hits.slice(0, 6)
           const more = hits.length - shown.length
-          let reason = `⛔ 写正文被拦截：上一章（${path.basename(prevFile)}）有 ${hits.length} 处未清毒句式欠账，先清零再写第 ${chapter} 章；用户显式豁免时在上一章标题行下加 <!-- 去味:跳过 --> 后重试。\n${shown.join("\n")}`
-          if (more > 0) reason += `\n（另有 ${more} 处，完整扫描：node <skill>/scripts/check-ai-patterns.js --check 上一章文件）`
+          let reason = `⛔ 본문 작성 차단: 이전 장(${path.basename(prevFile)})에 정리되지 않은 유해 문장 패턴이 ${hits.length}곳 남아 있습니다. 먼저 모두 정리한 뒤 ${chapter}장을 작성합니다. 사용자가 명시적으로 면제하려면 이전 장 제목 행 아래에 <!-- 去味:跳过 -->를 추가하고 다시 시도합니다.\n${shown.join("\n")}`
+          if (more > 0) reason += `\n(그 밖에 ${more}곳이 더 있습니다. 전체 검사: node <skill>/scripts/check-ai-patterns.js --check 이전 장 파일)`
           return reason
         }
       }
@@ -341,73 +341,72 @@ function proseBlockReason(root, absolute) {
   return null
 }
 
-// 收尾标点集与深扫 oracle check-degeneration.js 的 findTruncation 对齐（[。！？!?…”"』」）)】]）：
-// 】 是章尾系统播报模板的收束符（agent-references/hooks-chapter.md 章尾实战模板一/四），ASCII "
-// 是 normalize-punctuation.js --quote-mode ascii 的合法收引号，两者都不该被判「疑似截断」。
+// 문장 끝 구두점 집합은 심층 검사 oracle check-degeneration.js의 findTruncation과 맞춥니다([。！？!?…”"』」）)】]）。
+// 】는 장 끝 시스템 알림 템플릿의 종결 기호이며(agent-references/hooks-chapter.md 장 끝 실전 템플릿 1·4), ASCII "는
+// normalize-punctuation.js --quote-mode ascii의 합법적인 닫는 따옴표입니다. 둘 다 「잘린 것으로 의심」하면 안 됩니다.
 const TERMINAL = new Set(Array.from("。！？…”』」）)!?.~—】\""))
 const QUOTE_OPENERS = new Set(["「", "“", "‘", "『", '"'])
 const SOFT_PATTERNS = [
-  // 型号后缀（AI语言模型/AI助手/人工智能语言模型/AI模型/AI大模型）必须可选吃掉：否则前视断言
-  // 紧跟在「AI」后面看到的是「语」/「助」/「模」，最典型的退化开场整类漏检。
-  [/作为(一个)?(AI|人工智能|大?语言模型|智能助手|聊天助手)(?:语言模型|大?模型|助手|机器人)?(?=，|,|。|、|；|;|：|:|！|!|？|\?|\s|）|\)|」|』|"|】|我|无法|不能|没法|$)/, "AI 自指"],
-  [/^(Sure|Certainly|Here'?s|As an AI|I (?:cannot|can't|am unable|apologize))/, "英文 AI 腔"],
-  [/我(无法|不能)(继续(写|创作|生成|下去|输出)?|生成(内容|文本|正文)?|创作|续写|写作|完成(这个|本)?(章|篇|创作|请求)?)/, "生成拒绝语"],
+// 모델명 접미사(AI 언어 모델/AI 도우미/인공지능 언어 모델/AI 모델/대형 AI 모델)는 선택적으로 소비할 수 있어야 합니다. 그렇지 않으면 전방 탐색이
+  // 「AI」 바로 뒤에서 「언」/「도」/「모」를 보게 되어 가장 전형적인 퇴화 도입 유형 전체를 놓칩니다.
+  [/作为(一个)?(AI|人工智能|大?语言模型|智能助手|聊天助手)(?:语言模型|大?模型|助手|机器人)?(?=，|,|。|、|；|;|：|:|！|!|？|\?|\s|）|\)|」|』|"|】|我|无法|不能|没法|$)/, "AI 자기 지시"],
+  [/^(Sure|Certainly|Here'?s|As an AI|I (?:cannot|can't|am unable|apologize))/, "영어 AI 말투"],
+  [/我(无法|不能)(继续(写|创作|生成|下去|输出)?|生成(内容|文本|正文)?|创作|续写|写作|完成(这个|本)?(章|篇|创作|请求)?)/, "생성 거부 문구"],
 ]
 const HARD_PATTERNS = [
-  [/[（(](此处|以下|这里|下文|后续)?[^）)]{0,10}(省略|略去|略过)[^）)]{0,10}[）)]/, "占位符（括号省略）"],
-  [/(TODO|占位符|placeholder|待补充|此处待填|此处待补)/, "占位符"],
-  [/(细纲|情节点|卷纲|功能标签|目标情绪|字数目标|章首钩子|章尾钩子|任务描述)/, "工程词泄漏"],
-  [/�/, "乱码（替换字符）"],
+  [/[（(](此处|以下|这里|下文|后续)?[^）)]{0,10}(省略|略去|略过)[^）)]{0,10}[）)]/, "자리표시자(괄호 생략)"],
+  [/(TODO|占位符|placeholder|待补充|此处待填|此处待补)/, "자리표시자"],
+  [/(细纲|情节点|卷纲|功能标签|目标情绪|字数目标|章首钩子|章尾钩子|任务描述)/, "공정 용어 노출"],
+  [/�/, "깨진 문자(대체 문자)"],
 ]
 
 function skippableLine(line) {
   return !line || line.startsWith("#") || line === "---" || /^[-—=*·•\s]+$/.test(line)
 }
 
-// ── 毒句式（确定性 AI 句式指纹，写后正文网热路径）─────────────────────────────
-// 与 check-ai-patterns.js 的同名新规则统一规格：只收确定性、低误报的句式；密度型/
-// advisory 检测归 check-ai-patterns.js 深扫，不进这张每次写正文都跑的网。全部正则
-// 线性扫描、量词有界，无回溯灾难。台词/弹幕/系统播报不算：逐行把成对引号段等长
-// 问号占位（占位天然截断各规则的字符类，规则不会跨引号拼出假命中；见
-// maskQuotedSpans 为何用问号而不是句号），占位后仍残留引号字符（跨行对话/未闭合）
-// 的行整行跳过。js↔py 同构实现（codex
-// story_codex_hook.py）由 scripts/check-hook-regex-sync.sh（规范串逐字锁）与
-// scripts/test-prose-net-parity.sh（fixture 逐字 diff）锁 parity，文案以本核为准。
+// ── 유해 문장 패턴(결정론적 AI 문장 지문, 본문 작성 후 검사 경로) ─────────────────────────────
+// check-ai-patterns.js의 같은 이름 규칙과 동일한 사양: 결정론적이고 오탐이 적은 문장 패턴만 수집합니다. 밀도형·
+// advisory 검사는 check-ai-patterns.js의 심층 검사에 맡기며, 본문을 쓸 때마다 실행되는 이 게이트에는 넣지 않습니다. 모든 정규식은
+// 선형으로 검사하고 수량자를 제한해 역추적 폭주를 방지합니다. 대사·댓글·시스템 알림은 대상이 아닙니다. 줄마다 쌍을 이룬 따옴표 구간을 같은 길이의
+// 물음표 자리표시자로 바꿉니다(자리표시자가 각 규칙의 문자 클래스를 자연스럽게 끊어 따옴표를 가로질러 오탐을 만들지 않음. 왜
+// maskQuotedSpans가 마침표가 아니라 물음표를 사용하는지는 해당 함수를 참조). 치환 후에도 따옴표가 남는 줄(여러 줄 대화·닫히지 않은 따옴표)은
+// 줄 전체를 건너뜁니다. js↔py 동형 구현(codex story_codex_hook.py)은 scripts/check-hook-regex-sync.sh(규격 문자열 단위 고정)와
+// scripts/test-prose-net-parity.sh(fixture 단위 diff)가 parity를 고정하며, 문구는 이 핵심 구현을 기준으로 합니다.
 const TOXIC_QUOTE_SPANS = [/「[^」]*」/g, /『[^』]*』/g, /【[^】]*】/g, /“[^”]*”/g, /‘[^’]*’/g, /"[^"]*"/g, /'[^']*'/g]
 const TOXIC_QUOTE_CHARS = new Set(Array.from("「」『』【】“”‘’\"'"))
-// 分句起点边界（前一字符属于它才认「是A，不是B」的分句首「是」）；同时用作确认语的右边界。
+// 절 시작 경계(이전 문자가 여기에 속해야 「A이고 B가 아니다」의 절 시작 「是」로 인정)이며, 확인문 오른쪽 경계로도 사용합니다.
 const TOXIC_CLAUSE_BOUNDARY = new Set(Array.from("，,。.！!？?；;：:、…—~ \t　"))
-// 疑问尾（是吗/是吧/是嘛）与确认语（是的/是啊/是呀/是呢+边界）里的「是」不是对比句系动词；
-// 排除逻辑移植自 check-ai-patterns.js 的 TAG_PARTICLES / AFFIRMATION_TAG_PARTICLES。
+// 의문 어미(是吗/是吧/是嘛)와 확인문(是的/是啊/是呀/是呢+경계)의 「是」는 대조문 계사 동사가 아닙니다.
+// 제외 로직은 check-ai-patterns.js의 TAG_PARTICLES / AFFIRMATION_TAG_PARTICLES에서 이식했습니다.
 const TOXIC_TAG_PARTICLES = new Set(["吗", "吧", "嘛"])
 const TOXIC_AFFIRM_PARTICLES = new Set(["的", "啊", "呀", "呢"])
 const TOXIC_TRAILER_WINDOW = 600
 const TOXIC_SENTENCE_PATTERNS = [
-  [/声音(?:并)?不[大高响亮][^。！？!?\n]{0,16}[却但偏]/g, "voice-contrast", "删「不X…却Y」反差腔，直接写具体效果或动作。"],
-  [/(?:没有[^。！？!?\n，,]{1,12}[，,]){2}/g, "negation-parade", "「没有…，没有…」排比删到只剩一个或全删，改写正面在场的细节。"],
-  [/是[^。！？!?\n，,]{1,12}[，,]\s*(?:而)?不是[^。！？!?\n]{1,20}/g, "reverse-not-is", "删否定铺垫，直接写肯定项，或改成动作细节。"],
-  [/不是[^。！？!?\n]{1,16}[，,]\s*(?:而)?是/g, "not-is-comparison", "删否定铺垫，直接写肯定项，或改成动作细节。"],
+  [/声音(?:并)?不[大高响亮][^。！？!?\n]{0,16}[却但偏]/g, "voice-contrast", "「X가 아니지만 Y다」식 대조 말투를 삭제하고 구체적인 효과나 동작을 직접 씁니다."],
+  [/(?:没有[^。！？!?\n，,]{1,12}[，,]){2}/g, "negation-parade", "「…없고, …없다」식 나열은 하나만 남기거나 전부 삭제하고, 현재 드러난 세부를 긍정문으로 다시 씁니다."],
+  [/是[^。！？!?\n，,]{1,12}[，,]\s*(?:而)?不是[^。！？!?\n]{1,20}/g, "reverse-not-is", "부정으로 뜸 들이는 표현을 삭제하고 긍정 항목을 직접 쓰거나 동작 세부로 바꿉니다."],
+  [/不是[^。！？!?\n]{1,16}[，,]\s*(?:而)?是/g, "not-is-comparison", "부정으로 뜸 들이는 표현을 삭제하고 긍정 항목을 직접 쓰거나 동작 세부로 바꿉니다."],
 ]
 // 「正式拉开序幕/帷幕」是场内事件的报幕式陈述，不是叙述者预告，lookbehind 排除（同 check-ai-patterns.js）。
 const TOXIC_TRAILER_PATTERN = /没人知道|谁也不知道|谁也没想到|殊不知|(?:这)?才刚刚开(?:始|头)|正(?:朝着|向着)[^。！？!?\n]{0,24}(?:压|涌|袭|逼)(?:了?过去|了?过来|来)|(?<!正式)拉开(?:序幕|帷幕)|即将(?:开始|来临|降临)/
-// 章尾状态总结体：与 trailer-ending 共用文末窗口，盖章过去而非预告将来（同 check-ai-patterns.js）。
-// 收的都是 banned-words 已按名禁掉的形态；不收「(这|那)一刻…终于明白」——真人叙述里那是正常认知
-// 节拍，短篇第一人称审判句还是卖点。各分支要求落在句末断言位，避免吃进条件从句/动补/成语/及物用法/否定认知。
+// 장 끝 상태 요약체: trailer-ending과 같은 문서 끝 창을 사용하며 과거를 확정하는 표현이지 미래를 예고하는 표현이 아닙니다(check-ai-patterns.js와 동일).
+// 모두 banned-words에서 이름으로 차단한 형태입니다. 「(이|그) 순간…마침내 깨달았다」는 제외합니다. 실제 서술에서는 정상적인 인지
+// 박자이며, 단편 1인칭의 판단 문장으로서 매력으로 작동할 수 있습니다. 각 분기는 문장 끝의 단정 위치에 놓아 조건절·보어·성어·타동 용법·부정 인지를 삼키지 않게 합니다.
 const TOXIC_TRAILER_SUMMARY_PATTERN = /这一(?:夜|天|刻|战|年|局|役)[，,]?[^。！？!?，,\n]{0,6}(?<!命中)(?<!是)注定[^。！？!?\n]{0,8}[。！]|就这样[，,][^。！？!?，,\n]{0,8}(?:一切|全部)[^。！？!?，,\n]{0,4}(?:结束了|落幕|收场)[。！]|这一切[，,]?[^。！？!?，,\n]{0,6}(?:都)?(?:说明|意味着|结束了)(?!的)(?:(?!什么)[^。！？!?\n]){0,6}[。！]|(?:新的篇章|新的旅程|崭新的篇章|新的人生)[^。！？!?\n]{0,6}(?:开始|拉开|展开)|命运[^。！？!?\n]{0,6}齿轮/
-// 「是A，不是B」的反问尾巴（…，不是吗/么/吧）不算对比句；取匹配段最后一个「不是」后的首字判断。
+// 「A이고 B가 아니다」의 반문 어미(…，不是吗/么/吧)는 대조문으로 보지 않습니다. 일치 구간의 마지막 「不是」 뒤 첫 글자로 판단합니다.
 const TOXIC_REVERSE_TAIL = /.*[，,]\s*(?:而)?不是([^。！？!?\n]*)$/
 
-// 占位字符用「？」而不是「。」：占位既要截断各规则的 [^。！？!?…] 否定类（？与句号在每条规则的
-// 否定类里等效），又不能落在任何规则的接受位。句号占位会替 trailer-summary 的句末 [。！] 伪造出
-// 终止符，让「这一战注定是「血屠」的开端，…」这类引号里放代号/绰号的叙述行被误报，且报出的
-// 『这一战注定是。』在原文里 grep 不到。占位长度不变，故 trailer 窗口切点不漂移。
+// 자리표시자에는 「。」가 아니라 「？」를 사용합니다. 각 규칙의 [^。！？!?…] 부정 문자 클래스를 끊으면서도(각 규칙의 부정 클래스에서는 ？와 마침표가
+// 동등), 어떤 규칙의 허용 위치에도 놓이지 않아야 합니다. 마침표를 쓰면 trailer-summary의 문장 끝 [。！]이 종결 기호로 오인되어
+// 「이 전투는 「혈도」의 시작으로 정해졌다…」처럼 따옴표 안에 코드명·별칭을 넣은 서술 행을 오탐하고, 보고된 『이 전투는 정해졌다.』를
+// 원문에서 grep할 수도 없습니다. 자리표시자 길이는 유지하므로 trailer 창의 절단 위치도 변하지 않습니다.
 function maskQuotedSpans(line) {
   let out = line
   for (const spans of TOXIC_QUOTE_SPANS) out = out.replace(spans, (m) => "？".repeat(m.length))
   return out
 }
 
-// 「是不是」疑问、翻转「是」后跟疑问尾/确认语 → 不算「不是A，(而)是B」对比句。
+// 「是不是」 의문이나 뒤집힌 「是」 뒤의 의문 어미·확인문은 「A가 아니라 (오히려) B다」 대조문으로 보지 않습니다.
 function toxicNotIsExcluded(line, matched, start) {
   if (start > 0 && line[start - 1] === "是") return true
   const end = start + matched.length
@@ -418,9 +417,9 @@ function toxicNotIsExcluded(line, matched, start) {
   return false
 }
 
-// 只认分句首的「是A，不是B」：句中「但是/还是/只是/他是…」的「是」一律不算（either-or
-// 「不是/就是/也是」与全部「X是」连词/副词合成词都被分句首判定排除）；「是的，不是…」
-// 确认语开头、「是不是…」问句起头、「…，不是吗/么/吧」反问尾巴不算（同 check-ai-patterns.js）。
+// 절 시작의 「A이고 B가 아니다」만 인정합니다. 문장 중간의 「하지만/역시/단지/그는…이다」의 「是」는 모두 제외합니다(either-or
+// 「아니다/바로 ~이다/역시 ~이다」와 모든 「X是」 접속·부사 합성어도 절 시작 판정에서 제외). 「是的，不是…」
+// 확인문 시작, 「是不是…」 의문문 시작, 「…，不是吗/么/吧」 반문 어미도 제외합니다(check-ai-patterns.js와 동일).
 function toxicReverseNotIsExcluded(line, matched, start) {
   const prev = start > 0 ? line[start - 1] : ""
   if (prev !== "" && !TOXIC_CLAUSE_BOUNDARY.has(prev)) return true
@@ -434,7 +433,7 @@ function toxicReverseNotIsExcluded(line, matched, start) {
   return false
 }
 
-// 每行只报第一条命中的句式规则（复扫到净哲学：改完一处再扫下一处）。
+// 각 줄에서는 일치한 첫 번째 문장 패턴만 보고합니다(한 곳을 고친 뒤 다음 곳을 재검사하는 원칙).
 function matchToxicSentence(line) {
   for (const [regex, label, fix] of TOXIC_SENTENCE_PATTERNS) {
     regex.lastIndex = 0
@@ -462,9 +461,9 @@ function toxicPhraseFindings(text) {
   })
   for (const [lineNo, masked] of content) {
     const hit = matchToxicSentence(masked)
-    if (hit) findings.push(`第${lineNo}行 毒句式[${hit[0]}]：『${hit[2].slice(0, 20)}』——${hit[1]}`)
+    if (hit) findings.push(`${lineNo}행 유해 문장 패턴[${hit[0]}]: 『${hit[2].slice(0, 20)}』 — ${hit[1]}`)
   }
-  // trailer-ending 只扫文末 600 字窗口（引号占位后按行累计，边界行整行计入）。
+  // trailer-ending은 문서 끝 600자 창만 검사합니다(따옴표를 자리표시자로 바꾼 뒤 줄 단위로 누적하며 경계 줄은 전체를 포함).
   let acc = 0
   let cut = content.length
   while (cut > 0 && acc < TOXIC_TRAILER_WINDOW) {
@@ -474,11 +473,11 @@ function toxicPhraseFindings(text) {
   for (let i = cut; i < content.length; i++) {
     const [lineNo, masked] = content[i]
     const match = masked.match(TOXIC_TRAILER_PATTERN)
-    if (match) findings.push(`第${lineNo}行 毒句式[trailer-ending]：『${match[0].slice(0, 20)}』——删章尾预告腔，用正在发生的动作或画面收章。`)
+    if (match) findings.push(`${lineNo}행 유해 문장 패턴[trailer-ending]: 『${match[0].slice(0, 20)}』 — 장 끝 예고체를 삭제하고 현재 진행 중인 동작이나 장면으로 마무리합니다.`)
     const summary = masked.match(TOXIC_TRAILER_SUMMARY_PATTERN)
-    if (summary) findings.push(`第${lineNo}行 毒句式[trailer-summary]：『${summary[0].slice(0, 20)}』——删章尾状态总结句，收束状态是细纲的规划口径，正文落到具体动作、画面或台词上。`)
+    if (summary) findings.push(`${lineNo}행 유해 문장 패턴[trailer-summary]: 『${summary[0].slice(0, 20)}』 — 장 끝 상태 요약문을 삭제합니다. 마무리 상태는 세부 개요의 계획 표현이므로 본문에서는 구체적인 동작·장면·대사로 내려 씁니다.`)
   }
-  if (findings.length) findings.push("毒句式是确定性 AI 指纹：本章须清零后再继续。完整扫描：node <skill>/scripts/check-ai-patterns.js --check <正文文件>")
+  if (findings.length) findings.push("유해 문장 패턴은 결정론적 AI 지문입니다. 이 장에서 모두 제거한 뒤 계속합니다. 전체 검사: node <skill>/scripts/check-ai-patterns.js --check <본문 파일>")
   return findings
 }
 
@@ -495,7 +494,7 @@ function proseNetFindings(text) {
       for (const [regex, label] of SOFT_PATTERNS) {
         const match = line.match(regex)
         if (match) {
-          findings.push(`第${lineNo}行 元信息泄漏（${label}）：「${match[0].slice(0, 20)}」`)
+          findings.push(`${lineNo}행 메타데이터 노출(${label}): 「${match[0].slice(0, 20)}」`)
           hit = true
           break
         }
@@ -505,7 +504,7 @@ function proseNetFindings(text) {
     for (const [regex, label] of HARD_PATTERNS) {
       const match = line.match(regex)
       if (match) {
-        findings.push(`第${lineNo}行 ${label}：「${match[0].slice(0, 20)}」`)
+        findings.push(`${lineNo}행 ${label}: 「${match[0].slice(0, 20)}」`)
         break
       }
     }
@@ -513,15 +512,15 @@ function proseNetFindings(text) {
   for (let i = 1; i < content.length; i++) {
     const previous = content[i - 1][1]
     const [lineNo, current] = content[i]
-    if (previous === current && current.length >= 8) findings.push(`第${lineNo}行 紧邻复读：整行与上一行完全相同「${current.slice(0, 20)}」`)
+    if (previous === current && current.length >= 8) findings.push(`${lineNo}행 인접 반복: 이전 행과 완전히 동일한 행 「${current.slice(0, 20)}」`)
   }
   if (content.length) {
     const [lineNo, last] = content[content.length - 1]
-    if (!TERMINAL.has(Array.from(last).pop())) findings.push(`第${lineNo}行 疑似截断：结尾「…${last.slice(-12)}」未以标点收束`)
+    if (!TERMINAL.has(Array.from(last).pop())) findings.push(`${lineNo}행 잘림 의심: 끝부분 「…${last.slice(-12)}」가 구두점으로 마무리되지 않음`)
   }
-  // 「去味:跳过」豁免与欠账门同判据（文件首 6 行）：标记在场时跳过毒句式推回，
-  // 其余网（元信息/占位/复读/截断）照常——否则按拦截提示加标记的那次 Edit 会把
-  // 已豁免的毒句式再次当硬信号推回。
+// 「去味:跳过」면제는 미정리 잔액 게이트와 같은 기준(파일 첫 6행)을 사용합니다. 표기가 있으면 유해 문장 패턴의 재검사를 건너뛰고,
+  // 나머지 검사(메타데이터/자리표시자/반복/잘림)는 그대로 실행합니다. 그렇지 않으면 차단 안내에 따라 표기를 추가한 해당 Edit가
+  // 이미 면제된 유해 문장 패턴을 다시 하드 신호로 처리하게 됩니다.
   if (!/去味(：|:)跳过/.test(text.split(/\r?\n/).slice(0, 6).join("\n"))) {
     findings.push(...toxicPhraseFindings(text))
   }
@@ -559,7 +558,7 @@ function wordcountFinding(absolute, text) {
   if (!target) return null
   const actual = Array.from(text).length
   return actual < target * 0.9
-    ? `字数：第${chapter}章 实际 ${actual} 字 < 目标 ${target} 的 90%（${Math.floor(target * 0.9)}）。对照细纲字数预算定位欠账的密点、一次性重写到配额，别挤牙膏回炉。`
+    ? `글자 수: ${chapter}장 실제 ${actual}자 < 목표 ${target}자의 90%(${Math.floor(target * 0.9)}자). 세부 개요의 글자 수 예산과 대조해 부족한 밀도를 찾고, 조금씩 땜질하지 말고 한 번에 할당량까지 다시 씁니다.`
     : null
 }
 
@@ -577,7 +576,7 @@ function duplicateTitleFindings(absolute) {
   } catch {}
   const findings = []
   for (const [title, files] of titles.entries()) {
-    if (files.length > 1) findings.push(`${files.length} 章标题重复「${title}」（${files.join("、").slice(0, 60)}），建议改名。`)
+    if (files.length > 1) findings.push(`${files.length}개 장의 제목이 중복됩니다「${title}」(${files.join("、").slice(0, 60)}). 이름을 바꾸는 것이 좋습니다.`)
   }
   return findings
 }
@@ -587,7 +586,7 @@ function proseAfterWrite(root, absolute) {
   const findings = []
   try {
     const bytes = fs.statSync(absolute).size
-    if (bytes < 200) findings.push(`【落盘】正文仅 ${bytes} 字节，疑似未写完/落盘失败（quota/超时中断？），请核对并补写。`)
+    if (bytes < 200) findings.push(`【디스크 기록】본문이 ${bytes}바이트에 불과해 미완성 또는 기록 실패로 보입니다(quota/시간 초과로 중단되었을 수 있음). 확인 후 보완해 작성합니다.`)
     const text = fs.readFileSync(absolute, "utf8")
     findings.push(...proseNetFindings(text))
     const wordcount = wordcountFinding(absolute, text)
@@ -597,15 +596,15 @@ function proseAfterWrite(root, absolute) {
   }
   findings.push(...duplicateTitleFindings(absolute))
   if (!findings.length) return ""
-  return `=== 正文兜底检测（${safeRelative(root, absolute)}）===\n轻量确定性网自动复扫（模型无关，防主会话漏跑收尾）。按类型处理后复扫到净：\n${findings.join("\n")}`
+  return `=== 본문 보완 검사(${safeRelative(root, absolute)}) ===\n경량 결정론적 게이트가 자동으로 재검사했습니다(모델과 무관하며 메인 세션의 마무리 검사 누락을 방지). 유형별로 처리한 뒤 깨끗해질 때까지 재검사합니다.\n${findings.join("\n")}`
 }
 
-// 线性手写分词，不用带歧义交替的正则：旧式 /"(?:\\.|[^"])*"|'[^']*'|[^\s]+/ 里 \\. 与 [^"] 都能吃
-// 反斜杠，而调用方先按 [;&|\n] 拆段会拆开引号内的分隔符、留下一个不闭合的 "，此时每个反斜杠让
-// 搜索空间翻倍——`git commit -m "fix: 转义覆盖 \\n \\r … | see README"` 这种 130 字命令实测烧掉
-// 27s CPU，超过宿主 hook 的 timeoutMs（zcode 15000ms）被杀。逐字符扫描：引号内原样取字（成对
-// 引号剥掉，不闭合就取到段尾），ASCII 空白（空格/Tab/CR/LF）分词——U+3000 不是 shell 分词符，
-// 故不切。不解 \ 转义：resolveTarget 把 \ 当路径分隔符（Windows 路径）。
+// 선형 수제 토큰화이며 모호한 교대 정규식을 사용하지 않습니다. 기존 /"(?:\\.|[^"])*"|'[^']*'|[^\s]+/에서는 \\.와 [^"]가 모두 백슬래시를 소비할 수 있습니다.
+// 호출자가 먼저 [;&|\n]으로 구간을 나누면 인용부 안의 구분자가 분리되어 닫히지 않은 "가 남습니다. 이때 백슬래시마다
+// 검색 공간이 두 배가 됩니다. `git commit -m "fix: 이스케이프 적용 \\n \\r … | see README"` 같은 130자 명령은 실제로
+// CPU 27초를 소모해 호스트 hook의 timeoutMs(zcode 15000ms)를 넘어 종료되었습니다. 문자를 하나씩 스캔해 인용부 안의 문자를 그대로 취하고(쌍을 이루면
+// 인용부호를 제거하며 닫히지 않으면 구간 끝까지 취함), ASCII 공백(공백/Tab/CR/LF)으로 토큰화합니다. U+3000은 shell 구분자가 아니므로
+// 자르지 않습니다. 백슬래시 이스케이프도 해석하지 않습니다. resolveTarget가 백슬래시를 경로 구분자(Windows 경로)로 처리하기 때문입니다.
 function shellWords(segment) {
   const words = []
   let current = ""
@@ -685,10 +684,9 @@ function beforeShellRedirection(segment) {
 
 function isGitCommitCommand(command) {
   const valueOptions = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--super-prefix", "--config-env"])
-  // Flatten subshell/brace grouping to spaces so `(git commit)` / `{ git commit; }` still expose
-  // the git verb; split on separators; skip leading shell wrappers and control words
-  // (then/do/else/elif) so a commit inside if/for/while is detected. Mirrors the Claude bash
-  // oracle validate-story-commit.sh and codex is_git_commit_command.
+// 서브셸·중괄호 그룹을 공백으로 평탄화해 `(git commit)` / `{ git commit; }`에서도 git 동사를 드러냅니다. 구분자로 나눈 뒤 앞의 shell 래퍼와
+  // 제어어(then/do/else/elif)를 건너뛰므로 if/for/while 안의 commit도 감지합니다. Claude bash oracle
+  // validate-story-commit.sh 및 codex is_git_commit_command와 동일한 방식입니다.
   for (const rawSegment of String(command).replace(/\r/g, "").replace(/[(){}]/g, " ").split(/[;&|\n]+/)) {
     const words = shellWords(rawSegment)
     let i = 0
@@ -711,31 +709,31 @@ function isGitCommitCommand(command) {
   return false
 }
 
-// 设定/ 直属的项目级设定件：artifact-protocols.md 规定的 关系.md（正文是「# 角色关系图」）、
-// 题材定位.md，以及 文风.md、题材正文提示卡.md 等，它们本来就没有 名字/姓名 字段。
+// 设定/ 바로 아래에 있는 프로젝트 수준 설정 파일: artifact-protocols.md가 규정한 关系.md(본문은 「# 인물 관계도」),
+// 题材定位.md, 文风.md, 题材正文提示卡.md 등은 원래 이름·성명 필드가 없습니다.
 const SETTING_NON_CHARACTER_FILES = new Set(["关系.md", "题材定位.md", "题材正文提示卡.md", "文风.md", "世界规则.md", "世界观.md", "金手指.md", "背景设定.md"])
 
-// 只查角色卡：整棵 设定/ 一刀切会让每次碰设定的提交都刷一屏假警告，把同框的
-// 「正文硬编码角色属性」真警告埋掉。判定口径与 validate-story-commit.sh / opencode
-// pre-commit.sh 的 case 分支一一对齐（bash↔js↔py 四端同口径，别单边改回一刀切）：
-// ① 设定/角色|人物 子目录内的文件 → 角色卡；
-// ② 其余 设定/<子目录>/ → 整目录跳过（世界观/势力/报告/原理/人物关系 等）；
-// ③ 设定/ 直属的扁平文件 → 除已知项目级设定件外都算角色卡（主角.md/配角.md/反派.md 等自定义命名）。
+// 인물 카드만 검사합니다. 设定/ 전체를 일괄 검사하면 설정을 건드리는 모든 제출마다 가짜 경고가 쏟아져
+// 같은 화면에 있는 「본문에 하드코딩된 인물 속성」의 실제 경고가 묻힙니다. 판정 기준은 validate-story-commit.sh / opencode
+// pre-commit.sh의 case 분기와 일치합니다(bash↔js↔py 네 구현이 같은 기준을 사용하므로 한쪽만 일괄 검사로 되돌리지 않음):
+// ① 设定/角色|人物 하위 디렉터리의 파일 → 인물 카드;
+// ② 그 밖의 设定/<하위 디렉터리>/ → 디렉터리 전체를 건너뜀(세계관/세력/보고서/원리/인물 관계 등);
+// ③ 设定/ 바로 아래의 평면 파일 → 알려진 프로젝트 수준 설정 파일을 제외하면 모두 인물 카드로 처리(주인공.md/조연.md/악역.md 등 사용자 정의 이름).
 // bash 的 `*` 跨 `/` 匹配，`设定/角色/*|*/设定/角色/*` 等价于「路径里存在某个 设定 目录段满足该
 // 分支」，所以两趟扫描（先全路径找分支①，再全路径找分支②）而不是只看第一个 设定 段就定分支——
 // 后者在 设定/其他/设定/角色/x.md 这类嵌套路径上会与 bash 判定分叉。
 function isCharacterSheetPath(relative) {
   const segments = relative.split("/")
   const last = segments.length - 1
-  // 分支①：某个 设定 段紧跟 角色/人物，且其下还有文件段
+  // 분기 ①: 어떤 设定 구간 바로 뒤에 角色/人物가 있고 그 아래에 파일 구간이 더 있음
   for (let i = 0; i + 1 < last; i++) {
     if (segments[i] === "设定" && (segments[i + 1] === "角色" || segments[i + 1] === "人物")) return true
   }
-  // 分支②：某个 设定 段后还有 ≥2 段，即落在非角色子目录里
+  // 분기 ②: 어떤 设定 구간 뒤에 2개 이상의 구간이 있어 인물이 아닌 하위 디렉터리에 속함
   for (let i = 0; i + 1 < last; i++) {
     if (segments[i] === "设定") return false
   }
-  // 分支③：设定 直属扁平文件（分支②已排掉更深的路径，设定 段只能是倒数第二段）
+  // 분기 ③: 设定 바로 아래의 평면 파일(분기 ②에서 더 깊은 경로를 제외했으므로 设定 구간은 끝에서 두 번째일 수밖에 없음)
   return last >= 1 && segments[last - 1] === "设定" && !SETTING_NON_CHARACTER_FILES.has(segments[last])
 }
 
@@ -761,13 +759,13 @@ function stagedMarkdownWarnings(root) {
       text.split(/\r?\n/).forEach((line, index) => {
         if (/(身高|体重|年龄)[\s　]*(：|:)[\s　]*[0-9]+/.test(line)) hits.push(`${index + 1}:${line}`)
       })
-      if (hits.length) warnings.push(`⚠ ${relative}: 正文硬编码角色属性，应引用设定文件：\n${hits.join("\n")}`)
+      if (hits.length) warnings.push(`⚠ ${relative}: 본문에 인물 속성이 하드코딩되어 있습니다. 설정 파일을 참조해야 합니다.\n${hits.join("\n")}`)
     }
     if (isCharacterSheetPath(relative) && !/^[\s　]*(名字|姓名|名称|name)[\s　]*(：|:)/im.test(text)) {
-      warnings.push(`⚠ ${relative}: 设定文件缺少 name/名字 必填字段。`)
+      warnings.push(`⚠ ${relative}: 설정 파일에 필수 name/이름 필드가 없습니다.`)
     }
   }
-  return warnings.length ? `=== Story Commit Warnings（advisory only）===\n${warnings.join("\n")}\n=== End Warnings ===` : ""
+  return warnings.length ? `=== Story Commit Warnings(참고용 경고) ===\n${warnings.join("\n")}\n=== End Warnings ===` : ""
 }
 
 module.exports = {
