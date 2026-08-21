@@ -4,17 +4,17 @@
 
 ## 1. 현재 기준점
 
-현재 기준 브랜치는 `main`이며, 이번 변경을 커밋하기 전에는 로컬 작업 트리에 Batch 29~33 변경이 있다. 커밋·푸시가 끝나면 `HEAD`와 `origin/main`의 실제 해시를 다시 기록한다.
+현재 기준 브랜치는 `main`이며, Batch 29~33 변경을 커밋·푸시한 뒤 로컬 `HEAD`와 `origin/main`이 동기화되어 있다.
 
 | 항목 | 현재 값 |
 |---|---|
-| 최신 기준 커밋 | 커밋·푸시 후 실제 `HEAD`로 갱신 |
-| 직전 기준 커밋 | `e3af35a` (`localize chapter extractor template (batch 29)`) |
-| 원격 상태 | Batch 29~33 커밋·푸시 대기 |
-| 작업 트리 | Batch 29~33 및 진행 문서 변경 있음 |
+| 최신 기준 커밋 | `012150c33068e8810f9f241978768ca6c8ee4ac4` (`localize story setup templates batch 29-33`) |
+| 직전 기준 커밋 | `3befe22` (`update translation handover for batch 29`) |
+| 원격 상태 | `origin/main`과 동기화됨 |
+| 작업 트리 | 깨끗함 |
 | 마지막 확인일 | 2026-08-22 |
 
-기준 커밋 `e3af35a`에는 Batch 29의 `chapter-extractor.md` 전체 현지화가 포함되어 있다. 이후 작업 트리에서 Batch 30~33의 `story-explorer.md`, `story_hook_core.js`, `consistency-checker.md`, `story-researcher.md`, `guard-outline-before-prose.sh`, `story-outline.md`와 진행 문서를 갱신했다. Batch 28 스크립트 현지화는 `8662413`, Batch 28 인수인계 갱신은 `9441e03`에 포함되어 있다.
+최신 커밋 `012150c`에는 Batch 29~33의 템플릿 현지화와 `TRANSLATION_TODO.md`, `TRANSLATION_PROGRESS_REPORT.md`, 본 문서의 갱신이 포함되어 있다. Batch 29의 기준 커밋은 `e3af35a`이며, Batch 28 스크립트 현지화는 `8662413`, Batch 28 인수인계 갱신은 `9441e03`에 포함되어 있다.
 
 ## 2. 반드시 지켜야 할 작업 원칙
 
@@ -113,7 +113,7 @@ Batch 28의 네 JavaScript 파일과 Batch 31의 `story_hook_core.js`는 `node -
 
 ## 7. 다음 재개 지점
 
-**재개 기준:** 이번 Batch 29~33 변경을 커밋·푸시한 최신 `HEAD`(커밋 후 실제 해시로 갱신).
+**재개 기준:** `012150c33068e8810f9f241978768ca6c8ee4ac4` (`localize story setup templates batch 29-33`).
 
 **첫 작업:** `skills/story-setup/references/templates/agents/story-researcher.md`와 관련 rules/hooks에서 URL·필드명·선택자·정규식·CLI 명령·JSON 키·상태 토큰을 전수 대조한다. 이후 `skills/story-review/` 및 `skills/story-short-*`의 남은 참조 문서를 1~3개 파일 단위로 현지화한다.
 

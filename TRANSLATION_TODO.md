@@ -106,14 +106,14 @@
 - `guard-outline-before-prose.sh`의 PreToolUse 설명, fail-open 원칙, LC_ALL/UTF-8 안정성, JSON 경로 추출, Windows 경로 정규화, 단편·장편 개요 문, tracking checkpoint 문, 유해 문장 잔액 문과 사용자 표시 차단 메시지를 한국어로 현지화했다.
 - `story-outline.md`의 권·세부 개요 필수 항목, 증분 작성·본문 동기화, 장 시작·장 끝 훅 유형, 감정 변화, 누락 항목 처리, 권 대개요 예시를 한국어로 현지화했다.
 - 셸 문법은 Git Bash `bash -n`으로 통과했고, Markdown 구조는 제목 18개·코드 펜스 4개를 유지했다. 보호한 기능 요소는 `LC_ALL=C`, `story_hook_cli.js`, `tracking-checkpoint`, `prose-toxic`, 경로·정규식·JSON 필드·종료 코드이며 `git diff --check`도 통과했다.
-- 이번 배치는 아직 커밋·푸시하지 않았다.
+- 이번 배치는 `012150c` 커밋으로 커밋·푸시 완료했다.
 
 ## 번역·검증 실행 기록 (Batch 32)
 
 - `consistency-checker.md`의 frontmatter, 용어 수집, 실체·설정·타임라인 충돌, 규칙 경계·설정 계층·장간 인과·규칙 악용·대가 일관성 검사, 복선·형식 검사, S1~S4 기준, 금지 사항·책임 경계·출력 프로토콜을 한국어로 현지화했다.
 - `story-researcher.md`의 연구 장면 표, CDP 우선 워크플로, Google/Bing 전환, WebSearch 대체 경로, 다중 출처 검증, 출처 신뢰도, 구조화 출력 형식, 금지 사항·책임 경계를 한국어로 현지화했다.
 - 두 파일의 도구 목록, 경로·파일명, JSON 키, URL, CLI 명령, 상태 토큰, 검색어 예시와 enum은 기능 계약으로 보존했다. Markdown 구조와 코드 블록을 유지했으며 `git diff --check`를 통과했다.
-- 이번 배치는 아직 커밋·푸시하지 않았다.
+- 이번 배치는 `012150c` 커밋으로 커밋·푸시 완료했다.
 
 ## 번역·검증 실행 기록 (Batch 31)
 
