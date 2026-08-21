@@ -71,6 +71,7 @@
 - [ ] 코드 주석과 사용자에게 표시되는 오류·상태 메시지는 한국어로 번역
 - [ ] 테스트 픽스처는 실행 기능과 직접 연결되는지 확인한 뒤 보존 또는 함께 교체
 - [ ] `story-setup/references/templates/`의 셸·JavaScript·규칙 파일은 코드와 설명을 분리해 검토
+- [x] `skills/story-setup/references/templates/agents/chapter-extractor.md` — Batch 29 완료: 역할 추출 규칙·품질 검사·후반 출력 템플릿까지 현지화 및 기능 계약 검증
 
 ## 전수 검증
 
@@ -93,6 +94,20 @@
 
 
 
+
+## 번역·검증 실행 기록 (Batch 29)
+
+- `chapter-extractor.md`의 역할 추출 규칙, 별칭 처리, 중요도 등급, 품질 검사 12개 항목, 도메인 경계와 후반 Markdown 출력 템플릿까지 번역을 완료했다.
+- Markdown 출력의 고정 라벨과 호출·파싱 계약을 보호했다. frontmatter 키, JSON 키, `OUTPUT_MODE: json`, `major|supporting|minor`, `基调：`, `主题标签`, 사건 유형·주제·기조의 원문 열거값은 유지했다.
+- 템플릿 디렉터리 후속 후보를 CJK 잔존량 기준으로 확인했다. 다음 우선 후보는 `agents/story-explorer.md`, `hooks/story_hook_core.js`, `agents/consistency-checker.md`, `agents/story-researcher.md`, `hooks/guard-outline-before-prose.sh`, `rules/story-outline.md` 순이다. 이 중 JavaScript·셸 파일은 문법과 실행 문자열 검증을 먼저 적용한다.
+- `git diff --check`를 통과했으며 `demo/` 본문은 수정하지 않았다. 이번 배치는 아직 커밋·푸시하지 않았다.
+
+## 번역·검증 실행 기록 (Batch 28)
+
+- `skills/story-setup/references/templates/agents/chapter-extractor.md`의 frontmatter 설명, 역할 정의, 분석 범위, 입력 형식, 객관적 사실 묘사, 서사 프레임 금지, 시간 순서, 정보 충실도, 출력 JSON 설명, 사건 지점 밀도·유형·인용 규칙 일부를 한국어로 현지화했다.
+- frontmatter 키, `tools`·`disallowedTools`, 모델·턴 설정, JSON 키와 출력 구조, `OUTPUT_MODE: json`, 사건 유형·주제·기조의 원문 열거값은 기능 계약으로 보고 보존했다.
+- 파일 전체 번역은 아직 완료하지 않았다. 역할 추출 규칙, 별칭 후처리, 후반 출력 템플릿과 남은 중국어 설명을 다음 소배치에서 이어서 처리한다.
+- 이번 배치는 아직 커밋·푸시하지 않았으며, 최종 적용 전 Markdown 구조·frontmatter·JSON 계약·잔여 중국어 검사를 실행한다.
 
 ## 번역·검증 실행 기록 (Batch 28)
 
@@ -126,12 +141,13 @@
 - 새 스킬 `.claude/skills/chinese-translation-localization/SKILL.md`는 frontmatter, `CAVE-MAN-OUTPUT-ARM` 마커, 500줄 이하 조건, 시작·번역·검증·TODO·커밋 절차를 모두 통과했다(70줄).
 - `git diff --check`는 통과했다. 이번 감사에서 문서 본문이나 스크립트는 수정하지 않았으며, 감사용 임시 파일은 제거했다.
 
-## 다음 세션 재개 지점 (Batch 28)
+## 다음 세션 재개 지점 (Batch 29)
 
 - **현재 완료 커밋:** `b2daf5f` — `tracking-transaction.md` 한국어 현지화 및 TODO 갱신, 원격 `main`에 푸시 완료.
-- **현재 브랜치 상태:** `main`은 Batch 28 번역 파일과 TODO·진행 보고서가 `8662413` 커밋으로 원격에 반영된 상태이며, 작업 트리는 깨끗하다.
+- **현재 브랜치 상태:** `main`은 Batch 28과 인수인계 갱신 커밋 `9441e03`까지 원격에 반영된 상태이며, Batch 29의 세 파일 변경은 아직 작업 트리에 있다.
 - **완료 대상:** `skills/story-long-scan/scripts/fanqie-rank-scraper.js`, `skills/story-short-scan/scripts/cdp-utils.js`, `dz-browse-scraper.js`, `heiyan-booklist-scraper.js`.
-- **다음 대상 파일:** `skills/story-setup/references/templates/`의 실행 주석·사용자 표시 메시지, `memory-bank/TRANSLATION_HANDOVER.md`의 설명 문장, 이후 남은 `skills/` 참조 문서.
-- **다음 작업 순서:** URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 보호하고, story-setup 템플릿과 인수인계 문서의 일반 주석·도움말·설명만 작은 배치로 번역한다. 이후 기능 연결 문자열과 비-demo Markdown의 중국어 잔존을 재검증한다.
-- **현재 주의사항:** `workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`는 한국어 현지화하여 적용했으며 `git diff --check`를 통과했다. 작업 트리에는 기존 변경과 이번 번역 변경이 함께 있을 수 있으므로 일괄 복원·리셋하지 않는다.
+- **다음 대상 파일:** `skills/story-setup/references/templates/agents/story-explorer.md`.
+- **그 다음 대상:** `skills/story-setup/references/templates/hooks/story_hook_core.js`, `agents/consistency-checker.md`, `agents/story-researcher.md`, `hooks/guard-outline-before-prose.sh`, `rules/story-outline.md` 순으로 검토한다.
+- **다음 작업 순서:** URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·JSON 키·상태 토큰은 보호하고, agent·hook·rule 파일의 일반 설명·주석·사용자 표시 메시지만 번역한다. 각 배치 후 `git diff --check`, Markdown 구조 또는 JavaScript·셸 문법 검사를 실행한다.
+- **현재 주의사항:** `workflow-daily.md`, `workflow-revision.md`, `workflow-setup.md`와 Batch 29의 `chapter-extractor.md`는 한국어 현지화하여 적용했으며 `git diff --check`를 통과했다. 작업 트리에는 이번 배치의 진행 문서 변경이 함께 있으므로 일괄 복원·리셋하지 않는다.
 - **커밋 규칙:** 사용자가 커밋·푸시를 명시하거나 프로젝트 작업 규칙상 승인된 경우에만 검증된 변경을 5MB 미만 단위로 커밋·푸시한다. `demo/` 디렉터리는 수정하지 않는다.
