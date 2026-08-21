@@ -8,13 +8,13 @@
 
 | 항목 | 현재 값 |
 |---|---|
-| 최신 커밋 | `b265b8828e1f8c7e2aa478c1c2f7143462b47817` (`update translation progress after batch 28`) |
-| 직전 Batch 28 커밋 | `866241369226483320b8c0ff083264d1f65f70ca` (`localize scraper comments and logs (batch 28)`) |
+| 최신 커밋 | `e3af35a9801a0c0d321366bcbd69f79a23b49e97` (`localize chapter extractor template (batch 29)`) |
+| 직전 커밋 | `9441e03` (`refresh translation handover for batch 28`) |
 | 원격 상태 | `origin/main`과 동기화됨 |
 | 작업 트리 | 깨끗함 |
 | 마지막 확인일 | 2026-08-21 |
 
-최신 커밋 `b265b88`은 `TRANSLATION_PROGRESS_REPORT.md`와 `TRANSLATION_TODO.md`의 Batch 28 완료 상태를 실제 원격 반영 상태에 맞게 보정했다. 실질적인 스크립트 현지화는 직전 커밋 `8662413`에 포함되어 있다.
+최신 커밋 `e3af35a`에는 Batch 29의 `chapter-extractor.md` 전체 현지화와 `TRANSLATION_PROGRESS_REPORT.md`, `TRANSLATION_TODO.md` 갱신이 포함되어 있다. Batch 28 스크립트 현지화는 `8662413`, Batch 28 인수인계 갱신은 `9441e03`에 포함되어 있다.
 
 ## 2. 반드시 지켜야 할 작업 원칙
 
@@ -42,6 +42,7 @@
 - `skills/story-long-write/references/workflow-daily.md`
 - `skills/story-long-write/references/workflow-revision.md`
 - `skills/story-long-write/references/workflow-setup.md`
+- `skills/story-setup/references/templates/agents/chapter-extractor.md` 전체
 - `CHANGELOG.md`의 주요 구간 및 후반부
 - `README.md`의 설명 문장
 - `README_EN.md` 후반부 대조 검토
@@ -78,7 +79,7 @@ Batch 28의 네 JavaScript 파일은 `node --check`를 통과했고, 전체 변�
 
 ### 5.1 첫 배치: story-setup 템플릿
 
-`skills/story-setup/references/templates/`에서 중국어 주석·도움말·사용자 표시 메시지가 많은 파일 1~3개를 선정한다. 셸·JavaScript·규칙 파일의 실행 구조를 먼저 읽고, 명령어·경로·정규식·키·플레이스홀더를 보호한 뒤 일반 설명만 번역한다.
+첫 대상인 `skills/story-setup/references/templates/agents/chapter-extractor.md`는 Batch 29에서 전체 현지화를 완료했다. 다음 배치에서는 `agents/story-explorer.md`를 우선 처리한다. 이후 `hooks/story_hook_core.js`, `agents/consistency-checker.md`, `agents/story-researcher.md`, `hooks/guard-outline-before-prose.sh`, `rules/story-outline.md` 순으로 진행한다. 셸·JavaScript·규칙 파일의 실행 구조를 먼저 읽고, 명령어·경로·정규식·키·플레이스홀더를 보호한 뒤 일반 설명만 번역한다.
 
 ### 5.2 둘째 배치: 인수인계·진행 문서
 
@@ -107,11 +108,11 @@ Batch 28의 네 JavaScript 파일은 `node --check`를 통과했고, 전체 변�
 
 ## 7. 다음 재개 지점
 
-**재개 기준:** `b265b8828e1f8c7e2aa478c1c2f7143462b47817` (`update translation progress after batch 28`).
+**재개 기준:** `e3af35a9801a0c0d321366bcbd69f79a23b49e97` (`localize chapter extractor template (batch 29)`).
 
-**첫 작업:** `skills/story-setup/references/templates/`의 실제 파일 목록과 중국어 주석·사용자 표시 메시지 분포를 확인한다. 첫 배치는 1~3개 파일로 제한하고, 기능 문자열 보호와 구조 보존을 검증한 뒤 적용한다.
+**첫 작업:** `skills/story-setup/references/templates/agents/story-explorer.md`의 실제 구조와 중국어 주석·사용자 표시 메시지 분포를 확인한다. 다음 배치는 1~3개 파일로 제한하고, 기능 문자열 보호와 구조 보존을 검증한 뒤 적용한다.
 
-**작업 후 기록:** 처리한 파일, 보호한 기능 토큰, 남은 중국어의 판정, 문법·구조 검증 결과를 `TRANSLATION_TODO.md`와 `TRANSLATION_PROGRESS_REPORT.md`에 기록한다. 커밋·푸시는 사용자가 명시한 경우에만 수행한다.
+**작업 후 기록:** 처리한 파일, 보호한 기능 토큰, 남은 중국어의 판정, 문법·구조 검증 결과를 `TRANSLATION_TODO.md`와 `TRANSLATION_PROGRESS_REPORT.md`에 기록한다. 이번 Batch 29 변경은 `e3af35a`로 커밋·푸시 완료했으며, 이후 배치도 사용자가 명시한 경우에만 커밋·푸시한다.
 
 ## 8. 참고 파일
 
