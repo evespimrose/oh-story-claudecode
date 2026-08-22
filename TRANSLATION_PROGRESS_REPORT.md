@@ -2,7 +2,7 @@
 
 ## 기준 시점
 
-본 보고서는 `2026-08-22` 현재 `main` 브랜치의 실제 저장소 상태를 기준으로 갱신했다. Batch 29~33의 템플릿 현지화는 커밋 `012150c`로, Batch 34의 story-review AI 문체 참조 문서는 `d5b2e93`으로 원격에 푸시되었다. Batch 35의 quality 문서 현지화는 현재 작업 트리에 있으며 커밋 대기 중이다.
+본 보고서는 `2026-08-22` 현재 `main` 브랜치의 실제 저장소 상태를 기준으로 갱신했다. Batch 29~33의 템플릿 현지화는 커밋 `012150c`로, Batch 34의 story-review AI 문체 참조 문서는 `d5b2e93`으로 원격에 푸시되었다. Batch 35의 quality 문서 현지화는 커밋 `90a993f`로 원격에 푸시되었다. Batch 36의 character-relations·dialogue-mastery 현지화는 현재 작업 중이다.
 
 ## 작업 원칙
 
@@ -43,6 +43,14 @@
 
 품질 문서의 구조 검증 결과 `quality-checklist.md`는 제목 30개와 표 78행, 코드 펜스 2개를 유지했고 `quality-rubric.md`는 제목 6개와 표 25행, 코드 펜스 2개를 유지했다. `git diff --check`도 통과했다. 이번 변경은 아직 커밋·푸시하지 않았다.
 
+## Batch 36: character-relations·dialogue-mastery 현지화 착수
+
+`skills/story-review/references/character-relations.md`는 기존 장편 참조본의 한국어 현지화 내용을 기준으로 리뷰 참조본에 반영하기 시작했다. 관계 유형, 감정선, 남성향·여성향 로맨스, 빙의·수라장, 호감도, 인물 행동 자가 점검, 조연 버퍼, 경쟁자·친족선, 남성향 연애물 공략과 최종 체크리스트가 대상이다. 다만 기준본에도 기능성 중국어 토큰과 일부 혼합 문장이 남아 있어, 다음 단계에서 문맥별 전수 정리해야 한다.
+
+`dialogue-mastery.md`는 이미 현지화된 장편 참조본을 리뷰 참조본과 단편 쓰기 참조본에 반영했다. 권력 게임·반전·심리적 단절 대화, 잠재의도·의제, 감정 연속성, 정보·세계관 전달, 인물별 말투, 탄막·군중 대화, 리듬·분량·개그 사용 규칙을 포함한다. 남은 중국어는 예시 대사와 기능상 보존 대상이거나 일부 혼합 문장이므로, 최종 검수에서 분리한다.
+
+이번 Batch 36은 아직 커밋·푸시하지 않았다.
+
 ## 완료된 커밋
 
 | 커밋 | 내용 | 상태 |
@@ -52,7 +60,7 @@
 | `3e6f8fb` | 중국어 문서 현지화 2차: `emotional-arc-design` | 원격 반영 완료 |
 | `5b7f673` | 중국어 문서 현지화 3차: `genre-catalog`, `genre-core-mechanics` | 원격 반영 완료 |
 
-위 커밋들은 모두 `origin/main`에 순차적으로 푸시했다. 각 커밋은 작은 배치로 생성했다. Batch 35의 quality 문서 현지화만 현재 커밋·푸시 대기 상태다.
+위 커밋들은 모두 `origin/main`에 순차적으로 푸시했다. 각 커밋은 작은 배치로 생성했다. Batch 36의 character-relations·dialogue-mastery 변경과 이 보고서 갱신은 현재 커밋·푸시 대기 상태다.
 
 ## 이번 단계에서 현지화한 주요 내용
 
@@ -64,11 +72,11 @@
 
 `skills/` 전체에서 중국어 문자가 남아 있는 후보는 100개 이상으로 확인됐다. 다만 이 후보에는 문서 본문뿐 아니라 실행 코드의 외부 사이트 필드명·선택자·URL, 테스트 문자열, 스크래퍼 식별자가 함께 포함되어 있다. 다음 작업에서는 후보 파일을 작은 배치로 직접 읽어 기능 연결 문자열과 문서 언어를 분리한다.
 
-Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `anti-ai-writing.md`와 `banned-words.md`, Batch 35에서 `quality-checklist.md`와 `quality-rubric.md`를 처리했다. 다음 우선순위는 `character-relations.md`, `dialogue-mastery.md`, `plot-core-methods.md`, 플랫폼별 rubrics와 tracking 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
+Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `anti-ai-writing.md`와 `banned-words.md`, Batch 35에서 `quality-checklist.md`와 `quality-rubric.md`, Batch 36에서 `character-relations.md`와 `dialogue-mastery.md`를 착수했다. 다음 우선순위는 두 문서의 혼합 문장 최종 정리 후 `plot-core-methods.md`, 플랫폼별 rubrics와 tracking 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
 
 ## 검증 상태
 
-Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
+Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36의 현재 변경은 최종 혼합 문장 검수 전이다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
 
 ## 주의사항
 
