@@ -84,15 +84,23 @@
 
 일괄 번역은 1차로 문서 본문과 제목, 2차로 표·체크리스트·예시 설명, 3차로 주석·사용자 표시 로그, 4차로 동명 참조본 동기화 순서로 진행한다. 각 배치는 1~3개 파일로 제한하고 `demo/` 무수정, 기능 토큰 해시·개수, Markdown 구조, 언어별 문법 검증, `git diff --check`를 통과한 뒤 커밋한다.
 
+## Batch 39: plot 잔여 구간·감정선·skills 전수 조사 착수
+
+`plot-core-methods.md`의 지도 전환 세부 설계, 일상물 개요 프레임워크, 대형 플롯 기대감 설계 구간을 한국어로 현지화했다. 지도 4세력 프레임워크, 지위·환경 동시 상승, 특수 유형 처리, 일상물의 창작 경로·개요 추론·지점 형식, 대형 플롯의 하향식 설계와 사례를 포함한다. `ABABAB` 배열, 작품명·곡명과 같은 예시 고유명은 보존했다.
+
+`character-relations.md`에서는 인물 행동 자가 점검, 조연 공략 완충 지대, 신분 인식 차이, 적이자 친구 관계, 경쟁자·가족선, 남성향 연애 공략, 호감도 단계·커플 행동 문턱의 혼합 문장을 한국어로 정리했다. 이후 5종 감정선 템플릿과 인물 목표 독립성·관계선 설계 후반은 계속 검수한다.
+
+`skills/` 전체 1차 조사에서는 `demo/`를 제외한 추적 파일을 경로 안전 방식으로 검사했으며 중국어 포함 후보 221개를 확인했다. 후보에는 Markdown 본문뿐 아니라 TOML·JSON·JavaScript·Python·셸의 URL·경로·필드·선택자·정규식·테스트 데이터가 함께 포함되어 있으므로, 단순 문자 치환을 금지하고 유형별로 번역한다. 1차 실행 대상은 분량이 큰 참조 문서가 아니라 현재 우선순위가 높은 `story-review` 및 `story-short-*` 참조 문서로 고정하고, 이후 대형 문서를 1~3개씩 처리한다.
+
 ## 미완료 및 다음 대상
 
 `skills/` 전체에서 중국어 문자가 남아 있는 후보는 100개 이상으로 확인됐다. 다만 이 후보에는 문서 본문뿐 아니라 실행 코드의 외부 사이트 필드명·선택자·URL, 테스트 문자열, 스크래퍼 식별자가 함께 포함되어 있다. 다음 작업에서는 후보 파일을 작은 배치로 직접 읽어 기능 연결 문자열과 문서 언어를 분리한다.
 
-Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `anti-ai-writing.md`와 `banned-words.md`, Batch 35에서 `quality-checklist.md`와 `quality-rubric.md`, Batch 36에서 `character-relations.md`와 `dialogue-mastery.md`를 착수했다. Batch 37에서는 `plot-core-methods.md`의 절정 역추론·AB 대개요를 처리하고 플랫폼별 rubric의 현지화 상태를 점검했다. Batch 38에서는 감정선·수라장 세부 규칙과 skills 전체 전수 조사 계획을 반영했다. 다음 우선순위는 `character-relations.md`의 남은 감정선·인물 규칙 정리, `plot-core-methods.md` 후속 구간, 플랫폼 rubric 교차 검수와 tracking 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
+Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `anti-ai-writing.md`와 `banned-words.md`, Batch 35에서 `quality-checklist.md`와 `quality-rubric.md`, Batch 36에서 `character-relations.md`와 `dialogue-mastery.md`를 착수했다. Batch 37에서는 `plot-core-methods.md`의 절정 역추론·AB 대개요를 처리하고 플랫폼별 rubric의 현지화 상태를 점검했다. Batch 38에서는 감정선·수라장 세부 규칙과 skills 전체 전수 조사 계획을 반영했다. Batch 39에서는 plot 잔여 구간과 인물 행동·호감도 구간을 추가 현지화하고, `skills/` 전체 후보 221개에 대한 유형별 일괄 번역 계획을 실제 조사 단계로 옮겼다. 다음 우선순위는 `character-relations.md`의 남은 감정선·인물 규칙 정리, `plot-core-methods.md` 후속 구간, 플랫폼 rubric 교차 검수와 tracking 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
 
 ## 검증 상태
 
-Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36~38의 변경은 `git diff --check`를 통과했다. `character-relations.md`는 감정선·수라장 일부를 추가 현지화했으나, 인물 행동·호감도·조연 버퍼·연애 공략 후반에는 잔여 중국어 설명이 남아 있어 전수 검수 전 상태다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
+Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36~39의 변경은 `git diff --check`를 통과했다. `character-relations.md`의 감정선·수라장·인물 행동·호감도 구간은 추가 현지화했으며, 5종 감정선 템플릿과 인물 목표·관계선 후반에는 잔여 중국어 설명이 남아 있다. `skills/` 전수 조사는 후보 221개를 확인했지만 기능 문자열 분류와 번역은 단계별로 계속 진행한다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
 
 ## 주의사항
 
