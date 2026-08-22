@@ -183,10 +183,18 @@
 
 ## 3단계 공용 참조·프레임워크 현지화 계획
 
+### Batch 58: 3-A 출력 템플릿 동기화·3-B 후속 현지화 착수
+
+| 배치 | 기준본·사본 | 현재 상태 | 검증·다음 작업 |
+|---|---|---|---|
+| 3-A | `story-short-analyze/references/output-templates.md` → `story-long-analyze/references/output-templates.md` | 출력 계약·의사결정 라우팅·Stage 2~3 템플릿 현지화 및 사본 동기화 | 두 사본 SHA-256 동일성 확인. Stage 4~6 표·체크리스트 후속 현지화 |
+| 3-A | `story-short-analyze/references/material-decomposition.md` | 목차·단편/장편 차이·분석 원칙 현지화 | Stage 2~6 절차·출력 표를 소배치로 계속 현지화 |
+| 3-B | `story-long-write/references/plot-frameworks.md` | 원문 앵커 정책·라우팅·장르→프레임 표·이중선·정보 격차·완충 지대 도입 현지화 | 대구조·도입 설계·후속 프레임워크 절을 섹션 단위로 현지화 |
+
 ### Batch 57 착수: 3-A·3-B
 
 - **3-A:** `skills/story-short-analyze/references/material-decomposition.md`를 기준본으로 선정했다. 단편·장편 비교, 분석 원칙, 초기 분석 파이프라인을 한국어화했으며, Stage·경로·출력 계약·원문 인용 제한은 보존한다. `output-templates.md`와 동명 사본은 출력 키·플레이스홀더·표 구조를 고정한 뒤 다음 소배치에서 동기화한다.
-- **3-B:** `skills/story-long-write/references/plot-frameworks.md`에 원문 앵커 정책을 적용하고 의사결정 라우팅·이중선·정보 격차·완충 지대 도입 구간을 현지화했다. 장르명·고정 서사 패턴·고전 사례는 원문 앵커로 보존하며, 일반 지침·표·설명은 섹션 단위로 현지화한다.
+- **3-B:** `skills/story-long-write/references/plot-frameworks.md`에 원문 앵커 정책을 적용하고 의사결정 라우팅·장르→프레임 표·이중선·정보 격차·완충 지대 도입 구간을 현지화했다. 장르명·고정 서사 패턴·고전 사례는 원문 앵커로 보존하며, 일반 지침·표·설명은 섹션 단위로 현지화한다.
 
 ### 3단계 전체 배치 순서
 
