@@ -161,6 +161,12 @@
 
 세 문서의 경로·Gate·JSON/YAML 필드·상태값·정규식·고정 표식·실행 계약과 기능성 원문 예시는 보존한다. 다음 배치에서는 `outline-structure-theory.md`의 다중 플롯·지도 전환 후반, `outline-conflict.md`의 충돌 설계·대항 설계, `emotional-arc-design.md`의 중반 압박·기대감 관리·감정 핵심 공식과 품질 체크리스트를 이어서 처리한다.
 
+## Batch 50: 지도 전환·충돌·감정선 압박 규칙 현지화
+
+`outline-structure-theory.md`의 권별 프레임, 4대 독자 유지 수단, 지도 전환 3법, 최상위 프레임, 인간관계 선행, 다중 플롯 병행·피로 완화와 서양 판타지 요점을 현지화했다. `outline-conflict.md`에서는 문턱 기반 플롯 연장, 3대 추진력 역추론, 충돌 기준·초과 보상·구원물 8법, 대항 설계·악역 시점 정보 격차·주인공 행동력을 번역했다. `emotional-arc-design.md`에서는 중반 압박 4수단, 장르 트랙 전략, 기대감 관리 6법칙과 품질 체크리스트를 한국어로 현지화했다.
+
+다음 배치에서는 `outline-structure-theory.md`의 비교 작품 리듬 이식·세부 개요 분할·장 위치와 강약, `outline-conflict.md`의 감정선·금손가락·순환·동기·플롯 조직 후반, `emotional-arc-design.md`의 감정 핵심 공식·전반응-재현-후반응·감정 이입·연애 감정 설계·기대감의 기반 메커니즘을 처리한다.
+
 ## 미완료 및 다음 대상
 
 `skills/` 전체에서 중국어 문자가 남아 있는 후보는 100개 이상으로 확인됐다. 다만 이 후보에는 문서 본문뿐 아니라 실행 코드의 외부 사이트 필드명·선택자·URL, 테스트 문자열, 스크래퍼 식별자가 함께 포함되어 있다. 다음 작업에서는 후보 파일을 작은 배치로 직접 읽어 기능 연결 문자열과 문서 언어를 분리한다.
@@ -169,7 +175,7 @@ Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·ho
 
 ## 검증 상태
 
-Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36~49의 변경은 `git diff --check`를 통과했다. `character-relations.md`의 감정선·수라장·인물 행동·호감도 구간은 추가 현지화했으며, 5종 감정선 템플릿과 인물 목표·관계선 후반에는 잔여 중국어 설명이 남아 있다. `skills/` 전수 조사는 후보 221개를 확인했지만 기능 문자열 분류와 번역은 단계별로 계속 진행한다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
+Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36~50의 변경은 `git diff --check`를 통과했다. `character-relations.md`의 감정선·수라장·인물 행동·호감도 구간은 추가 현지화했으며, 5종 감정선 템플릿과 인물 목표·관계선 후반에는 잔여 중국어 설명이 남아 있다. `skills/` 전수 조사는 후보 221개를 확인했지만 기능 문자열 분류와 번역은 단계별로 계속 진행한다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
 
 ## 주의사항
 
