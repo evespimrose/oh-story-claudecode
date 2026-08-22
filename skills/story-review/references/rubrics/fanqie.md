@@ -1,4 +1,4 @@
-# 판타지 소설 Quality Rubric
+# 판치에 단편 품질 기준 (Fanqie Quality Rubric)
 
 ## 평가 기준
 
@@ -15,4 +15,4 @@
 
 - story-review의 story-architect 시각에서 이 기준을 인용
 - advisory only, blocking 아님
-- 판타지 알고리즘은 빠른 리듬, 강한 감정을 선호
+- 판치에 알고리즘은 빠른 리듬과 강한 감정을 선호

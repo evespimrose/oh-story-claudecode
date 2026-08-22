@@ -1,34 +1,32 @@
 ---
 name: output-contract
 description: |
-  story-short-analyze 输出契约。定义 Stage → 文件映射、_meta.json schema、
-  下游消费规范（story-short-write 读全套 markdown + 原文 + _meta.json 写新短篇）。
+  story-short-analyze 출력 계약. Stage → 파일 매핑, _meta.json 스키마,
+  하위 소비 규격(story-short-write가 전체 Markdown + 원문 + _meta.json을 읽어 새 단편을 작성)을 정의한다.
 sync-policy: |
-  本文件在 story-short-analyze 与 story-short-write 之间需保持字节一致（byte-equal）。
-  修改任一副本后，必须同步另一副本，并通过 bash scripts/check-shared-files.sh 验证。
-  禁止把本文件加入 IGNORE_NAMES 列表——它必须保持同步，不属于 intentional differences。
+  이 파일은 story-short-analyze와 story-short-write 사이에서 바이트 단위로 동일해야 한다(byte-equal).
+  어느 한 사본을 수정하면 다른 사본도 반드시 동기화하고 bash scripts/check-shared-files.sh로 검증한다.
+  이 파일을 IGNORE_NAMES 목록에 넣지 않는다. 반드시 동기화해야 하며 intentional differences에 해당하지 않는다.
 ---
 
-# 输出契约：story-short-analyze ↔ story-short-write
+# 출력 계약: story-short-analyze ↔ story-short-write
 
-`story-short-analyze` 拆完一篇短篇后，产物落盘到 `拆文库/{书名}/`。`story-short-write`
-写下一篇同题材短篇时，**同时**读这个目录下的全部产出。
+`story-short-analyze`가 단편 분석을 마치면 결과물을 `拆文库/{书名}/`에 저장한다. `story-short-write`가 같은 장르의 다음 단편을 쓸 때는 이 디렉터리의 모든 산출물을 **동시에** 읽는다.
 
 ---
 
-## 输出目录与文件树
+## 출력 디렉터리와 파일 트리
 
 ```
 拆文库/{书名}/
-├── 原文/                  # 管道前置步骤产出，存放源文件备份
-├── 拆文报告.md             # 人类可读综合报告（Stage 2-6 综合）
-├── 情节节点.md             # Stage 2 情节节点清单
-├── 写作手法.md             # Stage 4 写作手法分析
-└── _meta.json             # 管道元数据 + 结构计数（resume + 验收数值依据）
+├── 原文/                  # 파이프라인 선행 단계의 산출물, 원본 파일 백업
+├── 拆文报告.md             # 사람이 읽을 수 있는 종합 보고서(Stage 2~6 종합)
+├── 情节节点.md             # Stage 2 플롯 지점 목록
+├── 写作手法.md             # Stage 4 집필 기법 분석
+└── _meta.json             # 파이프라인 메타데이터 + 구조 카운트(resume + 인수 검증 수치의 근거)
 ```
 
-**文件名约定**：`拆文报告.md / 情节节点.md / 写作手法.md` 由 `story-short-write` 硬编码
-消费，不可重命名。分析叙事走 markdown，数字/枚举走 `_meta.json.structure_counts`。
+**파일명 규약**: `拆文报告.md / 情节节点.md / 写作手法.md`는 `story-short-write`가 하드코딩해 소비하므로 이름을 바꾸지 않는다. 분석 서술은 Markdown으로, 숫자·열거값은 `_meta.json.structure_counts`로 관리한다.
 
 ---
 
@@ -44,10 +42,9 @@ sync-policy: |
 
 ---
 
-## `_meta.json` schema
+## `_meta.json` 스키마
 
-`_meta.json` 是管道元数据 + 结构计数。**不放分析内容**，只放数字和枚举——给验收
-检查做完整性校验用。分析叙事都在 `拆文报告.md` 里。
+`_meta.json`은 파이프라인 메타데이터와 구조 카운트다. **분석 내용은 넣지 않고**, 인수 검증의 완전성 확인에 필요한 숫자와 열거값만 둔다. 분석 서술은 모두 `拆文报告.md`에 기록한다.
 
 ```jsonc
 {
@@ -69,7 +66,7 @@ sync-policy: |
 }
 ```
 
-### 写入顺序（crash safety）
+### 기록 순서(crash safety)
 
 1. **Stage N 开始前**：`last_stage_in_progress = N`，写盘。
 2. **Stage N 文件写完后**：non-empty + 最小长度合理性检查（如 `拆文报告.md` 新增段 ≥ 200 字）。
@@ -78,7 +75,7 @@ sync-policy: |
 5. **Stage 6 完成时额外动作**：把 `structure_counts` 一次性算出并写入 `_meta.json`，
    然后才进入验收。
 
-### Resume 协议
+### Resume 프로토콜
 
 - `last_stage_in_progress` 非空 → 该 Stage 上次中断，**从头**重跑（不复用半成品）。
 - `last_stage_in_progress` 为空 → 从 `max(stages_completed) + 1` 开始。
@@ -88,7 +85,7 @@ sync-policy: |
 
 ---
 
-## 验收接入点
+## 인수 검증 연결 지점
 
 Stage 6 内容写完后、`stages_completed[6]` append 前，跑三道检查：
 
@@ -125,7 +122,7 @@ Stage 6 内容写完后、`stages_completed[6]` append 前，跑三道检查：
 
 ---
 
-## 下游消费规范（story-short-write 怎么用）
+## 하위 소비 규격(story-short-write 사용법)
 
 > `story-short-write` 当前硬编码读 `拆文报告.md / 情节节点.md / 写作手法.md` 三个 markdown。
 > `_meta.json` 是可选增强：read 容忍，不存在不阻塞写作。
@@ -138,7 +135,7 @@ Stage 6 内容写完后、`stages_completed[6]` append 前，跑三道检查：
 | `写作手法.md` | 手法库 | POV / 对话 / 时间 / 信息控制 等具体手法 + 原文示例，新篇里复用 |
 | `原文/` | 语感源 | 抄对话调子、节奏、画面感、打脸张力。**不抄具体情节**，抄写法。 |
 
-### 写作流程建议
+### 집필 흐름 권장안
 
 1. 看 `_meta.json.genre_detected` 和 `structure_counts.reversal_type` 选骨架。
 2. 读 `拆文报告.md` 的「核心手法」「共鸣分析」「可复用结构」段，决定要保留 / 调整哪些。
@@ -146,7 +143,7 @@ Stage 6 内容写完后、`stages_completed[6]` append 前，跑三道检查：
 4. 写场景时翻 `写作手法.md` + `原文/`，参考具体写法。
 5. 写完后（可选）在新文档 frontmatter 写 `derived_from: 拆文库/{书名}/` 追溯。
 
-### 维护者本地烟雾测试
+### 유지관리자 로컬 스모크 테스트
 
 ```bash
 ls 拆文库/{书名}/   # 应有：原文/ 拆文报告.md 情节节点.md 写作手法.md _meta.json
@@ -157,7 +154,7 @@ ls 拆文库/{书名}/   # 应有：原文/ 拆文报告.md 情节节点.md 写�
 
 ---
 
-## 版本约定
+## 버전 규약
 
 - `_meta.json.version` 与本文件 `sync-policy` 联动。
 - breaking change（字段重命名 / 类型变更 / 必填变更）必须 bump major version 并同步两侧
