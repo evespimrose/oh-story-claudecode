@@ -2,7 +2,7 @@
 
 ## 기준 시점
 
-본 보고서는 `2026-08-22` 현재 `main` 브랜치의 실제 저장소 상태를 기준으로 갱신했다. Batch 29~33의 템플릿 현지화 변경은 검증을 마쳤고 커밋 `012150c`로 원격에 푸시되었다.
+본 보고서는 `2026-08-22` 현재 `main` 브랜치의 실제 저장소 상태를 기준으로 갱신했다. Batch 29~33의 템플릿 현지화는 커밋 `012150c`로, 인수인계 갱신은 `2a1dd4f`로 원격에 푸시되었다. Batch 34의 story-review 참조 문서와 기존 `story_hook_core.js` 후속 주석 현지화는 현재 작업 트리에 있다.
 
 ## 작업 원칙
 
@@ -31,6 +31,12 @@
 
 기능 계약인 frontmatter 키, `tools`·`disallowedTools`, 모델·턴 설정, JSON 키와 출력 구조, `OUTPUT_MODE: json`, `major|supporting|minor`, `基调：`, `主题标签` 및 사건 유형·주제·기조의 원문 열거값은 보존했다. 이후 `story-explorer.md`, `story_hook_core.js`, `consistency-checker.md`, `story-researcher.md`, `guard-outline-before-prose.sh`, `story-outline.md`까지 현지화했다. 템플릿의 설명·주석·사용자 표시 문장은 한국어화했지만 파서와 호출부가 의존할 수 있는 고정 표식은 유지했다.
 
+## Batch 34: story-review AI 문체 참조 문서 현지화 진행 중
+
+`skills/story-review/references/anti-ai-writing.md`와 `banned-words.md`를 한국어 중심으로 현지화했다. `anti-ai-writing.md`에서는 남아 있던 비기능성 중국어 설명과 혼합 문장을 정리하고, `banned-words.md`에서는 AI 금지 문식의 설명·처리 원칙·교체 전략을 번역했다.
+
+`check-ai-patterns.js`가 실제로 사용하는 중국어 금지 패턴, 정규식 기반 문장 예시, `formulaic-parallelism`, `cliche-density-tic`, `metaphor-density-tic` 같은 detector ID, `——`/`—`/`--` 검사 토큰과 `地/得`·`的` 등의 언어 패턴은 기능 계약으로 보존했다. 두 파일의 동명 사본도 shared-file guard 규칙에 맞춰 `story-deslop`, `story-long-write`, `story-short-analyze`, `story-short-write`에 동기화했다.
+
 ## 완료된 커밋
 
 | 커밋 | 내용 | 상태 |
@@ -40,7 +46,7 @@
 | `3e6f8fb` | 중국어 문서 현지화 2차: `emotional-arc-design` | 원격 반영 완료 |
 | `5b7f673` | 중국어 문서 현지화 3차: `genre-catalog`, `genre-core-mechanics` | 원격 반영 완료 |
 
-위 네 커밋은 모두 `origin/main`에 순차적으로 푸시했다. 각 커밋은 작은 배치로 생성했으며, 현재 미커밋 변경은 없다.
+위 커밋들은 모두 `origin/main`에 순차적으로 푸시했다. 각 커밋은 작은 배치로 생성했다. 현재 Batch 34와 `story_hook_core.js` 후속 주석 현지화는 아직 커밋하지 않았다.
 
 ## 이번 단계에서 현지화한 주요 내용
 
@@ -52,11 +58,11 @@
 
 `skills/` 전체에서 중국어 문자가 남아 있는 후보는 100개 이상으로 확인됐다. 다만 이 후보에는 문서 본문뿐 아니라 실행 코드의 외부 사이트 필드명·선택자·URL, 테스트 문자열, 스크래퍼 식별자가 함께 포함되어 있다. 다음 작업에서는 후보 파일을 작은 배치로 직접 읽어 기능 연결 문자열과 문서 언어를 분리한다.
 
-Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했다. 다음 우선순위는 `story-researcher.md`와 관련 rules/hooks의 기능 연결 문자열 전수 대조, 이어서 `skills/story-review/` 및 `skills/story-short-*`의 잔여 참조 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
+Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `skills/story-review/references/anti-ai-writing.md`와 `banned-words.md`를 처리했다. 다음 우선순위는 `quality-checklist.md`, `quality-rubric.md`, `character-relations.md`, `dialogue-mastery.md`이며, 이후 `plot-core-methods.md`와 플랫폼별 rubrics를 진행한다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
 
 ## 검증 상태
 
-Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. 전체 변경에 대해 `git diff --check`도 통과했다. `demo/` 본문은 이번 단계에서 변경하지 않았다. 중국어 잔존 전수 검색은 기능 문자열과 일반 설명을 분리해야 하므로 파일 단위의 소규모 검색과 직접 검수를 병행한다.
+Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 `banned-words.md`는 13개 제목과 코드 펜스 0개, `anti-ai-writing.md`는 기존 Markdown 구조를 유지했다. `git diff --check`와 `check-ai-patterns.js`의 `node --check`는 통과했다. 동명 참조본은 복사 후 바이트 동기화했으나 전체 `check-shared-files.sh`는 기존 스크립트 drift 항목도 함께 보고해 별도 정리가 필요하다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
 
 ## 주의사항
 

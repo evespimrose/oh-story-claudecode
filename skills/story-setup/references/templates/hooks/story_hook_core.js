@@ -195,12 +195,12 @@ function continuityFindings(root) {
 
 function extractProseTargets(command) {
   const targets = []
-  // 目标 token 三形态（引号段优先）：双引号段 / 单引号段 / 裸词。此前只有一个把引号排除在字符类外
-  // 的裸词式，带空格的引号目标（> "my book/正文/第1章.md"）整条命令抽不到目标就静默放行。
-  // 裸词类只排 ASCII 空白（空格/Tab/CR/LF，shell 真正的分词符）：\s 在 js 与 python 都含 U+3000，
-  // 而全角空格不分词，用 \s 会把「第003章　开局.md」截成「第003章」而漏拦（本项目章名分隔符
-  // [_\- 　] 自带全角空格）。反斜杠转义空格（my\ book）仍不认——resolveTarget 把 \ 归一成路径
-  // 分隔符（Windows 路径），在此解转义会反过来毁掉 book\正文\第1章.md。
+// target 토큰은 세 가지 형태(인용 구간 우선)입니다: 큰따옴표 구간 / 작은따옴표 구간 / 무인용 단어. 이전에는 문자 클래스에서 인용부호를 제외한
+  // 무인용 형식 하나만 있어 공백이 포함된 인용 대상(> "my book/正文/第1章.md")을 명령 전체에서 추출하지 못하고 조용히 통과시켰습니다.
+  // 무인용 클래스에서는 ASCII 공백(공백/Tab/CR/LF, 셸의 실제 토큰 구분자)만 제외합니다. JS와 Python의 \s에는 U+3000도 포함되지만,
+  // 전각 공백은 토큰 구분자가 아니므로 \s를 사용하면 「第003章　开局.md」가 「第003章」으로 잘려 차단을 놓칩니다(이 프로젝트의 장명 구분자
+  // [_\- 　]에는 전각 공백이 포함됨). 백슬래시로 이스케이프한 공백(my\ book)은 여전히 인식하지 않습니다. resolveTarget가 백슬래시를 경로
+  // 구분자(Windows 경로)로 정규화하므로 여기서 이스케이프를 해석하면 book\正文\第1章.md를 망가뜨리기 때문입니다.
   const bare = `[^ \\t\\r\\n"'<>|;&()]`
   const token = `"([^"]*正文[^"]*)"|'([^']*正文[^']*)'|["']?(${bare}*正文${bare}*)["']?`
   for (const source of [`>>?\\s*(?:${token})`, `(?:^|[\\s;&|(){}<>])(?:tee(?:\\s+-a)?|touch)\\s+(?:${token})`]) {
@@ -213,8 +213,8 @@ function extractProseTargets(command) {
   }
   for (const raw of shellSegments(command)) {
     const segment = beforeShellRedirection(raw)
-    // 引号感知分词（同 shellWords）：/\s+/ 会把 cp draft.md "my book/正文/第1章.md" 的目标切碎，
-    // 末位取到 book/正文/第1章.md —— 判到另一本书上（那本有细纲就直接放行）。
+// 인용부호를 인식하는 토큰화(shellWords와 동일): /\s+/를 사용하면 cp draft.md "my book/正文/第1章.md"의 대상을 잘라
+    // 마지막 토큰인 book/正文/第1章.md만 취하게 됩니다. 그러면 다른 책으로 판정되어(그 책에 세부 개요가 있으면) 그대로 통과합니다.
     const words = shellWords(segment)
     if (words.length >= 2 && (words[0] === "cp" || words[0] === "mv")) {
       const positional = words.slice(1).filter((word) => !word.startsWith("-"))
@@ -225,20 +225,20 @@ function extractProseTargets(command) {
   return targets
 }
 
-// apply_patch 目标抽取。只认 Add/Update 会漏掉 `*** Move to:`——它是 Update File 段的子指令
-// （apply_patch 的改名/搬家形态），落盘路径是**目的地**，源路径搬完就不存在了。此前
-// `*** Update File: draft.md` + `*** Move to: 书/正文/第9章.md` 只抽到 draft.md：细纲门放行
-// （draft.md 不是正文），写后兜底网也扫的是已经不存在的源 —— 一份没细纲的草稿能直接搬进 正文/。
-// 故 Move 用目的地**顶替**同段的源目标（不是追加：源已不在，拿它去查会误伤/空扫）。
-// Delete File 一律不入表（两端一致）：删除不是写入，proseBlockReason 对已存在的正文本就放行、
-// 删完文件也不在了没东西可扫，认它只会给「删稿」误报；但 Delete 段也能带 Move to（搬走后删源），
-// 那条 Move 的目的地照样要进表，故 Delete 只清掉待顶替的源槽位。
+// apply_patch 대상 추출. Add/Update만 인식하면 `*** Move to:`를 놓칩니다. 이는 Update File 구간의 하위 명령이며
+// (apply_patch의 개명·이동 형식), 디스크에 기록되는 경로는 **목적지**이고 이동이 끝나면 원본 경로는 존재하지 않습니다. 이전에는
+// `*** Update File: draft.md` + `*** Move to: 书/正文/第9章.md`에서 draft.md만 추출했습니다. 세부 개요 문이 통과시키고
+// (draft.md는 본문이 아님), 작성 후 보완망도 이미 사라진 원본만 검사하므로 세부 개요 없는 초안이 正文/으로 바로 이동할 수 있었습니다.
+// 따라서 Move는 같은 구간의 원본 대상을 목적지로 **대체**합니다(추가가 아님. 원본은 더 이상 없으므로 원본으로 검사하면 오탐 또는 빈 검사가 발생함).
+// Delete File은 양쪽 구현과 일치하게 목록에 넣지 않습니다. 삭제는 쓰기가 아니므로 proseBlockReason은 이미 존재하는 본문을 통과시키고,
+// 삭제 후 파일도 사라져 검사할 대상이 없기 때문입니다. 이를 인식하면 「원고 삭제」를 잘못 경고하게 됩니다. 다만 Delete 구간에도 Move to가
+// 포함될 수 있으므로(이동 후 원본 삭제), 해당 Move의 목적지는 목록에 넣고 Delete는 대체 대기 중인 원본 슬롯만 비웁니다.
 function extractPatchTargets(patchText) {
   const targets = []
   let sourceIndex = -1
   for (const line of String(patchText).split(/\r?\n/)) {
-    // apply_patch grammar 的控制行必须从第 0 列开始；diff 上下文行固定以空格开头。
-    // 先 trim 会把正文里的 ` *** Move to: notes.md` 伪装成搬家指令，顶掉真实扫描目标。
+// apply_patch 문법의 제어 행은 0열에서 시작해야 하며 diff 문맥 행은 항상 공백으로 시작합니다.
+    // 먼저 trim하면 본문 안의 ` *** Move to: notes.md`가 이동 명령으로 위장해 실제 검사 대상을 덮어쓸 수 있습니다.
     const file = line.match(/^\*\*\* (Add|Update|Delete) File: (.+)$/)
     if (file) {
       if (file[1] === "Delete") {
@@ -280,11 +280,11 @@ function proseBlockReason(root, absolute) {
   const chapter = match[1]
   const book = path.dirname(path.dirname(absolute))
   const state = path.join(book, "追踪", "_tracking-state.json")
-  // 这是守卫的 canonical case：agent 可能在任何脚手架存在前就首建 {书}/正文/第N章.md。
-  // 是否“像一本书”不能作为放行条件；相对路径误判应在宿主 adapter 按 cwd 正确解析，而不是
-  // 让核心守卫 fail open。
-  // story-import 在复制既有正文、尚未执行 tracking init 的窗口可以写；一旦 state 存在，
-  // 即进入当前追踪协议，不再因为保留了 拆文库/ 分析资产而永久绕过守卫。
+// 이것이 가드의 표준 사례입니다. agent는 어떤 스캐폴드도 존재하기 전에 {书}/正文/第N章.md를 처음 만들 수 있습니다.
+  // 「책처럼 보이는가」는 통과 조건이 될 수 없습니다. 상대 경로 오판은 호스트 adapter가 cwd에 따라 올바르게 해석해야 하며,
+  // 핵심 가드가 fail-open으로 처리해서는 안 됩니다.
+  // story-import은 기존 본문을 복사하고 아직 tracking init을 실행하지 않은 구간에서는 쓸 수 있습니다. state가 존재하는 순간
+  // 현재 추적 프로토콜에 들어가며, 拆文库/ 분석 자산이 남아 있다는 이유로 가드를 영구 우회하지 않습니다.
   if (fs.existsSync(path.join(root, "拆文库", path.basename(book))) && !fs.existsSync(state)) return null
   const exists = fs.existsSync(absolute)
   const outlineDir = path.join(book, "大纲")
@@ -312,9 +312,9 @@ function proseBlockReason(root, absolute) {
   if (prevNum >= 1) {
     let prevFile = null
     try {
-      // readdir 顺序在 ext4/overlayfs 上是哈希序：不排序就可能挑中同章号的原稿备份
-      // （workflow-revision 的「备份原稿」产物），拿早已被改写掉的旧文本报欠账。
-      // 显式排除 _原稿_ 备份并排序，保证四端与各文件系统上取到同一个「上一章」。
+// ext4/overlayfs에서 readdir 순서는 해시 순서이므로 정렬하지 않으면 같은 장 번호의 원고 백업을 고를 수 있습니다.
+      // (workflow-revision의 「원고 백업」 산출물), 이미 다시 작성된 이전 텍스트를 대상으로 미처리 잔액을 잘못 보고하게 됩니다.
+      // _原稿_ 백업을 명시적으로 제외하고 정렬해 네 구현과 모든 파일 시스템에서 동일한 「이전 장」을 선택합니다.
       const candidates = fs.readdirSync(path.dirname(absolute))
         .filter((file) => {
           const pm = file.match(/^第0*(\d+)章.*\.md$/)
@@ -710,7 +710,7 @@ function isGitCommitCommand(command) {
 }
 
 // 设定/ 바로 아래에 있는 프로젝트 수준 설정 파일: artifact-protocols.md가 규정한 关系.md(본문은 「# 인물 관계도」),
-// 题材定位.md, 文风.md, 题材正文提示卡.md 등은 원래 이름·성명 필드가 없습니다.
+// 题材定位.md, 文风.md, 题材正文提示卡.md 등에는 원래 이름·성명 필드가 없습니다.
 const SETTING_NON_CHARACTER_FILES = new Set(["关系.md", "题材定位.md", "题材正文提示卡.md", "文风.md", "世界规则.md", "世界观.md", "金手指.md", "背景设定.md"])
 
 // 인물 카드만 검사합니다. 设定/ 전체를 일괄 검사하면 설정을 건드리는 모든 제출마다 가짜 경고가 쏟아져
@@ -719,9 +719,9 @@ const SETTING_NON_CHARACTER_FILES = new Set(["关系.md", "题材定位.md", "�
 // ① 设定/角色|人物 하위 디렉터리의 파일 → 인물 카드;
 // ② 그 밖의 设定/<하위 디렉터리>/ → 디렉터리 전체를 건너뜀(세계관/세력/보고서/원리/인물 관계 등);
 // ③ 设定/ 바로 아래의 평면 파일 → 알려진 프로젝트 수준 설정 파일을 제외하면 모두 인물 카드로 처리(주인공.md/조연.md/악역.md 등 사용자 정의 이름).
-// bash 的 `*` 跨 `/` 匹配，`设定/角色/*|*/设定/角色/*` 等价于「路径里存在某个 设定 目录段满足该
-// 分支」，所以两趟扫描（先全路径找分支①，再全路径找分支②）而不是只看第一个 设定 段就定分支——
-// 后者在 设定/其他/设定/角色/x.md 这类嵌套路径上会与 bash 判定分叉。
+// bash의 `*`는 `/`를 가로질러 매칭하므로 `设定/角色/*|*/设定/角色/*`는 「경로 안에 해당 분기를 만족하는 设定 디렉터리 구간이 하나라도 있음」과 같습니다.
+// 따라서 첫 번째 设定 구간만 보고 분기를 정하지 않고 두 차례 검사합니다(먼저 전체 경로에서 분기 ①을 찾고, 다음에 분기 ②를 찾음).
+// 후자의 방식은 设定/其他/设定/角色/x.md 같은 중첩 경로에서 bash 판정과 달라집니다.
 function isCharacterSheetPath(relative) {
   const segments = relative.split("/")
   const last = segments.length - 1
