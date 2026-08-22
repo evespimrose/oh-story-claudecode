@@ -68,15 +68,23 @@
 
 기존 전수 검수 커밋에서는 `进行`, `关于`, `对于`가 포함된 번역 잔재와 중국어 문장 예시를 우선 교정했다. 동일 내용의 `story-setup` 중복 참조본에도 같은 표현을 적용해 용어 불일치를 줄였다.
 
+## Batch 37: 절정 역추론·AB 대개요 및 플랫폼 rubric 검토
+
+`skills/story-review/references/plot-core-methods.md`의 절정 역추론·AB 대개요 구간을 현지화했다. 절정에서 앞부분의 포석을 역추적하는 핵심 발상, A/B 표식의 의미와 실행, `ABABAB` 배열 순서를 한국어로 재구성했으며, 문서 내부 링크·비율·고정 표식은 보존했다.
+
+`fanqie.md`, `qidian.md`, `zhihu.md`는 이미 한국어 중심으로 현지화되어 있어 이번 단계에서는 전면 재작성하지 않고 플랫폼명·`PASS`/`FAIL`·수치 기준·`advisory only`·참조 agent명과 같은 기능·평가 토큰을 유지하는 계획으로 확정했다. 세 문서의 남은 작업은 용어 통일과 `quality-rubric.md` 기준과의 교차 검수다.
+
+`character-relations.md`는 기존 장편 기준본을 리뷰 참조본에 반영했으나, 기준본 자체에 남은 중국어 설명과 일부 혼합 문장은 추가 정리가 필요하다. 이번 커밋은 해당 기준본 반영과 Batch 37 진행분을 포함하며, 비기능성 중국어 설명의 최종 전수 정리는 다음 배치의 잔여 과제로 남긴다.
+
 ## 미완료 및 다음 대상
 
 `skills/` 전체에서 중국어 문자가 남아 있는 후보는 100개 이상으로 확인됐다. 다만 이 후보에는 문서 본문뿐 아니라 실행 코드의 외부 사이트 필드명·선택자·URL, 테스트 문자열, 스크래퍼 식별자가 함께 포함되어 있다. 다음 작업에서는 후보 파일을 작은 배치로 직접 읽어 기능 연결 문자열과 문서 언어를 분리한다.
 
-Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `anti-ai-writing.md`와 `banned-words.md`, Batch 35에서 `quality-checklist.md`와 `quality-rubric.md`, Batch 36에서 `character-relations.md`와 `dialogue-mastery.md`를 착수했다. 다음 우선순위는 두 문서의 혼합 문장 최종 정리 후 `plot-core-methods.md`, 플랫폼별 rubrics와 tracking 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
+Batch 29~33까지 `skills/story-setup/references/templates/`의 주요 agent·hook·rule 문서 현지화를 완료했고, Batch 34에서 `anti-ai-writing.md`와 `banned-words.md`, Batch 35에서 `quality-checklist.md`와 `quality-rubric.md`, Batch 36에서 `character-relations.md`와 `dialogue-mastery.md`를 착수했다. Batch 37에서는 `plot-core-methods.md`의 절정 역추론·AB 대개요를 처리하고 플랫폼별 rubric의 현지화 상태를 점검했다. 다음 우선순위는 `character-relations.md`의 잔여 혼합 문장 최종 정리, `plot-core-methods.md` 후속 구간, 플랫폼 rubric 교차 검수와 tracking 문서다. 각 파일에서 URL·필드명·선택자·정규식·CLI 옵션·출력 파일명·고유명은 기능 보호 예외로 분리한다.
 
 ## 검증 상태
 
-Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36의 현재 변경은 최종 혼합 문장 검수 전이다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
+Batch 28의 네 스크립트와 Batch 31의 `story_hook_core.js`는 `node --check`를 통과했다. Batch 33의 `guard-outline-before-prose.sh`는 Windows Git Bash `bash -n`을 통과했으며, `story-outline.md`는 제목 18개·코드 펜스 4개와 기능 필드를 유지했다. Batch 34의 AI 문체 참조본과 Batch 35의 quality 문서는 `git diff --check`를 통과했으며, Batch 35는 `90a993f`로 원격에 반영됐다. Batch 36~37의 현재 변경은 `git diff --check`를 통과했으며, `character-relations.md`는 잔여 혼합 문장 최종 검수 전이다. Batch 35의 `quality-checklist.md`는 제목 30개·표 78행·코드 펜스 2개, `quality-rubric.md`는 제목 6개·표 25행·코드 펜스 2개를 유지했다. 동명 참조본은 기존 shared-file 규칙에 따라 관리하며, 전체 `check-shared-files.sh`에서 보고되는 스크립트 drift는 별도 잔여 과제다. `demo/` 본문은 이번 단계에서 변경하지 않았다.
 
 ## 주의사항
 
