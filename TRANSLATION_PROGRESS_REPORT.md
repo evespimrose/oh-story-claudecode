@@ -181,6 +181,25 @@
 
 기능 보호 항목인 `workflow-setup.md#phase-3大纲搭建`, `剧情/`, `cross-book-recall.md`, `Σ` 계약, 경로·필드·상태값·정규식·Gate·플레이스홀더는 변경하지 않았다. 다음 배치에서는 세 문서의 남은 일반 설명·예시·통합 관점 표와 전체 용어 일치성을 전수 검수한다.
 
+## 3단계 공용 참조·프레임워크 현지화 계획
+
+### Batch 57 착수: 3-A·3-B
+
+- **3-A:** `skills/story-short-analyze/references/material-decomposition.md`를 기준본으로 선정했다. 단편·장편 비교, 분석 원칙, 초기 분석 파이프라인을 한국어화했으며, Stage·경로·출력 계약·원문 인용 제한은 보존한다. `output-templates.md`와 동명 사본은 출력 키·플레이스홀더·표 구조를 고정한 뒤 다음 소배치에서 동기화한다.
+- **3-B:** `skills/story-long-write/references/plot-frameworks.md`에 원문 앵커 정책을 적용하고 의사결정 라우팅·이중선·정보 격차·완충 지대 도입 구간을 현지화했다. 장르명·고정 서사 패턴·고전 사례는 원문 앵커로 보존하며, 일반 지침·표·설명은 섹션 단위로 현지화한다.
+
+### 3단계 전체 배치 순서
+
+| 배치 | 대상 | 처리 원칙 |
+|---|---|---|
+| 3-A | `material-decomposition.md`, `output-templates.md` 및 동명 사본 | 출력 계약·경로·JSON·플레이스홀더 보존, 일반 설명 현지화 |
+| 3-B | `plot-frameworks.md` | 플롯 모델·도표·예시를 섹션 단위로 현지화, 원문 앵커 정책 적용 |
+| 3-C | `anti-ai-writing.md`, `style-genre-modules.md` 공용 기준본 | 탐지 패턴·금지어·원문 예시 보존, 동일 사본 동기화 |
+| 3-D | `story-short-analyze` 장르·인물·기법 문서 | 장르 식별자·경로 보존, 본문·표·출력 설명 현지화 |
+| 3-E | `story-setup` OpenCode/ZCode agents·hooks·rules | frontmatter·명령·키·정규식 고정 후 설명·메시지 현지화 |
+| 3-F | 스캐너·검수 코드, `story-import`, `story-deslop` | 코드 문법·사용자 표시 메시지·동명 사본 검증 |
+| 3-G | 전체 재감사 | `demo/` 무수정·기능 문자열·사본·문법·shared-file drift 검증 |
+
 ## 2단계 장편 핵심 문서 전체 상태
 
 | 문서군 | 상태 | 이번 기준의 처리 범위 | 잔여 작업 |
